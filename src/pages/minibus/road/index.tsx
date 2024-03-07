@@ -1,121 +1,178 @@
-import { Autocomplete, Card, CardHeader, Grid, TextField } from '@mui/material';
-import dynamic from 'next/dynamic';
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
-import { GeoJSONData } from 'src/types/geoJSON';
-import { OpenStreetMapProvider } from 'leaflet-geosearch';
+import React, { useCallback, useState, MouseEvent, useEffect} from 'react'
+import {Card, CardHeader, Grid, Hidden, IconButton} from '@mui/material'
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
+import {styled} from '@mui/material/styles'
+import { DataGrid} from '@mui/x-data-grid'
+import TableHeader from 'src/components/tableHeader'
+import Link from 'next/link'
+import { useDispatch } from 'react-redux'
+import Icon from 'src/@core/components/icon'
+import AddUserDrawer from 'src/views/apps/minibus/choferes/AddUserDrawer'
+import axios from 'axios'
+import AddDrawMap from 'src/components/addDrawMap'
+import Steppers from 'src/components/steppers'
+import { useCounter } from 'src/hooks/useCounter'
+import Maps from './map'
+import Divider from '@mui/material/Divider'
 
-interface Search {
-  x:number
-  y:number
-  label:string
-  inputValue?:string
-}
-type SearchData = Search[]
-const geojsonData:GeoJSONData = {
-  type: 'FeatureCollection',
-  features: [
-    {
-      type: 'Feature',
-      properties: {
-        stroke:'#0000ff',
-        strokeWidth:2,
-        strokeOpacity:1,
-        fill:'#ff0000',
-        fillOpacity:0.5
-      },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [-67.01014716487808, -20.709537938468216],
-          [-61.249975998390184, -14.294169425330992],
-          [-70.249975998390184, -11.294169425330992],
-          [-100.249975998390184, -5.294169425330992]
-        ],
-      },
-    },
-  ],
-};
-const Roads = ()=>{
-  const Map = useMemo(() => dynamic(
-    () => import('./map'),
-    { 
-      loading: () => <p>Cargando la Mapa</p>,
-      ssr: false
+
+const StyledLink = styled(Link)(({ theme })=>({
+    fontWeight: 500,
+    fontSize: '0.8rem',
+    cursor: 'pointer',
+    textDecoration: 'none',
+    color: theme.palette.text.secondary,
+    '&:hover': {
+        color: theme.palette.primary.main
+      }
+}))
+
+const RowOptions = ({ id }: { id: number | string }) => {
+    // ** Hooks
+    //const dispatch = useDispatch<AppDispatch>()
+  
+    // ** State
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  
+    const rowOptionsOpen = Boolean(anchorEl)
+  
+    const handleRowOptionsClick = (event: MouseEvent<HTMLElement>) => {
+      setAnchorEl(event.currentTarget)
     }
-  ), [])
-  const [options, setOptions] = useState<SearchData>([])
-  const [lat,setLat] = useState<number>(0)
-  const [lng,setLng] = useState<number>(0)
-  const search = async (query: string) => {
-    const provider = new OpenStreetMapProvider();
-    const results = await provider.search({ query });
-    setOptions(results);
-  };
-
-  const handleQuery = (e:ChangeEvent<HTMLInputElement>)=>{
-    const query = e.target.value;
-    search(query);
-  }
-  const handleSelect = (value:string | Search | null) =>{
-    if(value && typeof value==='object'){
-      setLat(value.x)
-      setLng(value.y)
+    const handleRowOptionsClose = () => {
+      setAnchorEl(null)
     }
-  }
-    return(
-      <Grid container spacing={6}>
-        <Grid item xs={12}>
-          <Card>
-          <CardHeader title='Registro de rutas' sx={{pb:4, '& .MuiCardHeader-title':{letterSpacing:'.15px'}}}/>
-          <Card>
-          <Map 
-          geoJSON={geojsonData}
-          lat={lat}
-          lng={lng}
-          zoom={13}
-          />
-          <Autocomplete 
-          
-              options={options}
-              getOptionLabel={(options) => {
-                // Value selected with enter, right from the input
-                if (typeof options === 'string') {
-                  return options;
-                }
-                // Add "xxx" option created dynamically
-                if (options.inputValue) {
-                  return options.inputValue;
-                }
-                // Regular option
-                return options.label;
-              }}
-              onChange={(event,value)=>handleSelect(value)}
-              freeSolo
-              renderInput={(params)=> (
-                <TextField
-                {...params}
-                label='Buscar ubicación'
-                onChange={handleQuery}
-                InputProps={{
-                  ...params.InputProps,
-                  startAdornment:(
-                    <>
-                    {/* <SearchIcon /> */}
-                    {params.InputProps.startAdornment}
-                    </>
-                  )
-                }}
-                />
-
-              )}
-              sx={{borderTopLeftRadius:0, borderTopRightRadius:0}}
-              >
-
-              </Autocomplete>
-          </Card>
-      </Card>
-      </Grid>
-      </Grid>
+  
+    const handleDelete = () => {
+      //dispatch(deleteUser(id))
+      handleRowOptionsClose()
+    }
+  
+    return (
+      <>
+        <IconButton size='small' onClick={handleRowOptionsClick}>
+          <Icon icon='mdi:dots-vertical' />
+        </IconButton>
+        <Menu
+          keepMounted
+          anchorEl={anchorEl}
+          open={rowOptionsOpen}
+          onClose={handleRowOptionsClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right'
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right'
+          }}
+          PaperProps={{ style: { minWidth: '8rem' } }}
+        >
+          <MenuItem onClick={handleRowOptionsClose} sx={{ '& svg': { mr: 2 } }}>
+            <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4'/>
+            Editar
+          </MenuItem>
+          <MenuItem onClick={handleRowOptionsClose} sx={{ '& svg': { mr: 2 } }}>
+            <Icon icon='mdi:delete-outline' fontSize={20} color='red'/>
+            Eliminar
+          </MenuItem>
+        </Menu>
+      </>
     )
+  }
+  
+const columns = [
+    {
+        flex:0.2,
+        minWidth:110,
+        field:'roads',
+        headerName:'Rutas'
+    },
+    {
+        flex:0.2,
+        minWidth:110,
+        field:'date',
+        headerName:'Fecha de Creación'
+    },
+    {
+        flex:0.2,
+        minWidth:110,
+        field:'status',
+        variant:'outlined',
+        headerName:'Estado'
+    },
+    {
+        flex:0.2,
+        minWidth:110,
+        field:'actions',
+        sortable:false,
+        headerName:'Acciones',
+        renderCell:()=>{
+            return(<RowOptions id={1}/>)
+        }
+    }
+]
+const step = [{
+  title:'Rutas'
+},
+{
+  title:'Paradas'
+}
+]
+const Roads = ()=>{
+    const [pageSize,setPageSize]=useState<number>(10)
+    const [value, setValue] = useState<string>('')
+    const [hidden, setHidden] = useState<boolean>(false)
+    const [rows,setRows] = useState([])
+    const handleFilter = useCallback((val: string) => {
+        setValue(val)
+      }, [])
+      const toggleAddUserDrawer = () => setHidden(!hidden)
+      useEffect(()=>{
+        const fetchData:any = async() =>{
+            try{
+                const response = await axios.get('http://localhost:3001/drivelicence')
+                const rowsData = response.data.map((rows:any,index:any)=>({...rows, id:index+1}))
+                setRows(rowsData)
+            }catch (error){
+                console.error('Error al obtener datos:', error);
+            }
+        }
+        fetchData();
+      },[])
+      if(!hidden){
+    return(
+        <Grid container spacing={6} >
+            <Grid item xs={12}>
+                <Card>
+                    <CardHeader title='Lista de Rutas' sx={{pb:4, '& .MuiCardHeader-title':{letterSpacing:'.15px'}}}/>
+                    <TableHeader 
+                    value={value} 
+                    handleFilter={handleFilter} 
+                    toggle={toggleAddUserDrawer}  
+                    placeholder='Busquedad de Rutas'
+                    title='Nuevo Rutas'
+                    />
+                    <DataGrid
+                    autoHeight
+                    rows={rows}
+                    columns={columns}
+                    pageSize={pageSize}
+                    disableSelectionOnClick
+                    rowsPerPageOptions={[10,25,50]}
+                    sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+                    onPageSizeChange={(newPageSize: number) => setPageSize(newPageSize)}
+                    />
+                </Card>
+            </Grid>
+        </Grid>
+    )
+  }
+  else{
+    return(
+      <Maps toggle={toggleAddUserDrawer} title='Registrar Rutas'/>
+    )
+  }
 }
 export default Roads

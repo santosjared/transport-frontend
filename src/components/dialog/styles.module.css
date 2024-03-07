@@ -1,0 +1,50 @@
+/* styles.css */
+
+.successAnimation {
+    animation: successAnimation 5s;
+  }
+  
+  .errorAnimation {
+    animation: errorAnimation 5s;
+  }
+  
+  .warningAnimation {
+    animation: warningAnimation 5s;
+  }
+  
+  @keyframes successAnimation {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes errorAnimation {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    25%, 75% {
+      transform: translateX(-10px);
+    }
+    50% {
+      transform: translateX(10px);
+    }
+  }
+  
+  @keyframes warningAnimation {
+    0%, 100% {
+      transform: rotate(0deg);
+    }
+    25% {
+      transform: rotate(5deg);
+    }
+    75% {
+      transform: rotate(-5deg);
+    }
+  }
+  
