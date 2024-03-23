@@ -1,18 +1,22 @@
 import dynamic from 'next/dynamic';
-import { useMemo, useState } from 'react';
-import Location from '../../location';
+import { useMemo} from 'react';
+import Location from '../location';
 import type { FeatureCollection } from 'geojson';
 
 interface Props{
     geojson: FeatureCollection;
+    center:[lat:number,lng:number];
+    zoom:number;
+    polyline:boolean;
+    marker:boolean;
+    setCenter:(cooordenate:[lat:number,lng:number])=>void;
+    setZoom:(zoom:number)=>void
     setGeojson: (geojson: FeatureCollection) => void;
 }
-const Stops = ({geojson,setGeojson}:Props)=>{
-  const [center,setCenter] = useState<[lat:number,lng:number]>([0,0])
-  const [zoom, setZoom] = useState<number>(2)
-  const DrawMap = useMemo(()=>dynamic(()=>import('../../drawMap')),[geojson])
+const RenderMap = ({geojson,setGeojson,center,zoom,setCenter,setZoom,polyline,marker}:Props)=>{
+  const DrawMap = useMemo(()=>dynamic(()=>import('../drawMap')),[geojson])
   const Map = useMemo(() => dynamic(
-    () => import('../../../../../components/map'),
+    () => import('../../../../components/map'),
     { 
       loading: () => <p>Cargando la Mapa</p>,
       ssr: false
@@ -26,8 +30,8 @@ const Stops = ({geojson,setGeojson}:Props)=>{
             <DrawMap 
             geojson={geojson}
             setGeojson={setGeojson}
-            polyline={false}
-            marker={true}
+            polyline={polyline}
+            marker={marker}
             />
             <Location
             setCenter={setCenter}
@@ -36,4 +40,4 @@ const Stops = ({geojson,setGeojson}:Props)=>{
           </Map>
     )
 }
-export default Stops
+export default RenderMap

@@ -65,6 +65,7 @@ import 'src/iconify-bundle/icons-bundle-react'
 import '../../styles/globals.css'
 import { Provider } from 'react-redux'
 import { store } from 'src/store'
+import { QueryClient, QueryClientProvider } from 'react-query'
 
 // ** Extend App Props with Emotion
 type ExtendedAppProps = AppProps & {
@@ -80,6 +81,7 @@ type GuardProps = {
 
 const clientSideEmotionCache = createEmotionCache()
 
+const queryClient = new QueryClient()
 // ** Pace Loader
 if (themeConfig.routingLoader) {
   Router.events.on('routeChangeStart', () => {
@@ -119,9 +121,8 @@ const App = (props: ExtendedAppProps) => {
   const guestGuard = Component.guestGuard ?? false
 
   const aclAbilities = Component.acl ?? defaultACLObj
-
   return (
-    
+    <QueryClientProvider client={queryClient}>
     <Provider store={store} >
       <CacheProvider value={emotionCache}>
         <Head>
@@ -157,7 +158,8 @@ const App = (props: ExtendedAppProps) => {
           </SettingsProvider>
         </AuthProvider>
       </CacheProvider>
-    </Provider>   
+    </Provider>
+    </QueryClientProvider>   
   )
 }
 

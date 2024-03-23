@@ -9,71 +9,96 @@ const navigation = (): VerticalNavItemsType => {
       icon: 'mdi:home-outline',
     },
     {
-      title:'Choferes',
-      path:'/minibus/choferes',
-      icon:'healthicons:truck-driver',
-      children:[{
-        title:'Lista de Choferes',
-        path:'/minibus/choferes'
-      },
-      {
-        title:'Licencias de Conducir',
-        path:'/minibus/licence'
-      }
-    ]
+      title:'Rutas y Paradas',
+      path:'/minibus/monitoreo',
+      icon:'eos-icons:monitoring'
     },
+    // {
+    //   title:'Choferes',
+    //   path:'/minibus/choferes',
+    //   icon:'healthicons:truck-driver',
+    //   children:[{
+    //     title:'Lista de Choferes',
+    //     path:'/minibus/choferes'
+    //   },
+    //   {
+    //     title:'Licencias de Conducir',
+    //     path:'/minibus/licence'
+    //   }
+    // ]
+    // },
     {
-      title: 'Microbus',
+      title: 'Registro de microbuses',
       path: '/minibus/bus',
       icon: 'mdi:bus'
     },
     {
-      title:'Lineas',
-      path:'/second-page',
-      icon:'material-symbols:fork-right',
-      children:[
-        {
-          title:'Registro de lineas',
-          path:'/linea'
-        },
-        {
-          title:'Registro de rutas',
-          path:'/minibus/road'
-        },
-        {
-          title:'Registro de pasajes',
-          path:'pasajes'
-        }
-      ]
+      title: 'Registro de lineas',
+      path: '/minibus/lineas',
+      icon: 'tabler:list-letters'
     },
     {
-      title:'Horarios',
-      path:'/minibus/firts',
-      icon:'ic:twotone-log-out',
-      children:[
-        {
-          title:'Registro de horarios',
-          path:'/minibus/firts'
-        },
-        {
-          title:'Semanal',
-          path:'/minibus/weeks'
-        },
-        {
-          title:'Diario',
-          path:'/minibus/days'
-        }
-      ]
+      title:'Registro de rutas',
+      path:'/minibus/road',
+      icon:'material-symbols:fork-right'
     },
     {
-      title:'Faltas y Sanciones',
-      path:'#',
-      icon:'icomoon-free:hammer2'
+      title:'Registro de tarifas',
+      path:'/minibus/tarifas',
+      icon:'fluent:money-hand-20-regular'
     },
     {
-      title:'test',
-      path:'/second-page',
+      title:'Registro de horarios',
+      path:'/minibus/horario',
+      icon:'game-icons:notebook'
+    },
+    {
+      title:'Conectar Dispositivo GPS',
+      path:'/minibus/gps',
+      icon:'mdi:cellphone-gps'
     }
+    // {
+    //   title:'Registro de Rutas y Tarifas',
+    //   icon:'material-symbols:fork-right',
+    //   children:[
+    //     {
+    //       title:'Rutas',
+    //       path:'/minibus/road'
+    //     },
+    //     {
+    //       title:'Tarifas',
+    //       path:'/minibus/tarifas'
+    //     }
+    //   ]
+    // },
+    // {
+    //   title:'Horarios',
+    //   path:'/minibus/firts',
+    //   icon:'ic:twotone-log-out',
+    //   children:[
+    //     {
+    //       title:'Registro de horarios',
+    //       path:'/minibus/firts'
+    //     },
+    //     {
+    //       title:'Semanal',
+    //       path:'/minibus/weeks'
+    //     },
+    //     {
+    //       title:'Diario',
+    //       path:'/minibus/days'
+    //     }
+    //   ]
+    // },
+    // {
+    //   title:'Faltas y Sanciones',
+    //   path:'#',
+    //   icon:'icomoon-free:hammer2'
+    // },
+    // {
+    //   title:'test',
+    //   path:'/second-page',
+    // }
     // {
     //   title: 'Home',
     //   path: '/home',

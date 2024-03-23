@@ -4,8 +4,8 @@ import Box, {BoxProps} from '@mui/material/Box'
 import Typography from "@mui/material/Typography"
 import IconButton from "@mui/material/IconButton"
 import Icon from "src/@core/components/icon"
-import { Children, ReactNode } from "react"
-import { Card, CardContent, CardHeader } from "@mui/material"
+import {ReactNode } from "react"
+import { Card} from "@mui/material"
 
 interface SidebarAddUserType {
     toggle: () => void

@@ -30,9 +30,6 @@ const Location = ({setCenter,setZoom}:Props)=>{
         navigator.geolocation.getCurrentPosition((position)=>{
             setCenter([position.coords.latitude, position.coords.longitude])
             setZoom(position.coords.accuracy)
-        },()=>{
-            setCenter([0,0])
-            setZoom(2)
         })
     }
     return (

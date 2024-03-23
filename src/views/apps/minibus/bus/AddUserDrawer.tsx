@@ -19,6 +19,8 @@ import { addBus } from 'src/store/apps/bus';
 import { Card, CardMedia, Grid } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import axios from 'axios';
+import { useService } from 'src/hooks/useService';
+import { useMutation, useQuery } from 'react-query';
 
 interface SidebarAddUserType {
     open: boolean
@@ -63,7 +65,7 @@ interface SidebarAddUserType {
   const SidebarAddUser = (props:SidebarAddUserType) =>{
     const [errorMessage,setErrorMessage] = useState('')
     const [photo,setPhoto] = useState<string>('/images/default/licence.png')
-    //const [file, setFile]= useState<File|null>(null)
+    const [file, setFile]= useState<File|null>(null)
     const {open, toggle} = props
     const dispatch = useDispatch<AppDispatch>()
     const {
@@ -75,6 +77,7 @@ interface SidebarAddUserType {
     } = useForm<BusData>({
       defaultValues,
     })
+    
     // const handleChangeValue = (e:ChangeEvent<HTMLInputElement>) => {
     //   setFormData({
     //     ...formData,
@@ -96,6 +99,7 @@ interface SidebarAddUserType {
         }
       }
     }
+    const{Post}=useService()
     const onSubmit = async (data:BusData) => {
       // console.log('dtas',data)
       // const response = await axios.post('http://localhost:3001/bus', data, {
@@ -107,7 +111,6 @@ interface SidebarAddUserType {
       toggle()
       reset()
     }
-
     const handleClose = () => {
       setPhoto('/images/default/licence.png')
       toggle()

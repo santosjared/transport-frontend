@@ -7,11 +7,11 @@ const navigation = (): HorizontalNavItemsType => [
     path: '/home',
     icon: 'mdi:home-outline',
   },
-  {
-    title:'Registro de Chofer',
-    path:'/Registro-choferes',
-    icon:'healthicons:truck-driver'
-  },
+  // {
+  //   title:'Registro de Chofer',
+  //   path:'/Registro-choferes',
+  //   icon:'healthicons:truck-driver'
+  // },
   {
     title: 'Microbus',
     path: '/Micros',
