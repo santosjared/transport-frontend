@@ -5,29 +5,24 @@ import { useQuery } from "react-query"
 import AddDraw from "src/components/addDraw"
 import TableHeader from "src/components/tableHeader"
 import { useService } from "src/hooks/useService"
-import Conect from "./conect"
+import AddTarifas from "./register"
 
 
 const columns = [
     {
         flex:0.2,
-        field:'name',
-        headerName:'Nombre',
+        field:'rates',
+        headerName:'Nombre de tarifas',
     },
     {
         flex:0.2,
-        field:'mark',
-        headerName:'Marca',
+        field:'createdAt',
+        headerName:'Fecha de creación',
     },
     {
         flex:0.2,
-        field:'model',
-        headerName:'Modelo',
-    },
-    {
-        flex:0.2,
-        field:'conect',
-        headerName:'Estado de Conexion'
+        field:'details',
+        headerName:'Detalles'
     },
     {
         flex:0.2,
@@ -40,27 +35,27 @@ const columns = [
         headerName:'Acciones'
     }
 ]
-const Gps = ()=>{
+const Tarifas = ()=>{
     const [pageSize,setPageSize]=useState<number>(10)
     const [value, setValue] = useState<string>('')
-    const [openAdd, setOpenAdd] = useState<boolean>(false)
+    const [OpenAdd, setOpenAdd] = useState<boolean>(false)
     const {Get}=useService()
     const {data,isLoading,isError} = useQuery('roads',()=>Get('/road'))
     const handleFilter = useCallback((val: string) => {
         setValue(val)
     },[])
-    const toggleDrawer = () => setOpenAdd(!openAdd)
+    const toggleDrawer = () => setOpenAdd(!OpenAdd)
     return(
         <Grid container spacing={6} >
             <Grid item xs={12}>
                 <Card>
-                    <CardHeader title='Registro de gps' sx={{pb:0, '& .MuiCardHeader-title':{letterSpacing:'.15px'}}} />
+                    <CardHeader title='Registro de tarifas' sx={{pb:0, '& .MuiCardHeader-title':{letterSpacing:'.15px'}}} />
                     <TableHeader 
                     value={value} 
                     handleFilter={handleFilter} 
                     toggle={toggleDrawer}  
-                    placeholder='Busquedad de gps'
-                    title='Conectar nuevo gps'
+                    placeholder='Busquedad de tarifas'
+                    title='Nueva tarifa'
                     disable={isError || isLoading}
                     />
                     {isLoading?<Box sx={{textAlign:'center'}}>Cargando datos...</Box>:!isError?
@@ -77,10 +72,10 @@ const Gps = ()=>{
                     }
                 </Card>
             </Grid>
-            <AddDraw open={openAdd} toggle={toggleDrawer} title='Registro de gps'>
-                <Conect toggle={openAdd}/>
+            <AddDraw open={OpenAdd} toggle={toggleDrawer} title='Registro de Tarifas'>
+                <AddTarifas toggle={toggleDrawer}/>
             </AddDraw>
         </Grid>
     )
 }
-export default Gps
+export default Tarifas

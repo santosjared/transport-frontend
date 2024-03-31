@@ -5,29 +5,29 @@ import { useQuery } from "react-query"
 import AddDraw from "src/components/addDraw"
 import TableHeader from "src/components/tableHeader"
 import { useService } from "src/hooks/useService"
-import Conect from "./conect"
+import AddLinea from "./register"
 
 
 const columns = [
     {
         flex:0.2,
-        field:'name',
-        headerName:'Nombre',
+        field:'linea',
+        headerName:'Nombre de la linea',
     },
     {
         flex:0.2,
-        field:'mark',
-        headerName:'Marca',
+        field:'route',
+        headerName:'Rutas y paradas',
     },
     {
         flex:0.2,
-        field:'model',
-        headerName:'Modelo',
+        field:'schodule',
+        headerName:'Horarios'
     },
     {
-        flex:0.2,
-        field:'conect',
-        headerName:'Estado de Conexion'
+        title:0.2,
+        field:'tarifa',
+        headerName:'Tarifas'
     },
     {
         flex:0.2,
@@ -40,7 +40,7 @@ const columns = [
         headerName:'Acciones'
     }
 ]
-const Gps = ()=>{
+const Lineas = ()=>{
     const [pageSize,setPageSize]=useState<number>(10)
     const [value, setValue] = useState<string>('')
     const [openAdd, setOpenAdd] = useState<boolean>(false)
@@ -54,13 +54,13 @@ const Gps = ()=>{
         <Grid container spacing={6} >
             <Grid item xs={12}>
                 <Card>
-                    <CardHeader title='Registro de gps' sx={{pb:0, '& .MuiCardHeader-title':{letterSpacing:'.15px'}}} />
+                    <CardHeader title='Registro de lineas' sx={{pb:0, '& .MuiCardHeader-title':{letterSpacing:'.15px'}}} />
                     <TableHeader 
                     value={value} 
                     handleFilter={handleFilter} 
                     toggle={toggleDrawer}  
-                    placeholder='Busquedad de gps'
-                    title='Conectar nuevo gps'
+                    placeholder='Busquedad de lineas'
+                    title='Nueva linea'
                     disable={isError || isLoading}
                     />
                     {isLoading?<Box sx={{textAlign:'center'}}>Cargando datos...</Box>:!isError?
@@ -77,10 +77,10 @@ const Gps = ()=>{
                     }
                 </Card>
             </Grid>
-            <AddDraw open={openAdd} toggle={toggleDrawer} title='Registro de gps'>
-                <Conect toggle={openAdd}/>
+            <AddDraw open={openAdd} toggle={toggleDrawer} title='Registro de la linea'>
+                <AddLinea toggle={toggleDrawer}/>
             </AddDraw>
         </Grid>
     )
 }
-export default Gps
+export default Lineas
