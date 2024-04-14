@@ -14,6 +14,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import { fetchData } from 'src/store/apps/bus'
 import { deleteBus } from 'src/store/apps/bus'
 import getConfig from '../../../configs/environment'
+import AddDraw from 'src/components/addDraw'
+import RegisterBus from './register'
 
 const StyledLink = styled(Link)(({ theme })=>({
     fontWeight: 500,
@@ -184,7 +186,7 @@ const columns = [
       flex:0.2,
       minWidth:170,
       field:'fuel',
-      headerName:'Combustible',
+      headerName:'Gps',
       rederCell: ({row}:TypeCell)=>{
         return(
           <Typography noWrap variant='body2'>
@@ -223,10 +225,10 @@ const columns = [
         }
     }
 ]
-const Choferes = ()=>{
+const Bus = ()=>{
     const [pageSize,setPageSize]=useState<number>(10)
     const [value, setValue] = useState<string>('')
-    const [addUserOpen, setAddUserOpen] = useState<boolean>(false)
+    const [draw, setDraw] = useState<boolean>(false)
     const dispatch = useDispatch<AppDispatch>()
     const store = useSelector((state:RootState)=>state.bus)
 
@@ -238,13 +240,13 @@ const Choferes = ()=>{
     const handleFilter = useCallback((val: string) => {
         setValue(val)
       }, [])
-      const toggleAddUserDrawer = () => setAddUserOpen(!addUserOpen)
+      const toggleDrawer = () => setDraw(!draw)
     return(
         <Grid container spacing={6}>
             <Grid item xs={12}>
                 <Card>
                     <CardHeader title='Lista de Microbuses' sx={{pb:4, '& .MuiCardHeader-title':{letterSpacing:'.15px'}}}/>
-                    <TableHeader value={value} handleFilter={handleFilter} toggle={toggleAddUserDrawer} />
+                    <TableHeader value={value} handleFilter={handleFilter} toggle={toggleDrawer} />
                     <DataGrid
                     autoHeight
                     rows={rowsData}
@@ -258,8 +260,11 @@ const Choferes = ()=>{
                     />
                 </Card>
             </Grid>
-            <AddUserDrawer open={addUserOpen} toggle={toggleAddUserDrawer} />
+            <AddUserDrawer open={draw} toggle={toggleDrawer} />
+            {/* <AddDraw open={draw} toggle={toggleDrawer} title='Registro de Horarios'>
+                <RegisterBus toggle={toggleDrawer}/>
+            </AddDraw> */}
         </Grid>
     )
 }
-export default Choferes
+export default Bus

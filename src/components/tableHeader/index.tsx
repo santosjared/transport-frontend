@@ -16,21 +16,24 @@ interface TableHeaderProps {
     const { handleFilter, toggle, value, placeholder, title,disable } = props
   
     return (
-      <Box sx={{ p: 5, pb: 3, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
+      <Box sx={{ p: 5, pb: 3, display: 'flex', flexWrap: 'wrap',justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap'}}>
           <TextField
             size='small'
             value={value}
-            sx={{ mr: 6, mb: 2 }}
+            sx={{mr:2}}
             placeholder={placeholder}
             onChange={e => handleFilter(e.target.value)}
             disabled={disable}
           />
-  
+          <Button sx={{ mb: 2 }} variant='contained' disabled={disable}>
+            BUSCAR
+          </Button>
+          </Box>
           <Button sx={{ mb: 2 }} onClick={toggle} variant='contained' disabled={disable}>
             {title}
           </Button>
-        </Box>
+      
       </Box>
     )
   }

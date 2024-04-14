@@ -13,20 +13,20 @@ const navigation = (): VerticalNavItemsType => {
       path:'/minibus/monitoreo',
       icon:'eos-icons:monitoring'
     },
-    // {
-    //   title:'Choferes',
-    //   path:'/minibus/choferes',
-    //   icon:'healthicons:truck-driver',
-    //   children:[{
-    //     title:'Lista de Choferes',
-    //     path:'/minibus/choferes'
-    //   },
-    //   {
-    //     title:'Licencias de Conducir',
-    //     path:'/minibus/licence'
-    //   }
-    // ]
-    // },
+    {
+      title:'Choferes',
+      path:'/minibus/choferes',
+      icon:'healthicons:truck-driver',
+      children:[{
+        title:'Lista de Choferes',
+        path:'/minibus/choferes'
+      },
+      {
+        title:'Licencias de Conducir',
+        path:'/minibus/licence'
+      }
+    ]
+    },
     {
       title: 'Registro de microbuses',
       path: '/minibus/bus',

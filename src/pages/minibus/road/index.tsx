@@ -33,16 +33,6 @@ interface RoadData {
 interface TypeCell {
   row:RoadData
 }
-const StyledLink = styled(Link)(({ theme })=>({
-    fontWeight: 500,
-    fontSize: '0.8rem',
-    cursor: 'pointer',
-    textDecoration: 'none',
-    color: theme.palette.text.secondary,
-    '&:hover': {
-        color: theme.palette.primary.main
-      }
-}))
 
 const columns = [
   {

@@ -16,7 +16,7 @@ import { ChangeEvent, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from 'src/store';
 import { addBus } from 'src/store/apps/bus';
-import { Card, CardMedia, Grid } from '@mui/material';
+import { Autocomplete, Card, CardMedia, Grid } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import axios from 'axios';
 import { useService } from 'src/hooks/useService';
@@ -66,7 +66,11 @@ interface SidebarAddUserType {
     const [errorMessage,setErrorMessage] = useState('')
     const [photo,setPhoto] = useState<string>('/images/default/licence.png')
     const [file, setFile]= useState<File|null>(null)
+    const [onSelectGps,setOnselectGpas] = useState<any>(null)
     const {open, toggle} = props
+    const {Get} = useService()
+    const {data}=useQuery('divice',()=>Get('/divice'))
+    console.log(onSelectGps)
     const dispatch = useDispatch<AppDispatch>()
     const {
       reset,
@@ -78,12 +82,6 @@ interface SidebarAddUserType {
       defaultValues,
     })
     
-    // const handleChangeValue = (e:ChangeEvent<HTMLInputElement>) => {
-    //   setFormData({
-    //     ...formData,
-    //     [e.target.value]: e.target.value
-    //   })
-    // }
     const handleChangeImage = (e:ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files.length > 0) {
         const file = e.target.files?.[0] || null
@@ -101,12 +99,6 @@ interface SidebarAddUserType {
     }
     const{Post}=useService()
     const onSubmit = async (data:BusData) => {
-      // console.log('dtas',data)
-      // const response = await axios.post('http://localhost:3001/bus', data, {
-      //   headers: {
-      //     'Content-Type': 'multipart/form-data', // Importante para el envío de archivos
-      //   },
-      // });
       dispatch(addBus(data))
       toggle()
       reset()
@@ -249,22 +241,30 @@ interface SidebarAddUserType {
             {errors.numberSeating && <FormHelperText sx={{ color: 'error.main' }}></FormHelperText>}
           </FormControl>
           <FormControl fullWidth sx={{ mb: 6 }}>
-            <Controller
-              name='fuel'
-              control={control}
-              rules={{ required: true }}
-              render={({ field: { value, onChange } }) => (
+              <Autocomplete 
+              options={data?.data as Array<{name:string}>}
+              getOptionLabel={(option)=>option.name}
+              onChange={(event,value)=> setOnselectGpas(value)}
+              renderInput={(params)=> (
                 <TextField
-                value={value}
-                  label='Combustible'
-                  onChange={onChange}
-                  placeholder='Diésel'
-                  error={Boolean(errors.fuel)}
+                {...params}
+                label='Buscar rutas y paradas'
+                InputProps={{
+                  ...params.InputProps,
+                  startAdornment:(
+                    <>
+                    {params.InputProps.startAdornment}
+                    </>
+                  )
+                }}
                 />
+
               )}
-            />
-            {errors.fuel && <FormHelperText sx={{ color: 'error.main' }}></FormHelperText>}
-          </FormControl>
+              sx={{borderTopLeftRadius:0, borderTopRightRadius:0}}
+              >
+
+              </Autocomplete>
+            </FormControl>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<SaveIcon/>}>
               Guaradar

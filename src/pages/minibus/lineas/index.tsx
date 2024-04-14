@@ -1,4 +1,4 @@
-import { Box, Card, CardHeader, Grid } from "@mui/material"
+import { Box, Card, CardHeader, Grid, Typography } from "@mui/material"
 import { DataGrid } from "@mui/x-data-grid"
 import { useCallback, useState } from "react"
 import { useQuery } from "react-query"
@@ -11,8 +11,15 @@ import AddLinea from "./register"
 const columns = [
     {
         flex:0.2,
-        field:'linea',
+        field:'name',
         headerName:'Nombre de la linea',
+        renderCell:()=>{
+            return(
+                <Typography noWrap variant="body2">
+
+                </Typography>
+            )
+        }
     },
     {
         flex:0.2,
@@ -25,9 +32,14 @@ const columns = [
         headerName:'Horarios'
     },
     {
-        title:0.2,
+        flex:0.2,
         field:'tarifa',
         headerName:'Tarifas'
+    },
+    {
+        flex:0.2,
+        field:'buses',
+        headerName:'Buses'
     },
     {
         flex:0.2,
