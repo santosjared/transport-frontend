@@ -7,6 +7,8 @@ import 'leaflet-realtime';
 import io from 'socket.io-client';
 import getConfig from 'src/configs/environment';
 import type { FeatureCollection } from 'geojson';
+import { useSocket } from "src/hooks/useSocket";
+import { Avatar } from "@mui/material";
 
 interface Props {
     center:[lat:number,lng:number]
@@ -15,6 +17,17 @@ const RealtimeMap = ({center}:Props) => {
     const mapRef = useRef(null);
     const [map, setMap] = useState<null | L.Map>(null);
     const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
+    const [data, setData] = useState()
+
+    const {socket, isConnected, isLoading, isError} = useSocket()
+    
+    useEffect(()=>{
+        if(isConnected){
+          socket?.on('reSedLocation',(data)=>{
+            setData(data)
+          })
+        }
+      },[isConnected,socket])
 
     useEffect(() => {
         if (mapRef.current) {
@@ -40,30 +53,39 @@ const RealtimeMap = ({center}:Props) => {
         }
     }, [geojson]);
 
-    useEffect(() => {
-        const socket = io(getConfig().backendURI);
+    // const avatarIcon = L.divIcon({
+    //     className: 'leaflet-div-icon',
+    //     html: ReactDOMServer.renderToString(
+    //         <Avatar src="/ruta/de/tu/imagen/avatar.png" alt="Avatar" />
+    //     ),
+    //     iconSize: [38, 38], // Tamaño del avatar
+    //     iconAnchor: [22, 94], // Punto de anclaje del avatar
+    //     popupAnchor: [-3, -76] // Punto de anclaje del popup
+    // });
+    // useEffect(() => {
+    //     const socket = io(getConfig().backendURI);
 
-        socket.on('reSedLocation', (data) => {
+    //     socket.on('reSedLocation', (data) => {
 
-            setGeojson({
-                type: 'FeatureCollection',
-                features: [
-                    {
-                        type: 'Feature',
-                        properties: {},
-                        geometry: {
-                            type: 'Point',
-                            coordinates: [data.location.lng, data.location.lat],
-                        },
-                    },
-                ],
-            });
-        });
+    //         setGeojson({
+    //             type: 'FeatureCollection',
+    //             features: [
+    //                 {
+    //                     type: 'Feature',
+    //                     properties: {},
+    //                     geometry: {
+    //                         type: 'Point',
+    //                         coordinates: [data.cordenates.lat,data.cordenates.lng],
+    //                     },
+    //                 },
+    //             ],
+    //         });
+    //     });
 
-        return () => {
-            socket.disconnect();
-        };
-    }, []);
+    //     return () => {
+    //         socket.disconnect();
+    //     };
+    // }, []);
 
     return <div ref={mapRef} style={{ height: '500px' }} />;
 };

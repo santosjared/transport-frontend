@@ -1,5 +1,5 @@
-import React, { useCallback, useState, MouseEvent, useEffect} from 'react'
-import { Box, Button, Card, CardHeader, Grid, IconButton, Typography} from '@mui/material'
+import React, { useCallback, useState, MouseEvent} from 'react'
+import { Avatar, Box, Button, Card, CardHeader, Grid, IconButton, Typography} from '@mui/material'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import {styled} from '@mui/material/styles'
@@ -12,19 +12,23 @@ import AddChofer from './register'
 import TableHeader from 'src/components/tableHeader'
 import { useService } from 'src/hooks/useService'
 import { useQuery } from 'react-query'
-import { format } from 'date-fns'
+import getConfig from 'src/configs/environment'
 import CustomChip from 'src/@core/components/mui/chip'
 
-interface ChoferesData {
-  id:string
-  userId:string
-  category:string
-  dateEmition:string
-  dateExpire:string
-  status:boolean
+interface usersData {
+  name:string;
+  lastName:string;
+  ci:string;
+  address:string;
+  phone:string;
+  gender:string;
+  contry:string;
+  city:string
+  profile:string;
+  status:boolean;
 }
-interface TypeCell {
-  row:ChoferesData
+interface RowsTypeCell {
+  row:usersData
 }
 const RowOptions = ({ id }: { id: number | string }) => {
     // ** Hooks
@@ -84,110 +88,108 @@ const RowOptions = ({ id }: { id: number | string }) => {
       </>
     )
   }
-
-  const Names = ({id}:{id:number | string}) =>{
-
-    const [data, setData] = useState<{ name: string, lastName:string }>({ name: '', lastName:'' })
-
-    const { GetId } = useService()
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const fetch = await GetId('/users', id)
-            setData(fetch.data)
-        }
-        fetchData()
-    }, [id])
-    return (<Typography noWrap variant='body2'>{`${data.name} ${data.lastName}`}</Typography>)
-  }
-  const RenderCi = ({id}:{id:number | string}) =>{
-
-    const [data, setData] = useState<{ ci:string }>({ ci: ''})
-
-    const { GetId } = useService()
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const fetch = await GetId('/users', id)
-            setData(fetch.data)
-        }
-        fetchData()
-    }, [id])
-    return (<Typography noWrap variant='body2'>{data.ci}</Typography>)
-  }
+  
 const columns = [
     {
         flex:0.2,
         minWidth:200,
         field:'fullName',
         headerName:'Nombres y Apellidos',
-        renderCell:({row}:TypeCell)=>{
+        renderCell:({row}:RowsTypeCell)=>{
           return(
-            <Names id={row.userId}/>
-          )
+          <Box sx={{display:'flex', justifyContent:'space-between'}}>
+            <Avatar alt='profile' src={`${getConfig().backendURI}${row.profile}`} sx={{border:'solid 1px #E0E0E0'}}/>
+            <Typography variant='body2' sx={{margin:2}}>{`${row.name} ${row.lastName}`}</Typography>
+          </Box>)
         }
     },
     {
         flex:0.2,
-        minWidth:80,
+        minWidth:90,
         field:'ci',
         sortable:false,
         headerName:'CI',
-        renderCell:({row}:TypeCell)=>{
-          return(<RenderCi id={row.userId}/>)
-        }
-    },
-    {
-        flex:0.2,
-        minWidth:50,
-        field:'category',
-        sortable:false,
-        headerName:'Categoría de licencia',
-        renderCell:({row}:TypeCell) =>{
+        renderCell:({row}:RowsTypeCell)=>{
           return(
-            <Typography noWrap variant='body2'>{row.category}</Typography>
+            <Typography variant='body2' noWrap>{row.ci}</Typography>
           )
         }
     },
     {
         flex:0.2,
         minWidth:90,
-        field:'dateEmition',
+        field:'address',
         sortable:false,
-        headerName:'Fecha de Emision',
-        renderCell:({row}:TypeCell)=>{
+        headerName:'Dirección',
+        renderCell:({row}:RowsTypeCell)=>{
           return(
-            <Typography noWrap variant='body2'>{format(new Date(row.dateEmition), 'dd/MM/yyyy')}</Typography>
+            <Typography  variant='body2' noWrap>{row.address}</Typography>
           )
         }
     },
     {
         flex:0.2,
         minWidth:90,
-        field:'dateExpire',
+        field:'phone',
         sortable:false,
-        headerName:'Fecha de expiración',
-        renderCell:({row}:TypeCell)=>{
+        headerName:'Celular',
+        renderCell:({row}:RowsTypeCell)=>{
           return(
-            <Typography noWrap variant='body2'>{format(new Date(row.dateExpire), 'dd/MM/yyyy')}</Typography>
+            <Typography noWrap variant='body2'>{row.phone}</Typography>
           )
         }
+    },
+    {
+        flex:0.2,
+        minWidth:90,
+        field:'gender',
+        sortable:false,
+        headerName:'Género',
+        renderCell:({row}:RowsTypeCell)=>{
+          return(
+            <Typography noWrap variant='body2'>{row.gender}</Typography>
+          )
+        }
+    },
+    {
+        flex:0.2,
+        minWidth:90,
+        field:'contry',
+        sortable:false,
+        headerName:'Nacionalidad',
+        renderCell:({row}:RowsTypeCell)=>{
+          return(
+            <Typography noWrap variant='body2'>{row.contry}</Typography>
+          )
+        }
+    },
+    {
+      flex:0.2,
+      minWidth:90,
+      field:'city',
+      sortable:false,
+      headerName:'Localidad',
+      renderCell:({row}:RowsTypeCell)=>{
+        return(
+          <Typography noWrap variant='body2'>{row.city}</Typography>
+        )
+      }
     },
     {
         flex:0.2,
         minWidth:90,
         field:'status',
         variant:'outlined',
-        headerName:'Estado',
-        renderCell:({row}:TypeCell)=>{
-          return(
+        headerName:'Estados',
+        renderCell: ({ row }: RowsTypeCell) => {
+          return (
             <CustomChip
-            skin='light'
-            size='small'
-            label={row.status? 'Activo':'Inactivo'}
-            color={row.status? 'success':'secondary'}
-            sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
-          />
+              skin='light'
+              size='small'
+              label={row.status? 'Activo':'Inactivo'}
+              color={row.status? 'success':'secondary'}
+              sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
+            />
           )
         }
     },
@@ -202,29 +204,28 @@ const columns = [
         }
     }
 ]
-
-const Choferes = ()=>{
+const Users = ()=>{
     const [pageSize,setPageSize]=useState<number>(10)
     const [value, setValue] = useState<string>('')
     const [drawOpen, setDrawOpen] = useState<boolean>(false)
-    
-    const {Get} = useService()
-    const {data, isLoading, isError} = useQuery('choferes',()=>Get('/choferes'))
     const handleFilter = useCallback((val: string) => {
         setValue(val)
       }, [])
+    
+    const {Get} = useService()  
+    const {data, isLoading, isError} = useQuery('users',()=>Get('/users'))
       const toggleDrawer = () => setDrawOpen(!drawOpen)
     return(
         <Grid container spacing={6}>
             <Grid item xs={12}>
                 <Card>
-                <CardHeader title='Registro de choferes' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
+                <CardHeader title='Registro de usuarios' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
                     <TableHeader
                         value={value}
                         handleFilter={handleFilter}
                         toggle={toggleDrawer}
-                        placeholder='Busquedad de choferes'
-                        title='Nueva licencia de conducir'
+                        placeholder='Busquedad de Usuarios'
+                        title='Nuevo Usuario'
                         disable={false}
                     />
                     {isLoading?<Box sx={{textAlign:'center'}}>Cargando datos...</Box>:!isError?
@@ -241,10 +242,10 @@ const Choferes = ()=>{
                     }
                 </Card>
             </Grid>
-            <AddDraw open={drawOpen} toggle={toggleDrawer} title='Registro de la linea'>
+            <AddDraw open={drawOpen} toggle={toggleDrawer} title='Registro de la chofer'>
                 <AddChofer toggle={toggleDrawer} />
             </AddDraw>
         </Grid>
     )
 }
-export default Choferes
+export default Users

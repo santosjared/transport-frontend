@@ -1,12 +1,7 @@
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
-import Drawer from "@mui/material/Drawer"
 import { styled } from '@mui/material/styles'
-import { Controller, useForm } from "react-hook-form"
-import Box, { BoxProps } from '@mui/material/Box'
-import Typography from "@mui/material/Typography"
-import IconButton from "@mui/material/IconButton"
-import Icon from "src/@core/components/icon"
+import Box from '@mui/material/Box'
 import FormControl from "@mui/material/FormControl"
 import TextField from "@mui/material/TextField"
 import FormHelperText from "@mui/material/FormHelperText"
@@ -14,12 +9,10 @@ import Button from "@mui/material/Button"
 import { ChangeEvent, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from 'src/store';
-import { addBus } from 'src/store/apps/bus';
-import { Autocomplete, Card, CardMedia, Grid } from '@mui/material';
+import { Autocomplete, Card, CardMedia } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import axios from 'axios';
 import { useService } from 'src/hooks/useService';
-import { useMutation, useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 
 interface Props {
     toggle: () => void
@@ -40,12 +33,42 @@ const RegisterBus = ({ toggle }: Props) => {
     const [errorMessage, setErrorMessage] = useState('')
     const [photo, setPhoto] = useState<string>('/images/default/licence.png')
     const [file, setFile] = useState<File | null>(null)
-    const [onSelectGps, setOnselectGpas] = useState<any>(null)
+    const [trademark, setTrademark] = useState<string | null>(null)
+    const [model, setModel] = useState<string | null>(null)
+    const [type, setType] = useState<string | null>(null)
+    const [plaque, setPlaque] = useState<string | null>('')
+    const [cantidad, setCantidad] = useState<string | null>(null)
 
-    const { Get } = useService()
-    const { data } = useQuery('divice', () => Get('/divice'))
-    const dispatch = useDispatch<AppDispatch>()
+    const { Post } = useService()
 
+    const queryClient = useQueryClient()
+    const mutation = useMutation((Data: object) => Post('/bus', Data), {
+        onSuccess: () => {
+            queryClient.invalidateQueries('bus')
+        }
+    })
+    const handleSaveOnclick = () => {
+        const data = {
+            trademark: trademark,
+            model: model,
+            type: type,
+            plaque: plaque,
+            cantidad: cantidad,
+            photo: file
+        }
+        mutation.mutate(data)
+        handleReset();
+        toggle();
+    }
+    const handleReset = () => {
+        setTrademark(null)
+        setModel(null)
+        setType(null)
+        setPlaque(null)
+        setCantidad(null)
+        setFile(null)
+        setPhoto('/images/default/licence.png')
+    }
     const handleChangeImage = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files?.[0] || null
@@ -61,19 +84,9 @@ const RegisterBus = ({ toggle }: Props) => {
         }
     }
     const handleClose = () => {
-        setPhoto('/images/default/licence.png')
-        toggle()
-    }
-    const handleImage = (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0]
-        if (file?.type.startsWith('image/')) {
-            const imgURL = URL.createObjectURL(file);
-            setPhoto(imgURL);
-            setErrorMessage('')
-        } else {
-            setErrorMessage('Por favor, selecciona un archivo de imagen válido.')
-            setPhoto('/images/default/licence.png')
-        }
+        handleReset();
+        toggle();
+        
     }
     return (
         <Box sx={{ border: '1px solid #EEEDED', borderRadius: 1, p: 5 }}>
@@ -85,85 +98,70 @@ const RegisterBus = ({ toggle }: Props) => {
                         startIcon={<CloudUploadIcon />}>
                         Seleccionar Foto de MicroBus
                         <VisuallyHiddenInput
+                        autoComplete='off'
                             type="file"
                             onChange={handleChangeImage}
                             accept='image/*' />
                     </Button>
-                    {errorMessage && <Box style={{ color: 'red' }}>{errorMessage}</Box>}
+                    {errorMessage && <FormHelperText sx={{ color: 'error.main' }}>{errorMessage}</FormHelperText>}
                 </Card>
             </FormControl>
             <FormControl fullWidth sx={{ mb: 6 }}>
                 <TextField
-                    value={''}
+                    value={trademark}
                     label='Marca'
                     placeholder='Nissan'
+                    autoComplete='off'
+                    onChange={(e) => setTrademark(e.target.value)}
                 />
-                {<FormHelperText sx={{ color: 'error.main' }}></FormHelperText>}
             </FormControl>
             <FormControl fullWidth sx={{ mb: 6 }}>
                 <TextField
-                    value={''}
+                    value={model}
                     label='Modelo'
                     placeholder='2006'
+                    autoComplete='off'
+                    onChange={(e) => setModel(e.target.value)}
                 />
                 {<FormHelperText sx={{ color: 'error.main' }}></FormHelperText>}
             </FormControl>
             <FormControl fullWidth sx={{ mb: 6 }}>
                 <TextField
-                    value={''}
+                    value={type}
                     label='Tipo de Vehículo'
                     placeholder='Civilian'
+                    autoComplete='off'
+                    onChange={(e) => setType(e.target.value)}
                 />
                 {<FormHelperText sx={{ color: 'error.main' }}></FormHelperText>}
             </FormControl>
             <FormControl fullWidth sx={{ mb: 6 }}>
                 <TextField
-                    value={''}
+                    value={plaque}
                     label='Placa del Vehículo'
                     placeholder='XYZ 897'
+                    autoComplete='off'
+                    onChange={(e) => setPlaque(e.target.value)}
                 />
                 {<FormHelperText sx={{ color: 'error.main' }}></FormHelperText>}
             </FormControl>
             <FormControl fullWidth sx={{ mb: 6 }}>
                 <TextField
-                    value={''}
+                    value={cantidad}
                     type='number'
                     label='Cantidad de asientos'
                     placeholder='32'
+                    autoComplete='off'
+                    onChange={(e) => setCantidad(e.target.value)}
                 />
                 {<FormHelperText sx={{ color: 'error.main' }}></FormHelperText>}
             </FormControl>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-                <Autocomplete
-                    options={data?.data as Array<{ name: string }>}
-                    getOptionLabel={(option) => option.name}
-                    onChange={(event, value) => setOnselectGpas(value)}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            label='Asignar GPS'
-                            InputProps={{
-                                ...params.InputProps,
-                                startAdornment: (
-                                    <>
-                                        {params.InputProps.startAdornment}
-                                    </>
-                                )
-                            }}
-                        />
-
-                    )}
-                    sx={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
-                >
-
-                </Autocomplete>
-            </FormControl>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<SaveIcon />}>
-                    Guaradar
-                </Button>
                 <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
                     Cancel
+                </Button>
+                <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} onClick={handleSaveOnclick} startIcon={<SaveIcon />}>
+                    Guaradar
                 </Button>
             </Box>
         </Box>

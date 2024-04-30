@@ -22,7 +22,6 @@ export const useService = () => {
     return await instance.put(`${endpoint}/${id}`,data,getHeaders(data))
   }
   const Delete = async (endpoint:string,id:string | number)=>{
-    console.log('callme')
   return await instance.delete(`${endpoint}/${id}`)
   }
   return {

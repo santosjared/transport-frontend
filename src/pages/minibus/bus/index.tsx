@@ -4,46 +4,54 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import {styled} from '@mui/material/styles'
 import { DataGrid} from '@mui/x-data-grid'
-import TableHeader from 'src/views/apps/minibus/bus/tableHeader'
 import Link from 'next/link'
 import CustomChip from 'src/@core/components/mui/chip'
 import Icon from 'src/@core/components/icon'
 import AddUserDrawer from 'src/views/apps/minibus/bus/AddUserDrawer'
 import { AppDispatch, RootState } from 'src/store'
 import { useSelector, useDispatch } from 'react-redux'
-import { fetchData } from 'src/store/apps/bus'
 import { deleteBus } from 'src/store/apps/bus'
 import getConfig from '../../../configs/environment'
 import AddDraw from 'src/components/addDraw'
 import RegisterBus from './register'
-
-const StyledLink = styled(Link)(({ theme })=>({
-    fontWeight: 500,
-    fontSize: '0.8rem',
-    cursor: 'pointer',
-    textDecoration: 'none',
-    color: theme.palette.text.secondary,
-    '&:hover': {
-        color: theme.palette.primary.main
-      }
-}))
+import TableHeader from 'src/components/tableHeader'
+import { useQuery } from 'react-query'
+import { useService } from 'src/hooks/useService'
+import { Props } from 'react-apexcharts'
+import DialogUsers from './Dialog'
 
 type Bus = {
-  _id: string | number
   id:string,
   trademark:string,
   model:number,
   type:string,
   plaque:string,
-  numberSeating:number,
-  fuel:string,
+  cantidad:number,
+  gps:string,
   photo:string,
   status:boolean
 }
 interface TypeCell {
   row:Bus
 }
-const RowOptions = ({ id }: { id: number | string }) => {
+const RenderGps = ({ id }: { id: number | string }) => {
+  
+  const {GetId} = useService()
+  const {data} = useQuery('gps', ()=>GetId('/divice',id))
+  return(
+    <Typography noWrap variant='body2'>
+    {data?.data.name}
+  </Typography>
+  )
+}
+const Bus = ()=>{
+
+  const [pageSize,setPageSize]=useState<number>(10)
+  const [value, setValue] = useState<string>('')
+  const [draw, setDraw] = useState<boolean>(false)
+  const [openUsers,setOpenUsers] = useState(false)
+  const [idBus,setIdBus] = useState<number | string>('')
+  const RowOptions = ({ id }: { id: number | string }) => {
     // ** Hooks
     const dispatch = useDispatch<AppDispatch>()
   
@@ -58,7 +66,11 @@ const RowOptions = ({ id }: { id: number | string }) => {
     const handleRowOptionsClose = () => {
       setAnchorEl(null)
     }
-  
+    const handleUsersClick = () => {
+      setIdBus(id)
+      DrawUser();
+      setAnchorEl(null)
+    }
     const handleDelete = () => {
       dispatch(deleteBus(id))
       handleRowOptionsClose()
@@ -85,10 +97,8 @@ const RowOptions = ({ id }: { id: number | string }) => {
           PaperProps={{ style: { minWidth: '8rem' } }}
         >
           <MenuItem
-            component={Link}
             sx={{ '& svg': { mr: 2 } }}
-            onClick={handleRowOptionsClose}
-            href='/apps/user/view/overview/'
+            onClick={handleUsersClick}
           >
             <Icon icon='healthicons:truck-driver' fontSize={20} color='#00a0f4'/>
             Asignar Chofer
@@ -105,8 +115,7 @@ const RowOptions = ({ id }: { id: number | string }) => {
       </>
     )
   }
-  
-const columns = [
+  const columns = [
     {
         flex:0.2,
         minWidth:200,
@@ -115,10 +124,10 @@ const columns = [
         renderCell: ({row}:TypeCell)=>{
           return(
             <Box sx={{display:'flex'}}>
-              <Box sx={{display:'flex'}}>
-                <img src={`${getConfig().backendURI}${row.photo}`} height={45} width={45}></img>
+              <Box sx={{display:'flex', border:'solid 1px #E0E0E0', borderRadius:0.5}}>
+                <img src={`${getConfig().backendURI}${row.photo}`} height={35} width={35} style={{borderRadius:5}}></img>
               </Box>
-              <Box sx={{display:'flex', paddingTop:3, paddingLeft:1}}>
+              <Box sx={{display:'flex', paddingTop:2, paddingLeft:1}}>
                 <Typography noWrap variant='body2'>
                   {row.trademark}
                 </Typography>
@@ -172,26 +181,13 @@ const columns = [
     {
       flex:0.2,
       minWidth:90,
-      field:'numberSeating',
+      field:'cantidad',
       headerName:'Cantidad de Asientos',
       renderCell:({row}:TypeCell)=>{
         return(
           <Typography noWrap variant='body2'>
-            {row.numberSeating}
+            {row.cantidad}
           </Typography>
-        )
-      }
-    },
-    {
-      flex:0.2,
-      minWidth:170,
-      field:'fuel',
-      headerName:'Gps',
-      rederCell: ({row}:TypeCell)=>{
-        return(
-          <Typography noWrap variant='body2'>
-          {row.fuel}
-        </Typography>
         )
       }
     },
@@ -202,7 +198,6 @@ const columns = [
         variant:'outlined',
         headerName:'Estado',
         renderCell: ({ row }: TypeCell) => {
-          
           return (
             <CustomChip
               skin='light'
@@ -221,49 +216,49 @@ const columns = [
         sortable:false,
         headerName:'Acciones',
         renderCell:({row}:TypeCell)=>{
-            return(<RowOptions id={row._id}/>)
+            return(<RowOptions id={row.id}/>)
         }
     }
 ]
-const Bus = ()=>{
-    const [pageSize,setPageSize]=useState<number>(10)
-    const [value, setValue] = useState<string>('')
-    const [draw, setDraw] = useState<boolean>(false)
-    const dispatch = useDispatch<AppDispatch>()
-    const store = useSelector((state:RootState)=>state.bus)
-
-    useEffect(()=>{
-   dispatch(fetchData())
-    },[])
-
-   const rowsData = store.data.map((rows:any,index:any)=>({...rows, id:index+1}))
+    const {Get}=useService()
+    const {isError,isLoading, data} = useQuery('bus',()=>Get('/bus'))
+    
     const handleFilter = useCallback((val: string) => {
         setValue(val)
       }, [])
       const toggleDrawer = () => setDraw(!draw)
+      const DrawUser = ()=>setOpenUsers(!openUsers)
     return(
         <Grid container spacing={6}>
             <Grid item xs={12}>
                 <Card>
                     <CardHeader title='Lista de Microbuses' sx={{pb:4, '& .MuiCardHeader-title':{letterSpacing:'.15px'}}}/>
-                    <TableHeader value={value} handleFilter={handleFilter} toggle={toggleDrawer} />
+                    <TableHeader 
+                    value={value} 
+                    handleFilter={handleFilter} 
+                    toggle={toggleDrawer}  
+                    placeholder='Busquedad de microbuses'
+                    title='Nuevo microbus'
+                    disable={isError || isLoading}
+                    />
+                    {isLoading?<Box sx={{textAlign:'center'}}>Cargando datos...</Box>:!isError?
                     <DataGrid
                     autoHeight
-                    rows={rowsData}
+                    rows={data?.data}
                     columns={columns}
-                    //checkboxSelection
                     pageSize={pageSize}
                     disableSelectionOnClick
                     rowsPerPageOptions={[10,25,50]}
                     sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
                     onPageSizeChange={(newPageSize: number) => setPageSize(newPageSize)}
-                    />
+                    />:''
+                    }
                 </Card>
             </Grid>
-            <AddUserDrawer open={draw} toggle={toggleDrawer} />
-            {/* <AddDraw open={draw} toggle={toggleDrawer} title='Registro de Horarios'>
+            <AddDraw open={draw} toggle={toggleDrawer} title='Registro de Horarios'>
                 <RegisterBus toggle={toggleDrawer}/>
-            </AddDraw> */}
+            </AddDraw>
+            <DialogUsers open={openUsers} toggle={DrawUser} id={idBus}/>
         </Grid>
     )
 }

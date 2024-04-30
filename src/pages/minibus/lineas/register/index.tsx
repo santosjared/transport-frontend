@@ -1,156 +1,202 @@
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
-
-import { Controller, useForm } from "react-hook-form"
-import Box from '@mui/material/Box'
-
-import FormControl from "@mui/material/FormControl"
-import TextField from "@mui/material/TextField"
-import FormHelperText from "@mui/material/FormHelperText"
-import Button from "@mui/material/Button"
-import { useService } from 'src/hooks/useService';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { Autocomplete } from '@mui/material';
+import * as React from 'react';
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
+import Stack from '@mui/material/Stack';
+import { Box, Button, Checkbox, FormControl } from '@mui/material';
 import { ChangeEvent, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useService } from 'src/hooks/useService';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
 
 interface Props {
   toggle: () => void
 }
-interface Data {
-  name: string
-  routs: string
-  schedule: string
-}
-const defaultValues = {
-  name: '',
-  routs: '',
-  schedule: '',
-}
+
+const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkedIcon = <CheckBoxIcon fontSize="small" />;
+
 const AddLinea = ({ toggle }: Props) => {
 
-  const [onSelect, setOnSelect] = useState<any>(null)
-  const [name,setName] = useState('')
+  const [onSelectRuote, setOnSelectRoute] = useState<any>(null)
+  const [name, setName] = useState<string | null>(null)
+  const [onSelectHorario, setOnSelectHorario] = useState<any>([])
+  const [onSelectTarifa, setOnSelectTarifa] = useState<any>([])
+  const [onSelectBus, setOnSelectBus] = useState<any>([])
 
-  const { Post, Get } = useService()
-  const queryClient = useQueryClient()
+  const { Get, Post } = useService()
   const routs = useQuery('road', () => Get('/road'))
-  const schedules = useQuery('schedules', () => Get('/horario'))
-  const tarifa = useQuery('tarifa',()=> Get('/tarifa'))
+  const horario = useQuery('horario', () => Get('/horario'))
+  const tarifa = useQuery('tarifa', () => Get('/tarifa'))
+  const bus = useQuery('bus', () => Get('/bus'))
+
+  const queryClient = useQueryClient()
   const mutation = useMutation((Data: object) => Post('/linea', Data), {
     onSuccess: () => {
-      queryClient.invalidateQueries('lineas');
+      queryClient.invalidateQueries('linea')
     }
   })
 
-  const handleNameOnchange = (e:ChangeEvent<HTMLInputElement>) =>{
-    setName(e.target.value)
-  }
+  React.useEffect(() => {
+    if (mutation.isError) {
+      console.log(mutation.error)
+    }
+  }, [mutation.error])
+
   const handleClose = () => {
     toggle()
+    handleReset()
   }
-  const Routs = () => {
-    if (routs.isError || routs.isLoading) return [{ name: '' }]
-    return routs.data?.data
+  const handleSaveOnclick = () => {
+    if (name) {
+      const IdBuses = onSelectBus.map((bus: any) => bus.id)
+      const IdHorario = onSelectHorario.map((horario: any) => horario.id)
+      const IdTarifa = onSelectTarifa.map((tarifa: any) => tarifa.id)
+      const data = {
+        name: name,
+        route: onSelectRuote? onSelectRuote.id : '',
+        horario: IdHorario,
+        tarifa: IdTarifa,
+        buses: IdBuses
+      }
+      mutation.mutate(data)
+      if (mutation.isSuccess) {
+        toggle()
+        handleReset()
+      }
+    }
   }
-  const Schulede = () => {
-    if (schedules.isError || schedules.isLoading) return [{ name: '' }]
-    return schedules.data?.data
-  }
-  const Tarifa = () =>{
-    if (tarifa.isError || tarifa.isLoading) return [{name:''}]
-    return tarifa.data?.data
+  const handleReset = () => {
+    setName(null)
+    setOnSelectRoute(null)
+    setOnSelectHorario([])
+    setOnSelectTarifa([])
+    setOnSelectBus([])
   }
   return (
-    <Box sx={{ border: '1px solid #EEEDED', borderRadius: 1, p: 5 }}>
-      <FormControl fullWidth sx={{ mb: 6 }}>
-        <TextField label='Nombre de la linea'
-          placeholder='Linea 110'
-          value={name}
-          onChange={handleNameOnchange}
-        />
-      </FormControl>
-      <FormControl fullWidth sx={{ mb: 6 }}>
-        <Autocomplete
-          options={Routs()}
-          getOptionLabel={Routs().name}
-          onChange={(event, value) => setOnSelect(value)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label='Asignar rutas y paradas'
-              InputProps={{
-                ...params.InputProps,
-                startAdornment: (
-                  <>
-                    {params.InputProps.startAdornment}
-                  </>
-                )
-              }}
-            />
+    <> {routs.isLoading || horario.isLoading || tarifa.isLoading || bus.isLoading ? 'loadin...' :
+      <Stack spacing={8} sx={{ border: 1, padding: 5, borderRadius: 1 }}>
+        <FormControl fullWidth>
+          <TextField label='Nombre de la linea'
+            placeholder='Linea 110'
+            value={name}
+            autoComplete='off'
+            onChange={(e) => setName(e.target.value)}
+          />
+        </FormControl>
+        <FormControl fullWidth >
+          <Autocomplete
+            options={routs.data?.data}
+            getOptionLabel={(option: any) => option.name}
+            onChange={(event, value) => setOnSelectRoute(value)}
+            value={onSelectRuote}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label='Asignar ruta'
+                autoComplete='off'
+                InputProps={{
+                  ...params.InputProps,
+                  startAdornment: (
+                    <>
+                      {params.InputProps.startAdornment}
+                    </>
+                  )
+                }}
+              />
 
-          )}
-          sx={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
-        >
-
-        </Autocomplete>
-      </FormControl>
-      <FormControl fullWidth sx={{ mb: 6 }}>
-        <Autocomplete
-          options={Schulede()}
-          getOptionLabel={Schulede().name}
-          onChange={(event, value) => setOnSelect(value)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label='Asignar Horarios'
-              InputProps={{
-                ...params.InputProps,
-                startAdornment: (
-                  <>
-                    {params.InputProps.startAdornment}
-                  </>
-                )
-              }}
-            />
-
-          )}
-          sx={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
-        >
-        </Autocomplete>
-      </FormControl>
-      <FormControl fullWidth sx={{ mb: 6 }}>
-        <Autocomplete
-          options={Tarifa()}
-          getOptionLabel={Tarifa().name}
-          onChange={(event, value) => setOnSelect(value)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label='Asignar Tafrifa'
-              InputProps={{
-                ...params.InputProps,
-                startAdornment: (
-                  <>
-                    {params.InputProps.startAdornment}
-                  </>
-                )
-              }}
-            />
-
-          )}
-          sx={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
-        >
-        </Autocomplete>
-      </FormControl>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<SaveIcon />}>
-          Guardar
-        </Button>
-        <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
-          Cancel
-        </Button>
-      </Box>
-    </Box>
-  )
+            )}
+            sx={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+          />
+        </FormControl>
+        <FormControl fullWidth >
+          <Autocomplete
+            multiple
+            id="checkboxes-tags-demo"
+            options={horario.data?.data}
+            value={onSelectHorario}
+            disableCloseOnSelect
+            onChange={(e, value) => setOnSelectHorario(value)}
+            getOptionLabel={(option: any) => option.name}
+            renderOption={(props, option: any, { selected }) => (
+              <li {...props}>
+                <Checkbox
+                  icon={icon}
+                  checkedIcon={checkedIcon}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option.name}
+              </li>
+            )}
+            renderInput={(params) => (
+              <TextField {...params} autoComplete='off' label='Asignar horario' />
+            )}
+          />
+        </FormControl>
+        <FormControl fullWidth >
+          <Autocomplete
+            multiple
+            id="checkboxes-tags-demo"
+            options={tarifa.data?.data}
+            disableCloseOnSelect
+            value={onSelectTarifa}
+            onChange={(e, value) => setOnSelectTarifa(value)}
+            getOptionLabel={(option: any) => option.name}
+            renderOption={(props, option: any, { selected }) => (
+              <li {...props}>
+                <Checkbox
+                  icon={icon}
+                  checkedIcon={checkedIcon}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option.name}
+              </li>
+            )}
+            renderInput={(params) => (
+              <TextField {...params} autoComplete='off' label='Asignar tarifa' />
+            )}
+          />
+        </FormControl>
+        <FormControl fullWidth >
+          <Autocomplete
+            multiple
+            id="checkboxes-tags-demo"
+            options={bus.data?.data}
+            disableCloseOnSelect
+            value={onSelectBus}
+            onChange={(e, value) => setOnSelectBus(value)}
+            getOptionLabel={(option: any) => option.trademark}
+            renderOption={(props, option: any, { selected }) => (
+              <li {...props}>
+                <Checkbox
+                  icon={icon}
+                  checkedIcon={checkedIcon}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option.trademark} - {option.plaque}
+              </li>
+            )}
+            renderInput={(params) => (
+              <TextField {...params} autoComplete='off' label='Asignar minibus' />
+            )}
+          />
+        </FormControl>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
+            Cancel
+          </Button>
+          <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} onClick={handleSaveOnclick} startIcon={<SaveIcon />}>
+            Guardar
+          </Button>
+        </Box>
+      </Stack>
+    }  </>
+  );
 }
+
 export default AddLinea

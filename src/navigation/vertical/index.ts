@@ -9,23 +9,19 @@ const navigation = (): VerticalNavItemsType => {
       icon: 'mdi:home-outline',
     },
     {
-      title:'Rutas y Paradas',
+      title:'Monitoreo',
       path:'/minibus/monitoreo',
       icon:'eos-icons:monitoring'
     },
     {
-      title:'Choferes',
+      title:'Registro de usuarios',
+      path:'/minibus/users',
+      icon:'mdi:users'
+    },
+    {
+      title:'Registro de choferes',
       path:'/minibus/choferes',
       icon:'healthicons:truck-driver',
-      children:[{
-        title:'Lista de Choferes',
-        path:'/minibus/choferes'
-      },
-      {
-        title:'Licencias de Conducir',
-        path:'/minibus/licence'
-      }
-    ]
     },
     {
       title: 'Registro de microbuses',

@@ -32,7 +32,7 @@ const AddTarifas = ({ toggle }: Props) => {
   const [name,setName] = useState('')
   const [description,setDescription] = useState('')
 
-  const { Post, Get } = useService()
+  const { Post } = useService()
   const queryClient = useQueryClient()
   const mutation = useMutation((Data: object) => Post('/tarifa', Data), {
     onSuccess: () => {
@@ -40,12 +40,6 @@ const AddTarifas = ({ toggle }: Props) => {
     }
   })
 
-  const handleNameChange =(e:ChangeEvent<HTMLInputElement>)=>{
-    setName(e.target.value)
-  }
-  const handleDescriptionChange =(e:ChangeEvent<HTMLInputElement>)=>{
-    setDescription(e.target.value)
-  }
   const handleAddTarifa = () => {
     setAddTarifa([...addTarifa, { tipo: 'Nueva Tarifa', tarifa: 'Bs. 0.00' }])
   }
@@ -67,9 +61,16 @@ const AddTarifas = ({ toggle }: Props) => {
       description:description
     }
     mutation.mutate(data)
+    handleReset()
+  }
+  const handleReset = () =>{
+    setName('')
+    setDescription('')
+    setAddTarifa(defaultTarifa)
   }
   const handleClose = () => {
     toggle()
+    handleReset()
   }
   return (
     <Box>
@@ -80,12 +81,16 @@ const AddTarifas = ({ toggle }: Props) => {
           <Grid container spacing={2}>
             <Grid item xs={7}>
               <FormControl fullWidth sx={{ mb: 6 }}>
-                <TextField label='Tipo Tarifa' value={value.tipo} variant='standard' onChange={(e) => handleChangeTarifa(e.target.value, index, 'tipo')} fullWidth />
+                <TextField label='Tipo Tarifa' value={value.tipo} variant='standard' 
+                onChange={(e) => handleChangeTarifa(e.target.value, index, 'tipo')} fullWidth 
+                autoComplete='off'/>
               </FormControl>
             </Grid>
             <Grid item xs={3}>
               <FormControl fullWidth sx={{ mb: 1 }}>
-                <TextField label='Tarifa' value={value.tarifa} variant='standard' onChange={(e) => handleChangeTarifa(e.target.value, index, 'tarifa')} fullWidth />
+                <TextField label='Tarifa' value={value.tarifa} variant='standard' 
+                onChange={(e) => handleChangeTarifa(e.target.value, index, 'tarifa')} fullWidth 
+                autoComplete='off'/>
               </FormControl>
             </Grid>
             <Grid item xs={1}>
@@ -109,9 +114,9 @@ const AddTarifas = ({ toggle }: Props) => {
                 label='Nomber de Tarifa'
                 placeholder='tarifa 110'
                 value={name}
-                onChange={handleNameChange}
+                autoComplete='off'
+                onChange={(e)=>setName(e.target.value)}
               />
-              {/*<FormHelperText sx={{ color: 'error.main' }}></FormHelperText>*/}
             </FormControl>
           </Grid>
           <Grid item xs={12}>
@@ -119,18 +124,18 @@ const AddTarifas = ({ toggle }: Props) => {
               <TextField
                 label='Decripción'
                 placeholder='opcional'
-                onChange={handleDescriptionChange}
+                autoComplete='off'
+                onChange={(e)=>setDescription(e.target.value)}
               />
-              {/*<FormHelperText sx={{ color: 'error.main' }}></FormHelperText>*/}
             </FormControl>
           </Grid>
         </Grid>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} onClick={handleSaveOnclick} startIcon={<SaveIcon />}>
-            Guardar
-          </Button>
           <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
             Cancel
+          </Button>
+          <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} onClick={handleSaveOnclick} startIcon={<SaveIcon />}>
+            Guardar
           </Button>
         </Box>
       </fieldset>

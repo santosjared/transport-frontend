@@ -179,7 +179,6 @@ const StepperAlternativeLabel = (props:CloseType) => {
               )}
               sx={{borderTopLeftRadius:0, borderTopRightRadius:0}}
               >
-
               </Autocomplete>
             </Grid>
             <Grid item xs={12} sm={12}>

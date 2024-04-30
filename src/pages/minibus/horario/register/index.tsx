@@ -6,6 +6,8 @@ import SaveIcon from '@mui/icons-material/Save'
 import CancelIcon from '@mui/icons-material/Cancel'
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { styled } from '@mui/material/styles';
+import { useMutation, useQueryClient } from "react-query";
+import { useService } from "src/hooks/useService";
 
 const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
@@ -35,6 +37,15 @@ const RegisterHorario = ({ toggle }: Props) => {
     const [placeVuelta, setPlaceVuelta] = useState('')
     const [descriptionVuelta, setDescriptionVuelta] = useState('')
 
+    const { Post, Get } = useService()
+    const queryClient = useQueryClient()
+    const mutation = useMutation((Data: object) => Post('/horario', Data), {
+        onSuccess: () => {
+          queryClient.invalidateQueries('horario')
+        }
+      })
+    
+
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
     };
@@ -43,6 +54,7 @@ const RegisterHorario = ({ toggle }: Props) => {
     }
     const handleClose = () => {
         toggle()
+        handleReset()
     }
     const handleCheckboxIdaChange = (event: ChangeEvent<HTMLInputElement>) => {
         const { value, checked } = event.target;
@@ -52,19 +64,6 @@ const RegisterHorario = ({ toggle }: Props) => {
             setDaysIda(DaysIda.filter((day) => day !== value));
         }
     };
-    const handleFirstIdaChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setFirstOutIda(e.target.value);
-    };
-    const handleLastIdaChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setLastOutIda(e.target.value);
-    };
-    const handlePlaceIdaChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setPlaceIda(e.target.value)
-    }
-    const handleDescriptionIdaChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setDescriptionIda(e.target.value)
-    }
-    
     const handleCheckboxVueltaChange = (event: ChangeEvent<HTMLInputElement>) => {
         const { value, checked } = event.target;
         if (checked) {
@@ -73,17 +72,37 @@ const RegisterHorario = ({ toggle }: Props) => {
             setDaysVuelta(DaysVuelta.filter((day) => day !== value));
         }
     };
-    const handleFirstVueltaChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setFirstOutVuelta(e.target.value);
-    };
-    const handleLastVueltaChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setLastOutVuelta(e.target.value);
-    };
-    const handlePlaceVueltaChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setPlaceVuelta(e.target.value)
+    const handleSaveClick = () =>{
+        console.log('dispara')
+        const data = {
+            name:name,
+            horarioIda:{
+                place:placeIda,
+                firstOut:firstOutIda,
+                lastOut:lastOutIda,
+                days:DaysIda,
+                description:descriptionIda
+            },
+            horarioVuelta:{
+                place:placeVuelta,
+                firstOut:firstOutVuelta,
+                lastOut:lastOutVuelta,
+                days:DaysVuelta,
+                description:descriptionVuelta
+            }
+        }
+        mutation.mutate(data)
+        handleReset()
     }
-    const handleDescriptionVueltaChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setDescriptionVuelta(e.target.value)
+    const handleReset = () =>{
+        setFirstOutIda('00:00')
+        setLastOutIda('00:00')
+        setPlaceIda('')
+        setDaysIda([])
+        setFirstOutVuelta('00:00')
+        setLastOutVuelta('00:00')
+        setPlaceVuelta('')
+        setDaysVuelta([])
     }
     return (
         <Box>
@@ -119,8 +138,9 @@ const RegisterHorario = ({ toggle }: Props) => {
                                 label='Hora última Salida'
                                 variant="outlined"
                                 value={firstOutIda}
-                                onChange={handleFirstIdaChange}
+                                onChange={(e)=>setFirstOutIda(e.target.value)}
                                 type='time'
+                                autoComplete='off'
                                 inputProps={{
                                     maxLength: 5,
                                     pattern: '^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$',
@@ -135,8 +155,9 @@ const RegisterHorario = ({ toggle }: Props) => {
                                 fullWidth
                                 label='Hora última Salida'
                                 variant="outlined"
+                                autoComplete='off'
                                 value={lastOutIda}
-                                onChange={handleLastIdaChange}
+                                onChange={(e)=>setLastOutIda(e.target.value)}
                                 type='time'
                                 inputProps={{
                                     maxLength: 5,
@@ -152,8 +173,9 @@ const RegisterHorario = ({ toggle }: Props) => {
                             <TextField
                                 label='Lugar de salida'
                                 placeholder='Las Lecherias'
+                                autoComplete='off'
                                 value={placeIda}
-                                onChange={handlePlaceIdaChange}
+                                onChange={(e)=>setPlaceIda(e.target.value)}
                             />
                         </FormControl>
                 </Grid>
@@ -162,8 +184,9 @@ const RegisterHorario = ({ toggle }: Props) => {
                         <TextField
                             label='Descripción'
                             placeholder='opcional'
+                            autoComplete='off'
                             value={descriptionIda}
-                            onChange={handleDescriptionIdaChange}
+                            onChange={(e)=>setDescriptionIda(e.target.value)}
                         />
                     </FormControl>
                 </Grid>
@@ -205,8 +228,9 @@ const RegisterHorario = ({ toggle }: Props) => {
                                 fullWidth
                                 label='Hora última Salida'
                                 variant="outlined"
+                                autoComplete='off'
                                 value={firstOutVuelta}
-                                onChange={handleFirstVueltaChange}
+                                onChange={(e)=>setFirstOutVuelta(e.target.value)}
                                 type='time'
                                 inputProps={{
                                     maxLength: 5,
@@ -223,7 +247,8 @@ const RegisterHorario = ({ toggle }: Props) => {
                                 label='Hora última Salida'
                                 variant="outlined"
                                 value={lastOutVuelta}
-                                onChange={handleLastVueltaChange}
+                                autoComplete='off'
+                                onChange={(e)=>setLastOutVuelta(e.target.value)}
                                 type='time'
                                 inputProps={{
                                     maxLength: 5,
@@ -240,7 +265,8 @@ const RegisterHorario = ({ toggle }: Props) => {
                                 label='Lugar de salida'
                                 placeholder='Las Lecherias'
                                 value={placeVuelta}
-                                onChange={handlePlaceVueltaChange}
+                                autoComplete='off'
+                                onChange={(e)=>setPlaceVuelta(e.target.value)}
                             />
                         </FormControl>
                 </Grid>
@@ -250,7 +276,8 @@ const RegisterHorario = ({ toggle }: Props) => {
                             label='Descripción'
                             placeholder='opcional'
                             value={descriptionVuelta}
-                            onChange={handleDescriptionVueltaChange}
+                            autoComplete='off'
+                            onChange={(e)=>setDescriptionVuelta(e.target.value)}
                         />
                     </FormControl>
                 </Grid>
@@ -272,6 +299,7 @@ const RegisterHorario = ({ toggle }: Props) => {
                         <TextField
                             label='Nombre de horario'
                             placeholder='horario 012'
+                            autoComplete='off'
                             value={name}
                             onChange={handleNameChange}
                         />
@@ -280,7 +308,7 @@ const RegisterHorario = ({ toggle }: Props) => {
                         <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
                             Cancel
                         </Button>
-                        <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }}
+                        <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} onClick={handleSaveClick}
                             startIcon={<SaveIcon />}>
                             Guardar
                         </Button>
