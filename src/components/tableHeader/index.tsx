@@ -2,6 +2,7 @@ import { FormControl } from "@mui/material"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import TextField from "@mui/material/TextField"
+import { ReactNode } from "react"
 
 interface TableHeaderProps {
     value: string
@@ -9,12 +10,12 @@ interface TableHeaderProps {
     handleFilter: (val: string) => void
     placeholder:string
     title:string
-    disable:boolean
+    children?:ReactNode
   }
   
   const TableHeader = (props: TableHeaderProps) => {
     // ** Props
-    const { handleFilter, toggle, value, placeholder, title,disable } = props
+    const { handleFilter, toggle, value, placeholder, title,children } = props
   
     return (
       <Box sx={{ p: 5, pb: 3, display: 'flex', flexWrap: 'wrap',justifyContent: 'space-between' }}>
@@ -26,14 +27,11 @@ interface TableHeaderProps {
             sx={{mr:2}}
             placeholder={placeholder}
             onChange={e => handleFilter(e.target.value)}
-            disabled={disable}
           />
           </FormControl>
-          <Button sx={{ mb: 2 }} variant='contained' disabled={disable}>
-            BUSCAR
-          </Button>
           </Box>
-          <Button sx={{ mb: 2 }} onClick={toggle} variant='contained' disabled={disable}>
+          {children}
+          <Button sx={{ mb: 2 }} onClick={toggle} variant='contained'>
             {title}
           </Button>
       

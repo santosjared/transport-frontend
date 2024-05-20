@@ -5,57 +5,40 @@ import { useService } from 'src/hooks/useService'
 interface Redux {
   dispatch: Dispatch<any>
 }
-export const fetchData = createAsyncThunk('appBus/fetchBus',
-async (filtrs?: { [key: string]: any }) => {
-  const {Get} = useService()
-  if(filtrs){
-    const {filter, skip,limit}=filtrs
-    if(filter){
-      const response = await Get(`/bus?filter=${filter}`)
-      return response.data
-    }
-    if(skip&&limit){
-      const response = await Get(`/bus?skip=${skip}&limit=${limit}`)
-      return response.data
-    }
-    const response = await Get('/bus')
+export const fetchData = createAsyncThunk('appRoad/fetchRoad', async () => {
+    const {Get} = useService()
+    const response = await Get('/road')
     return response.data
-  }
-  const response = await Get('/bus')
-  return response.data
-}
-)
+})
 
-export const addBus = createAsyncThunk('appBus/addBus',
+export const addRoad = createAsyncThunk('appRoad/addRoad',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
     const {Post}= useService()
-    const response = await Post('/bus', data) 
+    const response = await Post('/road', data) 
     dispatch(fetchData())
     return response.data
   }
 )
 
-export const deleteBus = createAsyncThunk('appBus/deleteBus',
+export const deleteRoad = createAsyncThunk('appRoad/deleteRoad',
   async (id: number | string, {dispatch }: Redux) => {
     const {Delete} = useService()
-    const response = await Delete('/bus', id)
+    const response = await Delete('/road', id)
     dispatch(fetchData())
     return response.data
   }
 )
-export const findOneBus = createAsyncThunk('appBus/deleteBus',
+export const findOneRoad = createAsyncThunk('appRoad/deleteRoad',
   async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await Delete('/bus', id)
-    dispatch(fetchData())
+    const {GetId} = useService()
+    const response = await GetId('/road', id)
     return response.data
   }
 )
 export const appUsersSlice = createSlice({
-  name: 'appBus',
+  name: 'appRoad',
   initialState: {
     data: [],
-    total:0,
     isLoading:false,
     isSuccess:false,
     isError:false
@@ -72,8 +55,7 @@ export const appUsersSlice = createSlice({
         state.isLoading = false; 
         state.isSuccess = true;  
         state.isError = false;   
-        state.data = action.payload.result;
-        state.total = action.payload.total 
+        state.data = action.payload; 
     })
     .addCase(fetchData.rejected, (state) => {
         state.isLoading = false;

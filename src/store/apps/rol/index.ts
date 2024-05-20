@@ -1,61 +1,61 @@
 import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { useService } from 'src/hooks/useService'
+import axiosInstance from 'src/store/instancesAxios'
 
 interface Redux {
   dispatch: Dispatch<any>
 }
-export const fetchData = createAsyncThunk('appBus/fetchBus',
+export const fetchData = createAsyncThunk('appRol/fetchRol', 
 async (filtrs?: { [key: string]: any }) => {
-  const {Get} = useService()
-  if(filtrs){
-    const {filter, skip,limit}=filtrs
-    if(filter){
-      const response = await Get(`/bus?filter=${filter}`)
+    const {Get} = useService()
+    if(filtrs){
+      const response = await Get(`/roles?filter=${filtrs.filter}`)
       return response.data
     }
-    if(skip&&limit){
-      const response = await Get(`/bus?skip=${skip}&limit=${limit}`)
-      return response.data
-    }
-    const response = await Get('/bus')
+    const response = await Get('/roles')
     return response.data
-  }
-  const response = await Get('/bus')
-  return response.data
-}
-)
+})
 
-export const addBus = createAsyncThunk('appBus/addBus',
+export const addRol = createAsyncThunk('appRol/addRol',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
     const {Post}= useService()
-    const response = await Post('/bus', data) 
+    const response = await Post('/roles', data) 
     dispatch(fetchData())
     return response.data
   }
 )
 
-export const deleteBus = createAsyncThunk('appBus/deleteBus',
+export const deleteRol = createAsyncThunk('appRol/deleteRol',
   async (id: number | string, {dispatch }: Redux) => {
     const {Delete} = useService()
-    const response = await Delete('/bus', id)
+    const response = await Delete('/roles', id)
     dispatch(fetchData())
     return response.data
   }
 )
-export const findOneBus = createAsyncThunk('appBus/deleteBus',
+export const findOneRol = createAsyncThunk('appRol/deleteRol',
   async (id: number | string, {dispatch }: Redux) => {
     const {Delete} = useService()
-    const response = await Delete('/bus', id)
-    dispatch(fetchData())
+    const response = await Delete('/roles', id)
+    return response.data
+  }
+)
+export const findFilters = createAsyncThunk('appRol/deleteRol',
+  async (id: number | string, {dispatch }: Redux) => {
+    const {Delete} = useService()
+    const response = await axiosInstance.get(`/roles`, {
+      params: {
+        filter: id,
+      },
+    })
     return response.data
   }
 )
 export const appUsersSlice = createSlice({
-  name: 'appBus',
+  name: 'appRol',
   initialState: {
     data: [],
-    total:0,
     isLoading:false,
     isSuccess:false,
     isError:false
@@ -72,8 +72,7 @@ export const appUsersSlice = createSlice({
         state.isLoading = false; 
         state.isSuccess = true;  
         state.isError = false;   
-        state.data = action.payload.result;
-        state.total = action.payload.total 
+        state.data = action.payload; 
     })
     .addCase(fetchData.rejected, (state) => {
         state.isLoading = false;

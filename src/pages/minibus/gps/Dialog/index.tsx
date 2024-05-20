@@ -54,7 +54,7 @@ const DialogUsers = ({open, toggle,id}:Props)=>{
         }));
         setUsers(usersData);
       };
-      if(!isLoading){
+      if(!isLoading&&data){
           fetchData()
       }
     },[data?.data, isLoading])

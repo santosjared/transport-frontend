@@ -16,7 +16,6 @@ interface Props {
 const Register = ({ toggle }: Props) => {
 
   const [name, setName] = useState('');
-  const [brand, setBrand] = useState('');
   const [user, setUser] = useState('');
   const [key, setKey] = useState('');
   const [showKey, setShowKey] = useState(false)
@@ -31,7 +30,6 @@ const Register = ({ toggle }: Props) => {
   const handleSaveOnclick = ()=>{
     const data = {
       name:name,
-      brand:brand,
       user:user,
       key:key
     }
@@ -48,13 +46,6 @@ const Register = ({ toggle }: Props) => {
             placeholder='gps 012'
             onChange={(e) => setName(e.target.value)}
             value={name}
-          />
-        </FormControl>
-        <FormControl fullWidth sx={{ mb: 6 }}>
-          <TextField
-            label='Marca del dispositivo'
-            onChange={(e) => setBrand(e.target.value)}
-            value={brand}
           />
         </FormControl>
         <FormControl fullWidth sx={{ mb: 6 }}>

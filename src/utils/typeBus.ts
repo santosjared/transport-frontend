@@ -1,0 +1,1 @@
+export const typesBus = ['Microbus', 'Bus', 'Micro','Minibus', 'Carry','Trufi', 'Otro']

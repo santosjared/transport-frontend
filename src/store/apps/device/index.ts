@@ -1,61 +1,46 @@
 import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import axiosInstance from '../../instancesAxios'
 import { useService } from 'src/hooks/useService'
 
 interface Redux {
   dispatch: Dispatch<any>
 }
-export const fetchData = createAsyncThunk('appBus/fetchBus',
-async (filtrs?: { [key: string]: any }) => {
-  const {Get} = useService()
-  if(filtrs){
-    const {filter, skip,limit}=filtrs
-    if(filter){
-      const response = await Get(`/bus?filter=${filter}`)
-      return response.data
-    }
-    if(skip&&limit){
-      const response = await Get(`/bus?skip=${skip}&limit=${limit}`)
-      return response.data
-    }
-    const response = await Get('/bus')
+export const fetchData = createAsyncThunk('appDevice/fetchDevice', async () => {
+    const {Get} = useService()
+    const response = await Get('/divice')
     return response.data
-  }
-  const response = await Get('/bus')
-  return response.data
-}
-)
+})
 
-export const addBus = createAsyncThunk('appBus/addBus',
+export const addDevice = createAsyncThunk('appDevice/addDevice',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
     const {Post}= useService()
-    const response = await Post('/bus', data) 
+    const response = await Post('/divice', data) 
     dispatch(fetchData())
     return response.data
   }
 )
 
-export const deleteBus = createAsyncThunk('appBus/deleteBus',
+export const deleteDevice = createAsyncThunk('appDevice/deleteDevice',
   async (id: number | string, {dispatch }: Redux) => {
     const {Delete} = useService()
-    const response = await Delete('/bus', id)
+    const response = await Delete('/divice', id)
     dispatch(fetchData())
     return response.data
   }
 )
-export const findOneBus = createAsyncThunk('appBus/deleteBus',
-  async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await Delete('/bus', id)
-    dispatch(fetchData())
-    return response.data
-  }
+export const assignUser = createAsyncThunk('appassignUser/assignUser',
+    async (data: { [key: string]: any }, {dispatch}:Redux)=>{
+        const {Update} = useService()
+        const response = Update('/divice/user', data, data.id)
+        dispatch(fetchData())
+        return response
+    }
 )
 export const appUsersSlice = createSlice({
-  name: 'appBus',
+  name: 'appDevice',
   initialState: {
     data: [],
-    total:0,
     isLoading:false,
     isSuccess:false,
     isError:false
@@ -72,8 +57,7 @@ export const appUsersSlice = createSlice({
         state.isLoading = false; 
         state.isSuccess = true;  
         state.isError = false;   
-        state.data = action.payload.result;
-        state.total = action.payload.total 
+        state.data = action.payload; 
     })
     .addCase(fetchData.rejected, (state) => {
         state.isLoading = false;

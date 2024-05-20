@@ -47,17 +47,7 @@ const DialogUsers = ({open, toggle,id}:Props)=>{
     const {data, isLoading, isError} = useQuery('choferes',()=>Get('/choferes'))
     const [users, setUsers] = useState<any[]>([])
     useEffect(()=>{
-      const fetchData = async () => {
-        const usersData = await Promise.all(data?.data.map(async (chofer: any) => {
-          const userData = await GetId('/users', chofer.userId);
-          return userData.data;
-        }));
-        setUsers(usersData);
-      };
-      if(!isLoading){
-          fetchData()
-      }
-    },[data?.data, isLoading])
+    },[])
 
     const handleAddIdUser = (userId:number | string)=>{ 
       const data ={

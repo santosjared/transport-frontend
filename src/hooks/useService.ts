@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { instance } from "src/configs/instances"
 
 export const useService = () => {
@@ -10,7 +11,12 @@ export const useService = () => {
     return { headers:{'Content-Type': 'application/json'} }
   }
   const Post = async (endpoint:string,data: { [key: string]: any }) => {
-    return await instance.post(endpoint,data,getHeaders(data))
+    try{
+      const response = await instance.post(endpoint,data,getHeaders(data))
+      return response
+    }catch(error:any){
+      return error.response
+    }
   }
   const Get = async (endpoint:string) =>{
     return await instance.get(endpoint)

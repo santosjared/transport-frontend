@@ -56,7 +56,7 @@ const AddTarifas = ({ toggle }: Props) => {
 
   const handleSaveOnclick =()=>{
     const data = {
-      tarifas:addTarifa,
+      rates:addTarifa,
       name:name,
       description:description
     }

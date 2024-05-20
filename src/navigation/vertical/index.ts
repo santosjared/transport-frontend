@@ -19,11 +19,6 @@ const navigation = (): VerticalNavItemsType => {
       icon:'mdi:users'
     },
     {
-      title:'Registro de choferes',
-      path:'/minibus/choferes',
-      icon:'healthicons:truck-driver',
-    },
-    {
       title: 'Registro de microbuses',
       path: '/minibus/bus',
       icon: 'mdi:bus'

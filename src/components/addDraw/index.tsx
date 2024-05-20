@@ -33,7 +33,7 @@ interface SidebarAddUserType {
         variant='temporary'
         onClose={handleClose}
         ModalProps={{ keepMounted: true }}
-        sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 600 } } }}
+        sx={{ '& .MuiDrawer-paper': { width: { xs:'100%', sm: 600 } } }}
         >
           <Header>
             <Typography variant='h6'>{title}</Typography>

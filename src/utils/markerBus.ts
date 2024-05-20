@@ -1,0 +1,1 @@
+export const markersBus = ['Nissan','Toyota','Mercedes Benz','Mitsubishi','Scania','Hyundai','Volkwagen','Foton','Joylon','King Long','Otro']

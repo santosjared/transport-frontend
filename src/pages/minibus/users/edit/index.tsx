@@ -1,28 +1,27 @@
-import { Autocomplete, Avatar, Box, Button, Card, CardMedia, Divider, FormControl, FormHelperText, Grid, IconButton, InputAdornment, OutlinedInput, TextField, Typography } from "@mui/material"
+import { Autocomplete, Avatar, Box, Button, Card, CardMedia, FormControl, FormHelperText, Grid, IconButton, InputAdornment, OutlinedInput, TextField, Typography } from "@mui/material"
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
-import { ChangeEvent, FormEvent, useState } from "react"
+import { ChangeEvent, FormEvent, useEffect, useState } from "react"
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { useService } from "src/hooks/useService";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { styled } from '@mui/material/styles';
 import { useDispatch } from 'react-redux';
-import { addUser } from "src/store/apps/users";
-import { addLicenceDriver } from "src/store/apps/licence-driver";
+import { addUser, updateUser } from "src/store/apps/users";
+import { addLicenceDriver, updateLicence } from "src/store/apps/licence-driver";
 import AddIcon from '@mui/icons-material/Add';
 import KeyboardControlKeyIcon from '@mui/icons-material/KeyboardControlKey';
 import { AppDispatch } from "src/store";
 import { contrys } from "src/utils/contrys";
 import { isPhoneValidate } from "src/utils/validator";
 import { calculateYearsBetweenDates } from "src/utils/calculateYears";
-import { fetchData, findFilters, findOneRol } from "src/store/apps/rol";
-import axios from "axios";
-import { array } from "yup";
 import { HttpStatus } from "src/utils/HttpStatus";
 import Swal from "sweetalert2";
+import { useService } from "src/hooks/useService";
+import { isImage } from "src/utils/verificateImg";
+import getConfig from 'src/configs/environment'
 
 interface FormErrors {
     name?: string;
@@ -32,13 +31,14 @@ interface FormErrors {
     ci?: string,
     phone?: string,
     address?: string,
-    password?: string,
     category?: string,
     dateEmition?: string,
     dateExpire?: string,
 }
 interface Props {
     toggle: () => void;
+    id:string
+    store:any
 }
 
 const genders = [
@@ -63,8 +63,6 @@ interface userTypes{
     phone: string,
     address: string,
     contry: string,
-    password: string,
-    rol: string[],
     licenceId: string | null,
     otherGender: string
 }
@@ -78,7 +76,6 @@ const defaultUserData ={
     phone: '',
     address: '',
     contry: contrys[0],
-    password: '',
     rol: [],
     licenceId: null,
     otherGender: ''
@@ -116,14 +113,13 @@ const VisuallyHiddenInput = styled('input')({
     whiteSpace: 'nowrap',
     width: 1,
 });
-const AddUser = ({ toggle }: Props) => {
+const EditUser = ({ toggle, id,store }: Props) => {
 
     const [formUser, setformUser] = useState<userTypes>(defaultUserData)
     const [formLicence, setFormLicence] = useState<liceneTypes>(defaultLicenceData)
     const [formErrors, setFormErrors] = useState<FormErrors>(defaultErrors)
     const [self, setSelf] = useState('/images/avatars/2.png')
     const [profile, setProfile] = useState<File | null>(null)
-    const [showPassword, setShowPassword] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
     const [errorMessageFront, setErrorMessageFront] = useState('')
     const [errorMessageBack, setErrorMessageBack] = useState('')
@@ -132,8 +128,67 @@ const AddUser = ({ toggle }: Props) => {
     const [licenceFront, setLicenceFront] = useState<File | null>(null)
     const [licenceBack, setLicenceBack] = useState<File | null>(null)
     const [onAddLicence, setOnAddLicence] = useState(false)
+    const [userId,setUserId]=useState('')
+    const [licenceId,setLicenceId] = useState('')
 
+    const {GetId}=useService()
     const dispatch = useDispatch<AppDispatch>()
+    useEffect(()=>{
+        console.log('hace cambios')
+        if(id){
+            const fetch = async()=>{
+                const response = await GetId('/users',id)
+
+                const UserData ={
+                    profile: response.data.profile,
+                    name: response.data.name,
+                    lastName:response.data.lastName,
+                    gender: genders[2],
+                    email: response.data.email,
+                    ci: response.data.ci,
+                    phone: response.data.phone,
+                    address: response.data.address,
+                    contry: contrys[0],
+                    licenceId: response.data.licenceId,
+                    otherGender: response.data.gender
+                }
+                const img = await isImage(`${getConfig().backendURI}${response.data.profile}`)
+                if(img){
+                    setSelf(`${getConfig().backendURI}${response.data.profile}`)
+                }
+                genders.map((value,index)=>{
+                    if(value==response.data.gender){
+                        UserData.gender=genders[index]
+                    }
+                })
+                contrys.map((value,index)=>{
+                    if(value==response.data.contry){
+                        UserData.contry=contrys[index]
+                    }
+                })
+                if(response.data.licenceId){
+                    setOnAddLicence(true)
+                    const licence = await GetId('/licencia',response.data.licenceId.toString())
+                    const LicenceData={
+                        category: licence.data.category,
+                        dateEmition: licence.data.dateEmition,
+                        dateExpire: licence.data.dateExpire,
+                        licenceFront:licence.data.licenceFront ,
+                        licenceBack: licence.data.licenceBack
+                    }
+                    const imgF = await isImage(`${getConfig().backendURI}${licence.data.licenceFront}`)
+                    if(imgF){setFront(`${getConfig().backendURI}${licence.data.licenceFront}`)}
+                    const imgB = await isImage(`${getConfig().backendURI}${licence.data.licenceBack}`)
+                    if(imgB){setBack(`${getConfig().backendURI}${licence.data.licenceBack}`)}
+                    setLicenceId(response.data.id)
+                    setFormLicence(LicenceData)
+                }else{setOnAddLicence(false)}
+                setUserId(response.data.id)
+                setformUser(UserData)
+            }
+            fetch()
+        }
+    },[id,store])
     const handleImageFront = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
         if (file?.type.startsWith('image/')) {
@@ -157,6 +212,7 @@ const AddUser = ({ toggle }: Props) => {
             setErrorMessageBack('Por favor, selecciona un archivo de imagen válido.')
             setBack('/images/default/licence.png')
         }
+
     }
     const handleChangePhone =(e: ChangeEvent<HTMLInputElement>) =>{
         const { name, value } = e.target
@@ -208,9 +264,6 @@ const AddUser = ({ toggle }: Props) => {
         if (!formUser.address) {
             errors.address = 'El campo direccion es requerido es requerido';
         }
-        if (!formUser.password) {
-            errors.password = 'El campo contraseña es requerido';
-        }
         if(!emailRegex.test(formUser.email)){
             errors.email = 'Correo electrónico inválido.'
         }
@@ -230,75 +283,25 @@ const AddUser = ({ toggle }: Props) => {
             }
         }
         if (Object.keys(errors).length === 0) {
+            formUser.profile=profile
+            if(formUser.gender==='Otro'){formUser.gender=formUser.otherGender}
             if(onAddLicence){
                 formLicence.licenceBack=licenceBack;
                 formLicence.licenceFront=licenceFront;
-                formUser.profile=profile
-                if(formUser.otherGender){
-                    formUser.gender=formUser.otherGender
-                }
-                        dispatch(addLicenceDriver(formLicence)).then((response)=>{
-                            if(response.payload){
-                                formUser.licenceId=response.payload._id.toString()
-                                dispatch(addUser(formUser)).then((response)=>{
-                                    if(response.payload?.status===HttpStatus.BAD_REQUEST){
-                                        errors.address=response.payload.data.address
-                                        errors.ci=response.payload.data.ci
-                                        errors.lastName=response.payload.data.lastName
-                                        errors.email=response.payload.data.email
-                                        errors.name=response.payload.data.name
-                                        errors.password=response.payload.data.password  
-                                        setFormErrors(errors) 
-                                    }else{
-                                        if(response.payload){
-                                            setformUser(defaultUserData)
-                                            setFormLicence(defaultLicenceData)
-                                            setProfile(null)
-                                            setSelf('/images/avatars/2.png')
-                                            setLicenceBack(null)
-                                            setBack('/images/default/licence.png')
-                                            setLicenceFront(null)
-                                            setFront('/images/default/licence.png')
-                                            setOnAddLicence(!onAddLicence)
-                                            toggle()
-                                            Swal.fire({
-                                                title: '¡Éxito!',
-                                                text: 'Datos guardados exitosamente',
-                                                icon: "success"
-                                              });
-                                        }
-                                    }
-                                }).catch(()=>{console.log('error')})
-                            }
-                        })
+                dispatch(updateUser({userData:formUser,licenceData:formLicence,idUser:userId,idLicence:licenceId}))
+                .then((response:any)=>{
+                    console.log(response)
+                    if(response.payload){
+                        console.log('ejecuta')
+                        Swal.fire({title: '¡Éxito!',text: 'Datos actualizados exitosamente',icon: "success"});
+                        toggle()
+                    }})
             }else{
-                formUser.profile=profile
-                if(formUser.otherGender){
-                    formUser.gender=formUser.otherGender
-                }
-                dispatch(addUser(formUser)).then((response)=>{
-                    if(response.payload?.status===HttpStatus.BAD_REQUEST){
-                        errors.address=response.payload.data.address
-                        errors.ci=response.payload.data.ci
-                        errors.lastName=response.payload.data.lastName
-                        errors.email=response.payload.data.email
-                        errors.name=response.payload.data.name
-                        errors.password=response.payload.data.password  
-                        setFormErrors(errors) 
-                    }else{
-                        if(response.payload){
-                            setformUser(defaultUserData)
-                            setProfile(null)
-                            setSelf('/images/avatars/2.png')
-                            toggle()
-                            Swal.fire({
-                                title: '¡Éxito!',
-                                text: 'Datos guardados exitosamente',
-                                icon: "success"
-                              });
-                        }
-                    }
-                })
+                dispatch(updateUser({userData:formUser,idUser:userId})).then((response)=>{
+                    if(response.payload){ 
+                        Swal.fire({title: '¡Éxito!',text: 'Datos actualizados exitosamente',icon: "success"});
+                        toggle()
+                    }})
             }
         } else {
             setFormErrors(errors);
@@ -307,8 +310,8 @@ const AddUser = ({ toggle }: Props) => {
     const handleProfileOnchage = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files?.[0] || null
-            setProfile(file)
             if (file?.type.startsWith('image/')) {
+                setProfile(file)
                 const imgURL = URL.createObjectURL(file);
                 setSelf(imgURL);
                 setErrorMessage('')
@@ -317,21 +320,6 @@ const AddUser = ({ toggle }: Props) => {
                 setSelf('/images/avatars/2.png')
             }
         }
-    }
-    const handleOnclickCancel = ()=>{
-        setProfile(null)
-        setSelf('/images/avatars/2.png')
-        setLicenceBack(null)
-        setBack('/images/default/licence.png')
-        setFront('/images/default/licence.png')
-        setLicenceFront(null)
-        setFormErrors(defaultErrors)
-        setformUser(defaultUserData)
-        setFormLicence(defaultLicenceData)
-        if(onAddLicence){
-            setOnAddLicence(!onAddLicence)
-        }
-        toggle()
     }
     const handleGenderOnchange = (e: SelectChangeEvent) => {
         const { name, value } = e.target
@@ -358,7 +346,7 @@ const AddUser = ({ toggle }: Props) => {
                         </Box>
                     </Grid>
                     <Grid item xs={12}>
-                        <label htmlFor="upload-image" style={{ cursor: 'pointer' }}>
+                        <label htmlFor="update-img" style={{ cursor: 'pointer' }}>
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -377,7 +365,7 @@ const AddUser = ({ toggle }: Props) => {
                             </Box>
                         </label>
                         <input
-                            id="upload-image"
+                            id="update-img"
                             type="file"
                             style={{ display: 'none' }}
                             onChange={handleProfileOnchage}
@@ -530,32 +518,6 @@ const AddUser = ({ toggle }: Props) => {
                             />
                         </FormControl>
                     </Grid>
-                    <Grid item xs={6}>
-                        <FormControl fullWidth sx={{ mb: 6 }}>
-                            <InputLabel htmlFor="outlined-adornment-password" >Contraseña</InputLabel>
-                            <OutlinedInput
-                                id="outlined-adornment-password"
-                                name="password"
-                                type={showPassword ? 'text' : 'password'}
-                                error={Boolean(formErrors.password)}
-                                value={formUser.password}
-                                onChange={handleChangeFields}
-                                endAdornment={
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            aria-label="toggle password visibility"
-                                            onClick={() => setShowPassword((prevShow) => !prevShow)}
-                                            edge="end"
-                                        >
-                                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                                        </IconButton>
-                                    </InputAdornment>
-                                }
-                                label="Contraseña"
-                            />
-                            {formErrors.password && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.password}</FormHelperText>}
-                        </FormControl>
-                    </Grid>
                 </Grid>
                 {onAddLicence ?
                     <Grid container spacing={2}>
@@ -642,7 +604,7 @@ const AddUser = ({ toggle }: Props) => {
                     </Button>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Button size='large' variant='outlined' color='secondary' onClick={handleOnclickCancel} startIcon={<CancelIcon />}>
+                    <Button size='large' variant='outlined' color='secondary' onClick={toggle} startIcon={<CancelIcon />}>
                         Cancel
                     </Button>
                     <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<SaveIcon />}>
@@ -653,4 +615,4 @@ const AddUser = ({ toggle }: Props) => {
         </form>
     </Box>)
 }
-export default AddUser;
+export default EditUser;

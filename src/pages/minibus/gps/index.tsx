@@ -1,105 +1,52 @@
-import { Box, Card, CardHeader, Grid, IconButton, Link, Menu, MenuItem, Typography } from "@mui/material"
+import { Avatar, Box, Card, CardHeader,Grid, IconButton, Link, Menu, MenuItem, Typography } from "@mui/material"
 import { DataGrid } from "@mui/x-data-grid"
-import { useCallback, useEffect, useState, MouseEvent, use } from "react"
-import { useQuery } from "react-query"
+import { useCallback, useEffect, useState, MouseEvent,} from "react"
 import AddDraw from "src/components/addDraw"
 import TableHeader from "src/components/tableHeader"
 import { useService } from "src/hooks/useService"
-import Conect from "./conect"
 import Register from "./register"
 import CustomChip from 'src/@core/components/mui/chip'
 import Icon from "src/@core/components/icon"
 import { useSocket } from "src/hooks/useSocket"
 import DialogUsers from "./Dialog"
+import getConfig from 'src/configs/environment'
+import { useDispatch,useSelector } from "react-redux"
+import { deleteDevice } from "src/store/apps/device"
+import { RootState, AppDispatch } from 'src/store'
 
-interface Data {
-  name: string,
-  brand: string,
-  model: string,
-  key: string,
-  lat: number,
-  lng: number
-}
 type Divice = {
   id: string
   name: string
   brand: string
+  idUser:string
   connect: boolean
   status: boolean
 }
 interface TypeCell {
   row: Divice
 }
+
+const Users = ({id}:{id:number|string}) =>{
+
+  const {GetId} = useService()
+  const [user, setUser] = useState<any>()
+
+  useEffect(()=>{
+    const fetchData = async() =>{
+      const data = await GetId('/users',id)
+      setUser(data.data)
+    }
+    fetchData()
+  },[id])
+  return(
+    <Box sx={{display:'flex', justifyContent:'space-between'}}>{id?
+    <><Avatar alt='profile' src={`${getConfig().backendURI}${user?.profile}`} sx={{border:'solid 1px #E0E0E0'}}/>
+    <Typography variant='body2' sx={{margin:2}}>{`${user?.name} ${user?.lastName}`}</Typography></>:
+    <Typography noWrap variant="body2" color={'error'}>No Asignado</Typography>}
+  </Box>)
+}
 const Gps = () => {
 
-  const columns = [
-    {
-      flex: 0.2,
-      field: 'name',
-      headerName: 'Nombre',
-      renderCell: ({ row }: TypeCell) => {
-        return (
-          <Typography noWrap variant='body2'>
-            {row.name}
-          </Typography>
-        )
-      }
-    },
-    {
-      flex: 0.2,
-      field: 'brand',
-      headerName: 'Marca',
-      renderCell: ({ row }: TypeCell) => {
-        return (
-          <Typography noWrap variant='body2'>
-            {row.brand}
-          </Typography>
-        )
-      }
-    },
-    {
-      flex: 0.2,
-      field: 'conect',
-      headerName: 'Estado de Conexion',
-      renderCell: ({ row }: TypeCell) => {
-
-        return (
-          <CustomChip
-            skin='light'
-            size='small'
-            label={row.connect ? 'Conectado' : 'Desconectado'}
-            color={row.connect ? 'success' : 'error'}
-            sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
-          />
-        )
-      }
-    },
-    {
-      flex: 0.2,
-      field: 'status',
-      headerName: 'Estados',
-      renderCell: ({ row }: TypeCell) => {
-
-        return (
-          <CustomChip
-            skin='light'
-            size='small'
-            label={row.status ? 'Activo' : 'Inactivo'}
-            color={row.status ? 'success' : 'secondary'}
-            sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
-          />
-        )
-      }
-    },
-    {
-      flex: 0.2,
-      field: 'actions',
-      headerName: 'Acciones',
-      renderCell: ({ row }: TypeCell) => {
-        return (<RowOptions id={row.id} />)
-      }
-    }
-  ]
   const [pageSize, setPageSize] = useState<number>(10)
   const [value, setValue] = useState<string>('')
   const [openAdd, setOpenAdd] = useState<boolean>(false)
@@ -107,27 +54,12 @@ const Gps = () => {
   const [openUsers, setOpenUsers] = useState(false)
   const [diviceId, setDiviceId] = useState<string | number>('')
 
-  const DrawUser = () => setOpenUsers(!openUsers)
-
   const { socket, isConnected, isLoading, isError } = useSocket()
-
-  useEffect(() => {
-    if (isConnected) {
-      socket?.emit('datadivice')
-      socket?.on('diviceAll', (data) => {
-        setdata(data)
-      })
-    }
-  }, [isConnected, socket])
-
-  const handleFilter = useCallback((val: string) => {
-    //setValue(val)
-  }, [])
-  const toggleDrawer = () => setOpenAdd(!openAdd)
-
   const RowOptions = ({ id }: { id: number | string }) => {
 
-    const { Delete, GetId } = useService()
+    const dispatch = useDispatch<AppDispatch>()
+
+    const { Delete} = useService()
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 
@@ -147,6 +79,12 @@ const Gps = () => {
 
     const handleDelete = () => {
       Delete('/divice', id)
+      if (isConnected) {
+        socket?.emit('datadivice')
+        socket?.on('diviceAll', (data) => {
+          setdata(data)
+        })
+      }
       handleRowOptionsClose()
     }
 
@@ -190,6 +128,95 @@ const Gps = () => {
       </>
     )
   }
+  const columns = [
+    {
+      flex: 0.2,
+      field: 'name',
+      minWidth: 90,
+      headerName: 'Nombre',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant='body2'>
+            {row.name}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'user',
+      headerName: 'Choferes',
+      minWidth: 160,
+      renderCell: ({row}:TypeCell)=>{
+        return(
+          <Users id={row.idUser}/>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'conect',
+      minWidth: 70,
+      headerName: 'Estado de Conexion',
+      renderCell: ({ row }: TypeCell) => {
+
+        return (
+          <CustomChip
+            skin='light'
+            size='small'
+            label={row.connect ? 'Conectado' : 'Desconectado'}
+            color={row.connect ? 'success' : 'error'}
+            sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
+          />
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'status',
+      minWidth: 70,
+      headerName: 'Estados',
+      renderCell: ({ row }: TypeCell) => {
+
+        return (
+          <CustomChip
+            skin='light'
+            size='small'
+            label={row.status ? 'Activo' : 'Inactivo'}
+            color={row.status ? 'success' : 'secondary'}
+            sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
+          />
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'actions',
+      minWidth: 70,
+      headerName: 'Acciones',
+      renderCell: ({ row }: TypeCell) => {
+        return (<RowOptions id={row.id} />)
+      }
+    }
+  ]
+ 
+  
+  const DrawUser = () => setOpenUsers(!openUsers)
+
+  useEffect(() => {
+    if (isConnected) {
+      socket?.emit('datadivice')
+      socket?.on('diviceAll', (data) => {
+        setdata(data)
+      })
+    }
+  }, [isConnected, socket])
+
+  const handleFilter = useCallback((val: string) => {
+  }, [])
+  const toggleDrawer = () => setOpenAdd(!openAdd)
+
+  
   return (
     <Grid container spacing={6} >
       <Grid item xs={12}>
