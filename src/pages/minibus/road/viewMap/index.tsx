@@ -1,37 +1,29 @@
 import dynamic from 'next/dynamic';
 import { useMemo} from 'react';
-import { useService } from 'src/hooks/useService';
-import { useQuery } from 'react-query';
-import { Box } from '@mui/material';
 import AddDrawMap from 'src/components/addDrawMap';
 
 interface Props{
-    id:string | number;
+    data:any
     onClose:() => void;
 }
-const ViewMap = ({id,onClose}:Props)=>{
-    const {GetId} = useService()
-    const {data,isLoading,isError} = useQuery('roads',() =>GetId('/road',id))
+const ViewMap = ({data,onClose}:Props)=>{
   const Map = useMemo(() => dynamic(
     () => import('../../../../components/map'),
     { 
       loading: () => <p>Cargando la mapa...</p>,
       ssr: false
     }
-  ), [])
+  ), [data])
     return(
         <AddDrawMap 
-        title={`Ruta de la linea ${data?.data.name}`}
+        title={data.name}
         toggle={onClose}
         >
-        {isLoading?<Box sx={{textAlign:'center'}}>Cargando la mapa...</Box>:!isError?
           <Map 
-          center={data?.data.center}
-          zoom={data?.data.zoom}
-          geoJSON={data?.data.geojsonR}
+          center={data.center}
+          geoJSON={data.geojson}
           >
-          </Map>:''
-        }
+          </Map>
         </AddDrawMap>
     )
 }

@@ -35,3 +35,4 @@ const DialogAlert = ({title,message}:DialogAlert)=>{
     </Dialog>
     )
 }
+export default DialogAlert

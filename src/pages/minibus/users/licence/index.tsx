@@ -1,5 +1,5 @@
 import { Box, Card, CardContent, CardMedia, Dialog, DialogContent, Divider, Fade, FadeProps, Grid, IconButton, Typography } from "@mui/material"
-import { ReactElement, Ref, forwardRef, useEffect, useState } from "react"
+import { Fragment, ReactElement, Ref, forwardRef, useEffect, useState } from "react"
 import Icon from "src/@core/components/icon"
 import { getInitials } from "src/@core/utils/get-initials"
 import CustomAvatar from 'src/@core/components/mui/avatar'
@@ -29,16 +29,17 @@ const ViewLicence = ({ open, toggle, data }: Props) => {
     if (data) {
       const image = async () => {
         const img = await isImage(`${getConfig().backendURI}${data.profile}`)
-        const imgf = await isImage(`${getConfig().backendURI}${data.licenceId.licenceFront}`)
+        if(data.licenceId){
+          const imgf = await isImage(`${getConfig().backendURI}${data.licenceId.licenceFront}`)
         const imgb = await isImage(`${getConfig().backendURI}${data.licenceId.licenceBack}`)
-        setIsImg(img)
         setIsImgF(imgf)
         setIsImgB(imgb)
+        }
+        setIsImg(img)
       }
       image()
     }
   }, [data])
-  console.log(data)
   return (
     <Dialog
       fullWidth
@@ -112,7 +113,9 @@ const ViewLicence = ({ open, toggle, data }: Props) => {
                       />}
 
                   </Box>
-                  <Typography variant='h6'>Licencia de Conducir</Typography>
+                  {data.licenceId?
+                  <Fragment>
+                    <Typography variant='h6'>Licencia de Conducir</Typography>
                   <Divider sx={{ mt: theme => `${theme.spacing(4)} !important` }} />
                   <Box sx={{ pt: 2, pb: 1 }}>
                     <Box sx={{ display: 'flex', mb: 2.7 }}>
@@ -134,14 +137,16 @@ const ViewLicence = ({ open, toggle, data }: Props) => {
                       <Typography variant='body2'>{data.licenceId.category}</Typography>
                     </Box>
                   </Box>
-                  {isImgF ? 
+                  {isImgF ?
                        <Box sx={{ display: 'flex', border: 'solid 1px #E0E0E0', borderRadius: 0.5, width:260 , mb:6}}>
                        <img src={`${getConfig().backendURI}${data.licenceId.licenceFront}`} height={150} width={255} style={{ borderRadius: 5 }}></img>
                      </Box> : ''}
-                     {isImgB ? 
+                     {isImgB ?
                        <Box sx={{ display: 'flex', border: 'solid 1px #E0E0E0', borderRadius: 0.5, width:260 }}>
                        <img src={`${getConfig().backendURI}${data.licenceId.licenceBack}`} height={150} width={255} style={{ borderRadius: 5 }}></img>
                      </Box> : ''}
+                  </Fragment>
+                  :''}
                 </CardContent>
               </Card>
             </Grid>
@@ -152,4 +157,4 @@ const ViewLicence = ({ open, toggle, data }: Props) => {
     </Dialog>
   )
 }
-export default ViewLicence   
+export default ViewLicence

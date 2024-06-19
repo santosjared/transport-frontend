@@ -1,19 +1,17 @@
 import dynamic from 'next/dynamic';
 import { useMemo} from 'react';
-import Location from '../location';
 import type { FeatureCollection } from 'geojson';
+import { LatLng } from 'leaflet';
 
 interface Props{
+  location:any
     geojson: FeatureCollection;
-    center:[lat:number,lng:number];
-    zoom:number;
-    polyline:boolean;
-    marker:boolean;
-    setCenter:(cooordenate:[lat:number,lng:number])=>void;
+    center: [number, number];
+    setCenter:(position: LatLng | null)=>void;
     setZoom:(zoom:number)=>void
     setGeojson: (geojson: FeatureCollection) => void;
 }
-const RenderMap = ({geojson,setGeojson,center,zoom,setCenter,setZoom,polyline,marker}:Props)=>{
+const RenderMap = ({geojson,setGeojson,center,setCenter,setZoom,location}:Props)=>{
   const DrawMap = useMemo(()=>dynamic(()=>import('../drawMap')),[geojson])
   const Map = useMemo(() => dynamic(
     () => import('../../../../components/map'),
@@ -21,21 +19,16 @@ const RenderMap = ({geojson,setGeojson,center,zoom,setCenter,setZoom,polyline,ma
       loading: () => <p>Cargando la Mapa</p>,
       ssr: false
     }
-  ), [center,zoom])
+  ), [location])
     return(
           <Map 
           center={center}
-          zoom={zoom}
+          setPosition={setCenter}
+          setZoom={setZoom}
           >
             <DrawMap 
             geojson={geojson}
             setGeojson={setGeojson}
-            polyline={polyline}
-            marker={marker}
-            />
-            <Location
-            setCenter={setCenter}
-            setZoom={setZoom}
             />
           </Map>
     )

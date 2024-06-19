@@ -11,6 +11,8 @@ import road from 'src/store/apps/road'
 import tarifa from 'src/store/apps/tarifa'
 import horario from './apps/horario'
 import rol from './apps/rol'
+import userAndBus from 'src/store/apps/bus/fectchUsers'
+import monitoreo from './apps/monitoreo'
 
 export const store = configureStore({
   reducer: {
@@ -22,7 +24,9 @@ export const store = configureStore({
     road,
     tarifa, 
     horario,
-    rol
+    rol,
+    userAndBus,
+    monitoreo
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({

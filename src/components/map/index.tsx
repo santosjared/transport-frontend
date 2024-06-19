@@ -9,20 +9,24 @@ import { Map as LeafletMap } from 'leaflet';
 
 interface PropsMap {
   geoJSON?: FeatureCollection;
-  center: [lat: number, lng: number];
+  center: [number, number];
+  zoom?:number
+  setHandleChanges?:(arg:boolean) => void;
   setPosition?: (position: LatLng | null) => void;
   setZoom?: (zoom: number) => void;
-  zoom: number;
   children?: ReactNode;
 }
 
-const Map = memo(({ geoJSON, center, zoom, children, setPosition, setZoom }: PropsMap) => {
+const Map = memo(({ geoJSON, center, children, setPosition, setZoom , zoom,setHandleChanges}: PropsMap) => {
 
   const mapRef = useRef<LeafletMap | null>(null);
   if (mapRef.current && setZoom) {
     mapRef.current.on('zoomend', () => {
       const zoom = mapRef.current!.getZoom();
-      if (setZoom) { 
+      if (setZoom) {
+        if(setHandleChanges){
+          setHandleChanges(true) 
+        }
         setZoom(zoom);
       }
     });
@@ -30,6 +34,9 @@ const Map = memo(({ geoJSON, center, zoom, children, setPosition, setZoom }: Pro
   const handleMapClick = (e: any) => {
     if (setPosition) {
       const newPosition = new LatLng(e.latlng.lat, e.latlng.lng);
+      if(setHandleChanges){
+        setHandleChanges(true)
+      }
       setPosition(newPosition);
     }
   };
@@ -38,6 +45,9 @@ const Map = memo(({ geoJSON, center, zoom, children, setPosition, setZoom }: Pro
     if (setPosition) {
       const mapBounds = e.target.getBounds();
       const center = mapBounds.getCenter();
+      if(setHandleChanges){
+        setHandleChanges(true)
+      }
       setPosition(center);
     }
   };
@@ -48,7 +58,7 @@ const Map = memo(({ geoJSON, center, zoom, children, setPosition, setZoom }: Pro
   };
 
   return (
-    <MapContainer center={center} zoom={zoom} style={styleMap} ref={mapRef}>
+    <MapContainer center={center} zoom={zoom?zoom:16} style={styleMap} ref={mapRef}>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

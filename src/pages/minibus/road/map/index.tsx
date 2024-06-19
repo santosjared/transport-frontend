@@ -1,20 +1,29 @@
-import { Box, BoxProps, Button, Card, Grid, IconButton, TextField, Typography} from '@mui/material';
+import { Box, BoxProps, Button, Card, FormControl, Grid, IconButton, TextField, Typography } from '@mui/material';
 import type { FeatureCollection } from 'geojson';
 import { useCounter } from 'src/hooks/useCounter';
-import { Fragment,useState } from 'react';
+import { FormEvent, Fragment, useEffect, useState } from 'react';
 import Steppers from 'src/components/steppers';
 import Swal from 'sweetalert2'
 import { styled } from '@mui/material/styles'
 import Icon from "src/@core/components/icon"
 import RenderMap from './renderMap';
-import { useService } from 'src/hooks/useService';
-import { useMutation, useQueryClient } from 'react-query';
-import LoadingButton from '@mui/lab/LoadingButton';
 import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Cancel';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from 'src/store';
+import { addRoad } from 'src/store/apps/road';
+import useGeolocation from 'src/hooks/useGeoLocation';
+import { LatLng } from 'leaflet';
 
 interface Props {
   toggle: () => void
-  title:string
+  title: string
+}
+const defaultErrors ={
+  geojson:'',
+  center:'',
+  zoom:'',
+  name:'',
 }
 const Header = styled(Box)<BoxProps>(({ theme }) => ({
   display: 'flex',
@@ -23,222 +32,120 @@ const Header = styled(Box)<BoxProps>(({ theme }) => ({
   justifyContent: 'space-between',
   backgroundColor: theme.palette.background.default
 }))
-const steps = [{
-  title:'Rutas'
-},
-{
-  title:'Paradas'
-},
-{
-  title:'Nombre'
-}
-]
-const geoDeafult:FeatureCollection = {
+const geoDeafult: FeatureCollection = {
   type: "FeatureCollection",
-features:[]
+  features: []
 }
-const Maps = ({toggle,title}:Props)=>{
-  const {count, increment, decrement} = useCounter(0)
-  const [geojsonR,setGeojsonR] = useState<FeatureCollection>(geoDeafult)
-  const [geojsonS, setGeojsonS] = useState<FeatureCollection>(geoDeafult)
-  const [zoom,setZoom] = useState<number>(2)
-  const [center,setCenter] = useState<[lat:number,lng:number]>([0,0])
-  const [name,setName] = useState<string>('')
-  const {Post}=useService()
-  const queryClient = useQueryClient()
-  const mutation = useMutation((Data:object)=>Post('/road',Data),{
-    onSuccess:()=>{
-      queryClient.invalidateQueries('roads');
-    }
-  })
-  const handleCancel=()=>{
-    if(geojsonR.features.length !==0 || geojsonS.features.length !==0)
-    {
+const Maps = ({ toggle, title }: Props) => {
+  const [geojson, setGeojson] = useState<FeatureCollection>(geoDeafult)
+  const [zoom, setZoom] = useState<number>(16)
+  const [center, setCenter] = useState<LatLng | null>(null)
+  const [name, setName] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [formErrors,setFormErrors] = useState(defaultErrors)
+
+  const dispatch = useDispatch<AppDispatch>()
+  const { error, location } = useGeolocation()
+  const handleCancel = () => {
+    if (geojson.features.length !== 0) {
       Swal.fire({
         title: '¿Quieres descartar los cambios?',
         text: '¡No se guardaran los cambios realizados!',
         icon: "warning",
         showCancelButton: true,
         cancelButtonColor: "#3085d6",
-        confirmButtonText: 'Descartar Cambios'
+        confirmButtonText: 'Descartar Cambios',
+        cancelButtonText: 'Seguir editando'
       }).then((result) => {
         if (result.isConfirmed) {
-          setGeojsonR(geoDeafult)
-          setGeojsonS(geoDeafult)
-          toggle()
+          handleReset()
         }
       });
-    }else{
-      toggle()
+    } else {
+      handleReset()
     }
   }
-  const handleOmited = ()=>{
-    if(geojsonS.features.length !==0)
-    {
-      Swal.fire({
-        title: '¿Quieres omitir sin guardar los cambios?',
-        icon: "warning",
-        showCancelButton: true,
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: 'Omitir de todos modos',
-        cancelButtonText:'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          setGeojsonS(geoDeafult)
-          increment()
-        }
-      });
-    }else{increment()}
-  }
-  const handleClose = () => {
-    if(geojsonR.features.length !==0 || geojsonS.features.length !==0){
-      Swal.fire({
-        title: '¿Estas seguro de cerrar sin guardar?',
-        icon: "warning",
-        showCancelButton: true,
-        cancelButtonColor: "#3085d6",
-        confirmButtonColor:'red',
-        confirmButtonText: 'Cerrar sin guardar',
-        cancelButtonText:'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          toggle()
-        }
-      });
-    }else{toggle()}
-  }
-  const onSubmit =()=>{
-    const getData = ()=>{
-      return{
-        geojsonR,
-        geojsonS,
-        zoom,
-        center,
-        name
+  const onSubmit = async (e:FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    const data ={
+      geojson:geojson,
+      zoom:zoom,
+      center:center?[center.lat,center.lng]:location?[location.latitude,location.longitude]:[0,0],
+      name:name
+    }
+    try {
+      const response = await dispatch(addRoad(data))
+      if (response.payload.success) {
+        Swal.fire({ title: '¡Éxito!', text: 'Datos guardados exitosamente', icon: "success" });
+        handleReset()
+      } else {
+        if (response.payload.data) {
+          const { data } = response.payload
+          formErrors.name = data.name
+          setFormErrors(formErrors)
+        } else { Swal.fire({ title: '¡Error!', text: 'ocurio un error al guardar los datos', icon: "error" }); handleReset() }
       }
+    } catch (error) {
+      Swal.fire({ title: '¡Error!', text: 'ocurio un error al guardar los datos', icon: "error" });
+      handleReset()
+    } finally {
+      setFormErrors(formErrors)
+      setIsLoading(false)
     }
-    mutation.mutate(getData())
+   
   }
- 
-    if(mutation.isError){
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text:'Hubo un error al guardar los datos, conexion de base de datos fallida o variables de entorno no son correctos',
-      });
-    }
-    if(mutation.isSuccess)
-    {
-      Swal.fire({
-        title: '¡Éxito!',
-        text: 'Datos guardados exitosamente',
-        icon: "success"
-      });
-      toggle()
-    }
- 
-  const getStepContent = (step: number)=>{
-    switch (step) {
-      case 0:
-        return (
-               <Fragment key={step}>
-                <Grid item xs={12} sm={12}>
-                  <RenderMap 
-                  geojson={geojsonR}
-                  setGeojson={setGeojsonR}
-                  zoom={zoom}
-                  center={center}
-                  setZoom={setZoom}
-                  setCenter={setCenter}
-                  polyline={true}
-                  marker={false}
-                  />
-                </Grid>
-                </Fragment>
-            )
-            case 1:
-              return (
-                     <Fragment key={step}>
-                      <Grid item xs={12} sm={12}>
-                        <RenderMap
-                        geojson={geojsonS}
-                        setGeojson={setGeojsonS}
-                        zoom={zoom}
-                        center={center}
-                        setCenter={setCenter}
-                        setZoom={setZoom}
-                        polyline={false}
-                        marker={true}
-                        />
-                      </Grid>
-                      </Fragment>
-                  )
-            case 2: 
-            return(
-              <Fragment>
-                <Grid item xs={12} sm={12}>
-                <TextField
-                fullWidth
-                label='Nombre de ruta'
-                placeholder='ruta y parada 110'
-                value={name}
-                onChange={e => setName(e.target.value)}
-              />
-                </Grid>
-              </Fragment>
-            )
-        default: return 'Unknown Step'
-    }
-  }
+  const handleReset = () =>{
+    setName('')
+    setGeojson(geoDeafult)
+    defaultErrors.name=''
+    setFormErrors(defaultErrors)
+    toggle()
+  } 
   return (
-  <Card>
-    <Header>
-    <Typography variant='h6'>{title}</Typography>
-    <IconButton size='small' onClick={handleClose} sx={{ color: 'text.primary' }}>
-      <Icon icon='mdi:close' fontSize={20} />
-      </IconButton>
-  </Header>
-    <Steppers 
-    activeStep={count}
-    steps={steps}
-    >
-      <Grid container spacing={5}>
-        {getStepContent(count)}
-        <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button
-            size='large'
-            variant='outlined'
-            color='secondary'
-            disabled={count === 0 || mutation.isLoading}
-            onClick={decrement}
-          >
-            Atras
-          </Button>
-          <Box sx={{ flex: '1 1 auto' }} />
-          <Button size='large' variant='outlined' 
-          disabled={mutation.isLoading}
-          onClick={count ===1?handleOmited:handleCancel} color='secondary' sx={{mr:1}}>
-            {count === 1? 'Omitir': 'Cancelar'}</Button>
-          {mutation.isLoading?
-                <LoadingButton
-                loading
-                loadingPosition="start"
-                startIcon={<SaveIcon />}
-                variant="outlined"
-              >
-                Guardando...
-              </LoadingButton>:
-          <Button size='large' 
-          variant={'contained'} 
-          onClick={count === steps.length-1?onSubmit:increment}
-          startIcon={count === steps.length-1 || mutation.isLoading?<SaveIcon/>:''} 
-          >
-            {count === steps.length - 1 ?'Guardar' : 'Siguiente'}
-          </Button>}
+    <Card>
+      <Header>
+        <Typography variant='h6'>{title}</Typography>
+        <IconButton size='small' onClick={handleCancel} sx={{ color: 'text.primary' }}>
+          <Icon icon='mdi:close' fontSize={20} />
+        </IconButton>
+      </Header>
+      <form onSubmit={onSubmit}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={12}>
+          <RenderMap
+            geojson={geojson}
+            setGeojson={setGeojson}
+            center={location?[location.latitude, location.longitude]:[0,0]}
+            setCenter={setCenter}
+            setZoom={setZoom}
+            location={location}
+          />
+        </Grid>
+        <Grid item xs={12} sm={12}>
+          <Box sx={{ pt: 3, pl: 10, pr: 10, pb: 10 }}>
+            <FormControl fullWidth sx={{ mb: 6 }}>
+              <TextField
+                label='Nombre de la ruta'
+                value={name}
+                error={Boolean(formErrors.name)}
+                helperText = {formErrors.name}
+                onChange={e=>setName(e.target.value)}
+              />
+            </FormControl>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Button size='large' variant='outlined' color='secondary' onClick={handleCancel} startIcon={<CancelIcon />}>
+                Cancel
+              </Button>
+              <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<SaveIcon />}>
+                Guardar
+              </Button>
+            </Box>
+          </Box>
         </Grid>
       </Grid>
-    </Steppers>
+      </form>
     </Card>
   )
-  }
+}
 export default Maps

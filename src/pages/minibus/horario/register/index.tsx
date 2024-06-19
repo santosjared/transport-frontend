@@ -1,19 +1,45 @@
-import { Box, Button, Checkbox, FormControl, FormControlLabel, Grid, Tab, Tabs, TextField } from "@mui/material"
-import { ChangeEvent, useRef, useState } from "react";
+import { Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid,TextField } from "@mui/material"
+import { ChangeEvent, FormEvent, Fragment, useState } from "react";
 import React from 'react';
-import TabPanel from "src/components/TabPanel";
 import SaveIcon from '@mui/icons-material/Save'
 import CancelIcon from '@mui/icons-material/Cancel'
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { styled } from '@mui/material/styles';
-import { useMutation, useQueryClient } from "react-query";
-import { useService } from "src/hooks/useService";
+import { addHorario } from "src/store/apps/horario";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "src/store";
+import Swal from "sweetalert2";
 
-const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo', 'Feriados']
 
 interface Props {
     toggle: () => void
 }
+interface horarioDta {
+    name:string
+    place:string,
+    firstOut:string
+    lastOut:string
+    days:string[],
+    description:string
+    otherDay:string
+}
+const defaultErrors = {
+    name:'',
+    place:'',
+    firstOut:'',
+    lastOut:'',
+    days:'',
+    description:''
+}
+const defaultData: horarioDta = {
+    name: '',
+    place: '',
+    firstOut: '00:00',
+    lastOut: '00:00',
+    days: [],
+    description: '',
+    otherDay:''
+};
 
 const StyledTextField = styled(TextField)({
     '& input': {
@@ -22,107 +48,99 @@ const StyledTextField = styled(TextField)({
 });
 const RegisterHorario = ({ toggle }: Props) => {
 
+    const [horarioForms,setHorarioForms] = useState<horarioDta>(defaultData)
+    const [formErrors,setFormErrors] = useState(defaultErrors)
     const [value, setValue] = useState(0);
-    const [name, setName] = useState('')
+    const [Days, setDays] = useState<string[]>([]);
+    const dispatch = useDispatch<AppDispatch>()
+    const [isLoading, setIsLoading] = useState(false)
 
-    const [firstOutIda, setFirstOutIda] = useState('00:00');
-    const [lastOutIda, setLastOutIda] = useState('00:00');
-    const [DaysIda, setDaysIda] = useState<string[]>([]);
-    const [placeIda, setPlaceIda] = useState('')
-    const [descriptionIda, setDescriptionIda] = useState('')
-
-    const [firstOutVuelta, setFirstOutVuelta] = useState('00:00');
-    const [lastOutVuelta, setLastOutVuelta] = useState('00:00');
-    const [DaysVuelta, setDaysVuelta] = useState<string[]>([]);
-    const [placeVuelta, setPlaceVuelta] = useState('')
-    const [descriptionVuelta, setDescriptionVuelta] = useState('')
-
-    const { Post, Get } = useService()
-    const queryClient = useQueryClient()
-    const mutation = useMutation((Data: object) => Post('/horario', Data), {
-        onSuccess: () => {
-          queryClient.invalidateQueries('horario')
-        }
-      })
-    
-
-    const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-        setValue(newValue);
-    };
-    const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setName(e.target.value)
-    }
     const handleClose = () => {
         toggle()
         handleReset()
     }
+    const handleChangeFields = (e: ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target
+        setHorarioForms({
+            ...horarioForms,
+            [name]: value
+        })
+        setFormErrors({
+            ...formErrors,
+            [name]: ''
+        })
+    }
     const handleCheckboxIdaChange = (event: ChangeEvent<HTMLInputElement>) => {
         const { value, checked } = event.target;
         if (checked) {
-            setDaysIda([...DaysIda, value]);
+            setDays([...Days, value]);
         } else {
-            setDaysIda(DaysIda.filter((day) => day !== value));
+            setDays(Days.filter((day) => day !== value));
         }
     };
-    const handleCheckboxVueltaChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const { value, checked } = event.target;
-        if (checked) {
-            setDaysVuelta([...DaysVuelta, value]);
-        } else {
-            setDaysVuelta(DaysVuelta.filter((day) => day !== value));
+    const onSubmit = async (e: FormEvent) =>{  
+        e.preventDefault()
+        horarioForms.days= Days
+        setIsLoading(true)
+        try {
+          const response = await dispatch(addHorario(horarioForms))
+          if (response.payload.success) {
+            Swal.fire({ title: '¡Éxito!', text: 'Datos guardados exitosamente', icon: "success" });
+            handleReset()
+          } else {
+            if (response.payload.data) {
+              const { data } = response.payload
+              formErrors.name = data.name
+              formErrors.place = data.place
+              formErrors.firstOut = data.firstOut
+              formErrors.lastOut = data.lastOut
+              formErrors.days = data.days
+            } else { Swal.fire({ title: '¡Error!', text: 'ocurio un error al guardar los datos', icon: "error" }); handleReset() }
+          }
+        } catch (error) {
+          Swal.fire({ title: '¡Error!', text: 'ocurio un error al guardar los datos', icon: "error" });
+          handleReset()
+        } finally {
+          setIsLoading(false)
+          setFormErrors(formErrors)
         }
-    };
-    const handleSaveClick = () =>{
-        console.log('dispara')
-        const data = {
-            name:name,
-            horarioIda:{
-                place:placeIda,
-                firstOut:firstOutIda,
-                lastOut:lastOutIda,
-                days:DaysIda,
-                description:descriptionIda
-            },
-            horarioVuelta:{
-                place:placeVuelta,
-                firstOut:firstOutVuelta,
-                lastOut:lastOutVuelta,
-                days:DaysVuelta,
-                description:descriptionVuelta
-            }
-        }
-        mutation.mutate(data)
-        handleReset()
     }
     const handleReset = () =>{
-        setFirstOutIda('00:00')
-        setLastOutIda('00:00')
-        setPlaceIda('')
-        setDaysIda([])
-        setFirstOutVuelta('00:00')
-        setLastOutVuelta('00:00')
-        setPlaceVuelta('')
-        setDaysVuelta([])
+        setHorarioForms(defaultData);
+        setDays([]);
+        setFormErrors(defaultErrors);
+        toggle();
     }
     return (
-        <Box>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 6 }}>
-                <Tabs value={value} onChange={handleChange} aria-label="horizontal tabs">
-                    <Tab label="Horarios de Ida" />
-                    <Tab label="Horarios de Vuelta" />
-                    <Tab label="Nombre del Horario" />
-                </Tabs>
-            </Box>
-            <TabPanel value={value} index={0}>
+        <form onSubmit={onSubmit}>
             <Box sx={{ border: '1px solid #EEEDED', borderTopLeftRadius: 10, borderTopRightRadius: 10, pl: 5 }}>
                 <Grid container spacing={2}>
                     {days.map((day, index) => (
-                        <Grid key={index} item xs={4}>
+                        <Fragment key={index}><Grid item xs={4}>
                             <FormControlLabel
-                                control={<Checkbox checked={DaysIda.includes(day)} onChange={handleCheckboxIdaChange} value={day} />}
+                                control={<Checkbox checked={Days.includes(day)} onChange={handleCheckboxIdaChange} value={day} />}
                                 label={day}
                             />
+                            {formErrors.days && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.days}</FormHelperText>}
                         </Grid>
+                          {index === days.length-1?
+                          <Grid item xs={4}>
+                            <FormControl fullWidth sx={{mb:3,pr:4}}>
+                            <TextField 
+                            label='Otro'
+                            name="otherDay"
+                            placeholder="Fin de semana"
+                            value={horarioForms.otherDay}
+                            error={Boolean(formErrors.days)}
+                            helperText = {formErrors.days}
+                            autoComplete='off'
+                            onChange={handleChangeFields}
+                            />
+                          </FormControl>
+                          </Grid>
+                            :''
+                            }
+                    </Fragment>
                     ))}
                 </Grid>
             </Box>
@@ -135,12 +153,15 @@ const RegisterHorario = ({ toggle }: Props) => {
                         <FormControl fullWidth>
                             <StyledTextField
                                 fullWidth
-                                label='Hora última Salida'
+                                label='Hora primera Salida'
                                 variant="outlined"
-                                value={firstOutIda}
-                                onChange={(e)=>setFirstOutIda(e.target.value)}
+                                name="firstOut"
+                                value={horarioForms.firstOut}
+                                onChange={handleChangeFields}
                                 type='time'
                                 autoComplete='off'
+                                error={Boolean(formErrors.firstOut)}
+                                helperText = {formErrors.firstOut}
                                 inputProps={{
                                     maxLength: 5,
                                     pattern: '^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$',
@@ -153,12 +174,15 @@ const RegisterHorario = ({ toggle }: Props) => {
                         <FormControl fullWidth sx={{ mb: 6 }}>
                             <StyledTextField
                                 fullWidth
+                                name="lastOut"
                                 label='Hora última Salida'
                                 variant="outlined"
                                 autoComplete='off'
-                                value={lastOutIda}
-                                onChange={(e)=>setLastOutIda(e.target.value)}
+                                value={horarioForms.lastOut}
+                                onChange={handleChangeFields}
                                 type='time'
+                                error = {Boolean(formErrors.lastOut)}
+                                helperText = {formErrors.lastOut}
                                 inputProps={{
                                     maxLength: 5,
                                     pattern: '^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$',
@@ -167,15 +191,31 @@ const RegisterHorario = ({ toggle }: Props) => {
                             />
                         </FormControl>
                     </Grid>
-                </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={6}>
                 <FormControl fullWidth sx={{mb:6}}>
                             <TextField
                                 label='Lugar de salida'
+                                name="place"
                                 placeholder='Las Lecherias'
                                 autoComplete='off'
-                                value={placeIda}
-                                onChange={(e)=>setPlaceIda(e.target.value)}
+                                value={horarioForms.place}
+                                onChange={handleChangeFields}
+                                error={Boolean(formErrors.place)}
+                                helperText = {formErrors.place}
+                            />
+                        </FormControl>
+                </Grid>
+                <Grid item xs={6}>
+                <FormControl fullWidth sx={{mb:6}}>
+                            <TextField
+                                label='Nombre de horario'
+                                name="name"
+                                placeholder='Horario Ida'
+                                autoComplete='off'
+                                value={horarioForms.name}
+                                onChange={handleChangeFields}
+                                error={Boolean(formErrors.name)}
+                                helperText={formErrors.name}
                             />
                         </FormControl>
                 </Grid>
@@ -183,139 +223,27 @@ const RegisterHorario = ({ toggle }: Props) => {
                     <FormControl fullWidth sx={{ mb: 6 }}>
                         <TextField
                             label='Descripción'
+                            name="description"
                             placeholder='opcional'
                             autoComplete='off'
-                            value={descriptionIda}
-                            onChange={(e)=>setDescriptionIda(e.target.value)}
+                            value={horarioForms.description}
+                            onChange={handleChangeFields}
                         />
                     </FormControl>
                 </Grid>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    
+                </Grid>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}> 
                     <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
                         Cancel
                     </Button>
                     <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} 
-                    onClick={()=>setValue(1)}
-                    startIcon={<ArrowForwardIosIcon />}
+                    startIcon={<SaveIcon />}
                     >
-                        Siguiente
+                        guardar
                     </Button>
                 </Box>
             </Box>
-            </TabPanel>
-            <TabPanel value={value} index={1}>
-            <Box sx={{ border: '1px solid #EEEDED', borderTopLeftRadius: 10, borderTopRightRadius: 10, pl: 5 }}>
-                <Grid container spacing={2}>
-                    {days.map((day, index) => (
-                        <Grid key={index} item xs={4}>
-                            <FormControlLabel
-                                control={<Checkbox checked={DaysVuelta.includes(day)} onChange={handleCheckboxVueltaChange} value={day} />}
-                                label={day}
-                            />
-                        </Grid>
-                    ))}
-                </Grid>
-            </Box>
-            <Box sx={{
-                borderTop: 0, borderBottom: '1px solid #EEEDED', borderLeft: '1px solid #EEEDED', borderRight: '1px solid #EEEDED',
-                borderBottomLeftRadius: 10, borderBottomRightRadius: 10, p: 5
-            }}>
-                <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                        <FormControl fullWidth>
-                            <StyledTextField
-                                fullWidth
-                                label='Hora última Salida'
-                                variant="outlined"
-                                autoComplete='off'
-                                value={firstOutVuelta}
-                                onChange={(e)=>setFirstOutVuelta(e.target.value)}
-                                type='time'
-                                inputProps={{
-                                    maxLength: 5,
-                                    pattern: '^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$',
-                                    placeholder: 'HH:mm',
-                                }}
-                            />
-                        </FormControl>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <FormControl fullWidth sx={{ mb: 6 }}>
-                            <StyledTextField
-                                fullWidth
-                                label='Hora última Salida'
-                                variant="outlined"
-                                value={lastOutVuelta}
-                                autoComplete='off'
-                                onChange={(e)=>setLastOutVuelta(e.target.value)}
-                                type='time'
-                                inputProps={{
-                                    maxLength: 5,
-                                    pattern: '^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$',
-                                    placeholder: 'HH:mm',
-                                }}
-                            />
-                        </FormControl>
-                    </Grid>
-                </Grid>
-                <Grid item xs={12}>
-                <FormControl fullWidth sx={{mb:6}}>
-                            <TextField
-                                label='Lugar de salida'
-                                placeholder='Las Lecherias'
-                                value={placeVuelta}
-                                autoComplete='off'
-                                onChange={(e)=>setPlaceVuelta(e.target.value)}
-                            />
-                        </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                    <FormControl fullWidth sx={{ mb: 6 }}>
-                        <TextField
-                            label='Descripción'
-                            placeholder='opcional'
-                            value={descriptionVuelta}
-                            autoComplete='off'
-                            onChange={(e)=>setDescriptionVuelta(e.target.value)}
-                        />
-                    </FormControl>
-                </Grid>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
-                        Cancel
-                    </Button>
-                    <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} 
-                    onClick={()=>setValue(2)}
-                    startIcon={<ArrowForwardIosIcon />}>
-                        Siguiente
-                    </Button>
-                </Box>
-            </Box>
-            </TabPanel>
-            <TabPanel value={value} index={2}>
-                <Box sx={{ border: '1px solid #EEEDED', borderRadius: 1, p: 5 }}>
-                    <FormControl fullWidth sx={{ mb: 6 }}>
-                        <TextField
-                            label='Nombre de horario'
-                            placeholder='horario 012'
-                            autoComplete='off'
-                            value={name}
-                            onChange={handleNameChange}
-                        />
-                    </FormControl>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
-                            Cancel
-                        </Button>
-                        <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} onClick={handleSaveClick}
-                            startIcon={<SaveIcon />}>
-                            Guardar
-                        </Button>
-                    </Box>
-                </Box>
-            </TabPanel>
-        </Box >
+        </form>
     )
 }
 export default RegisterHorario

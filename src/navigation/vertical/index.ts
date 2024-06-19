@@ -19,19 +19,14 @@ const navigation = (): VerticalNavItemsType => {
       icon:'mdi:users'
     },
     {
+      title:'Roles y Permiso',
+      path:'/minibus/role',
+      icon:'carbon:user-role'
+    },
+    {
       title: 'Registro de microbuses',
       path: '/minibus/bus',
       icon: 'mdi:bus'
-    },
-    {
-      title: 'Registro de lineas',
-      path: '/minibus/lineas',
-      icon: 'tabler:list-letters'
-    },
-    {
-      title:'Registro de rutas',
-      path:'/minibus/road',
-      icon:'material-symbols:fork-right'
     },
     {
       title:'Registro de tarifas',
@@ -44,10 +39,20 @@ const navigation = (): VerticalNavItemsType => {
       icon:'game-icons:notebook'
     },
     {
-      title:'Conectar Dispositivo GPS',
-      path:'/minibus/gps',
-      icon:'mdi:cellphone-gps'
-    }
+      title:'Registro de rutas',
+      path:'/minibus/road',
+      icon:'material-symbols:fork-right'
+    },
+    {
+      title: 'Registro de lineas',
+      path: '/minibus/lineas',
+      icon: 'tabler:list-letters'
+    },
+    // {
+    //   title:'Conectar Dispositivo GPS',
+    //   path:'/minibus/gps',
+    //   icon:'mdi:cellphone-gps'
+    // }
     // {
     //   title:'Registro de Rutas y Tarifas',
     //   icon:'material-symbols:fork-right',

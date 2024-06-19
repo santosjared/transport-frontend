@@ -8,9 +8,8 @@ import type { FeatureCollection} from 'geojson';
 import * as L from 'leaflet';
 interface Props{
     geojson: FeatureCollection;
+    setHandleChanges?:(arg:boolean) => void
     setGeojson: (geojson: FeatureCollection) => void;
-    polyline:boolean
-    marker:boolean;
 }
 const Colors:CSSProperties = createStyles({
     width:34,
@@ -26,7 +25,7 @@ const Colors:CSSProperties = createStyles({
     }
 })
 
-const DrawMap = ({geojson,setGeojson,polyline,marker}:Props)=>{
+const DrawMap = ({geojson,setGeojson, setHandleChanges}:Props)=>{
     const ref = useRef<L.FeatureGroup>(null);
     const [polylineColor, setPolylineColor] = useState('#000');
     useEffect(() => {
@@ -56,6 +55,10 @@ const DrawMap = ({geojson,setGeojson,polyline,marker}:Props)=>{
                 ...geo,
                 features: updatedFeatures,
               };
+              if(setHandleChanges){
+                setHandleChanges(true)
+              }
+              
             setGeojson(updatedGeo);
           }
     }
@@ -81,11 +84,11 @@ const DrawMap = ({geojson,setGeojson,polyline,marker}:Props)=>{
             //         color:polylineColor
             //     }
             // },
-            polyline:polyline,
+            polyline:true,
             polygon:false,
             circle:false,
             circlemarker:false,
-            marker:marker,
+            marker:true,
             rectangle:false,
         }}
         />

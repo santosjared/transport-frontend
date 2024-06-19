@@ -39,6 +39,8 @@ interface FormErrors {
 }
 interface Props {
     toggle: () => void;
+    page:number,
+    pageSize:number
 }
 
 const genders = [
@@ -51,7 +53,7 @@ interface liceneTypes{
     dateEmition: Date | null
     dateExpire: Date | null
     licenceFront:File | null
-    licenceBack:File | null 
+    licenceBack:File | null
 }
 interface userTypes{
     profile: File | null,
@@ -116,7 +118,7 @@ const VisuallyHiddenInput = styled('input')({
     whiteSpace: 'nowrap',
     width: 1,
 });
-const AddUser = ({ toggle }: Props) => {
+const AddUser = ({ toggle, page, pageSize }: Props) => {
 
     const [formUser, setformUser] = useState<userTypes>(defaultUserData)
     const [formLicence, setFormLicence] = useState<liceneTypes>(defaultLicenceData)
@@ -247,8 +249,8 @@ const AddUser = ({ toggle }: Props) => {
                                         errors.lastName=response.payload.data.lastName
                                         errors.email=response.payload.data.email
                                         errors.name=response.payload.data.name
-                                        errors.password=response.payload.data.password  
-                                        setFormErrors(errors) 
+                                        errors.password=response.payload.data.password
+                                        setFormErrors(errors)
                                     }else{
                                         if(response.payload){
                                             setformUser(defaultUserData)
@@ -283,8 +285,8 @@ const AddUser = ({ toggle }: Props) => {
                         errors.lastName=response.payload.data.lastName
                         errors.email=response.payload.data.email
                         errors.name=response.payload.data.name
-                        errors.password=response.payload.data.password  
-                        setFormErrors(errors) 
+                        errors.password=response.payload.data.password
+                        setFormErrors(errors)
                     }else{
                         if(response.payload){
                             setformUser(defaultUserData)
@@ -521,7 +523,7 @@ const AddUser = ({ toggle }: Props) => {
                             <TextField
                                 name="email"
                                 label='Correo electrónico'
-                                placeholder='expale@gmail.com'
+                                placeholder='example@gmail.com'
                                 onChange={handleChangeFields}
                                 error={Boolean(formErrors.email)}
                                 helperText={formErrors.email}

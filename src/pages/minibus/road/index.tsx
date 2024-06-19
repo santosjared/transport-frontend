@@ -1,127 +1,58 @@
-import React, { useCallback, useState, MouseEvent, useEffect, useMemo} from 'react'
-import {Box, Button, Card, CardHeader, Grid, Hidden, IconButton, Typography} from '@mui/material'
+import React, { useCallback, useState, MouseEvent, useEffect, ChangeEvent } from 'react'
+import { Box, Button, Card, CardHeader, FormControl, Grid, IconButton, TextField, Typography } from '@mui/material'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
-import {styled} from '@mui/material/styles'
-import { DataGrid} from '@mui/x-data-grid'
+import { DataGrid } from '@mui/x-data-grid'
 import TableHeader from 'src/components/tableHeader'
-import Link from 'next/link'
-import { useDispatch } from 'react-redux'
 import Icon from 'src/@core/components/icon'
-import AddUserDrawer from 'src/views/apps/minibus/choferes/AddUserDrawer'
-import axios from 'axios'
-import AddDrawMap from 'src/components/addDrawMap'
-import Steppers from 'src/components/steppers'
-import { useCounter } from 'src/hooks/useCounter'
 import Maps from './map'
-import Divider from '@mui/material/Divider'
-import { useService } from 'src/hooks/useService'
-import { useMutation, useQuery, useQueryClient } from 'react-query'
-import type { FeatureCollection } from 'geojson';
 import CustomChip from 'src/@core/components/mui/chip'
 import Swal from 'sweetalert2'
 import { format } from 'date-fns';
+import { useDispatch } from 'react-redux'
+import { AppDispatch, RootState } from 'src/store'
+import { deleteRoad, fetchData } from 'src/store/apps/road'
+import { useSelector } from 'react-redux'
 import ViewMap from './viewMap'
+import MapsEdit from './edit'
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 interface RoadData {
-  createdAt:string
-  name:string
-  status:boolean
-  id:string
+  createdAt: string
+  name: string
+  status: boolean
+  id: string
+}
+
+
+const defaultFilter = {
+  createdAt: '',
+  name: '',
+  status: '',
+  road: ''
 }
 
 interface TypeCell {
-  row:RoadData
+  row: RoadData
 }
 
-const columns = [
-  {
-      flex:0.2,
-      minWidth:110,
-      field:'name',
-      headerName:'Nombres de rutas',
-      renderCell:({row}:TypeCell)=>{
-        return(
-          <Typography noWrap variant='body2'>
-          {row.name}
-        </Typography>
-        )
-      }
-  },
-  {
-      flex:0.2,
-      minWidth:110,
-      field:'createdAt',
-      headerName:'Fecha de Creación',
-      renderCell:({row}:TypeCell)=>{
-        return(
-          <Typography noWrap variant='body2'>
-          {format(new Date(row.createdAt), 'dd/MM/yyyy')}
-        </Typography>
-        )
-      }
-  },
-  {
-    flex:0.2,
-    minWidth:110,
-    field:'road',
-    headerName:'Rutas',
-    renderCell:({row}:TypeCell)=>{
-      return(
-        <Typography noWrap variant='body2'>
-          <Button variant='outlined' sx={{textTransform:'lowercase'}} href='/minibus/road/view/rutas/'>ver rutas</Button>
-        </Typography>
-      )
-    }
-  },
-  {
-      flex:0.2,
-      minWidth:110,
-      field:'status',
-      variant:'outlined',
-      headerName:'Estado',
-      renderCell: ({ row }: TypeCell) => {
-        return (
-          <CustomChip
-            skin='light'
-            size='small'
-            label={row.status? 'Activo':'Inactivo'}
-            color={row.status? 'success':'secondary'}
-            sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
-          />
-        )
-      }
-  },
-  {
-      flex:0.2,
-      minWidth:110,
-      field:'actions',
-      sortable:false,
-      headerName:'Acciones',
-      renderCell:({row}:TypeCell)=>{
-          return(<RowOptions id={row.id}/>)
-      }
-  }
-]
 
-const RowOptions = ({ id }: { id: number | string }) => {
+
+const Roads = () => {
+
+  const RowOptions = ({ id, data }: { id: number | string; data: RoadData }) => {
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
     const rowOptionsOpen = Boolean(anchorEl)
-    const {Delete}=useService()
-    const queryClient = useQueryClient()
-    const remove = useMutation((id:string | number)=>Delete('/road',id),{
-      onSuccess:()=>{
-        queryClient.invalidateQueries('roads')
-      }
-    })
     const handleRowOptionsClick = (event: MouseEvent<HTMLElement>) => {
       setAnchorEl(event.currentTarget)
     }
+    const dispatch = useDispatch<AppDispatch>()
     const handleRowOptionsClose = () => {
       setAnchorEl(null)
     }
-  
+
     const handleDelete = async () => {
       handleRowOptionsClose()
       const confirme = await Swal.fire({
@@ -129,32 +60,22 @@ const RowOptions = ({ id }: { id: number | string }) => {
         icon: "warning",
         showCancelButton: true,
         cancelButtonColor: "#3085d6",
-        cancelButtonText:'Cancelar',
-        confirmButtonColor:'red',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ff4040',
         confirmButtonText: 'Eliminar',
-      }).then(async(result)=>{return await result.isConfirmed});
-      if(confirme)
-      {
-          remove.mutate(id)
+      }).then(async (result) => { return await result.isConfirmed });
+      if (confirme) {
+        dispatch(deleteRoad(id)).then((result) => {
+          if (result.payload) {
+            Swal.fire({
+              title: '¡Éxito!',
+              text: 'Los datos fueron eliminados',
+              icon: "success"
+            });
+          }
+        })
       }
     }
-    useEffect(()=>{
-      if(remove.isSuccess){
-        Swal.fire({
-          title: '¡Éxito!',
-          text: 'Los datos fueron eliminados',
-          icon: "success"
-        });
-      }
-      if(remove.isError)
-      {
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text:'Hubo un error al eliminar los datos, conexion de base de datos fallida o variables de entorno no son correctos',
-        });
-      }
-    },[remove.isSuccess,remove.isError])
     return (
       <>
         <IconButton size='small' onClick={handleRowOptionsClick}>
@@ -175,74 +96,242 @@ const RowOptions = ({ id }: { id: number | string }) => {
           }}
           PaperProps={{ style: { minWidth: '8rem' } }}
         >
-          <MenuItem onClick={handleRowOptionsClose} sx={{ '& svg': { mr: 2 } }}>
-            <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4'/>
+          <MenuItem onClick={() => { handleRowOptionsClose(); handleEdit(data) }} sx={{ '& svg': { mr: 2 } }}>
+            <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4' />
             Editar
           </MenuItem>
           <MenuItem onClick={handleDelete} sx={{ '& svg': { mr: 2 } }}>
-            <Icon icon='mdi:delete-outline' fontSize={20} color='red'/>
+            <Icon icon='mdi:delete-outline' fontSize={20} color='red' />
             Eliminar
           </MenuItem>
         </Menu>
       </>
     )
   }
-  
-const Roads = ()=>{
-  
-    const [pageSize,setPageSize]=useState<number>(10)
-    const [value, setValue] = useState<string>('')
-    const [hidden, setHidden] = useState<boolean>(false)
-    const {Get}=useService()
-    const {data,isLoading,isError} = useQuery('roads',()=>Get('/road'))
-    const handleFilter = useCallback((val: string) => {
-        setValue(val)
-      }, [])
-      const toggleDrawer = () => setHidden(!hidden)
-      useEffect(()=>{
-        if(isError)
-        {
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text:'Hubo un error al obtener los datos, conexion de base de datos fallida o variables de entorno no son correctos',
-          });
-        }
-      },[isError])
-      if(!hidden){
-    return(
-        <Grid container spacing={6} >
-            <Grid item xs={12}>
-                <Card>
-                    <CardHeader title='Registro de rutas' sx={{pb:0, '& .MuiCardHeader-title':{letterSpacing:'.15px'}}} />
-                    <TableHeader 
-                    value={value} 
-                    handleFilter={handleFilter} 
-                    toggle={toggleDrawer}  
-                    placeholder='Busquedad de lineas'
-                    title='Nuevo Rutas'
-                    disable={isError || isLoading}
-                    />
-                    {isLoading?<Box sx={{textAlign:'center'}}>Cargando datos...</Box>:!isError?
-                    <DataGrid
-                    autoHeight
-                    rows={data?.data}
-                    columns={columns}
-                    pageSize={pageSize}
-                    disableSelectionOnClick
-                    rowsPerPageOptions={[10,25,50]}
-                    sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
-                    onPageSizeChange={(newPageSize: number) => setPageSize(newPageSize)}
-                    />:''
-                    }
-                </Card>
-            </Grid>
+  const columns = [
+    {
+      flex: 0.2,
+      minWidth: 110,
+      field: 'name',
+      headerName: 'Nombres de rutas',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant='body2'>
+            {row.name}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 110,
+      field: 'createdAt',
+      headerName: 'Fecha de Creación',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant='body2'>
+            {format(new Date(row.createdAt), 'dd/MM/yyyy')}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 110,
+      field: 'road',
+      headerName: 'Rutas',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <>
+            <OpenInNewIcon sx={{ color: `#A0A0A0`, cursor: 'pointer' }} onClick={() => handleData(row)} />
+            <Typography noWrap variant='body2' sx={{ cursor: 'pointer' }} onClick={() => handleData(row)}>ver rutas</Typography>
+          </>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 110,
+      field: 'status',
+      variant: 'outlined',
+      headerName: 'Estado',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <CustomChip
+            skin='light'
+            size='small'
+            label={row.status ? 'Activo' : 'Inactivo'}
+            color={row.status ? 'success' : 'secondary'}
+            sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
+          />
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 110,
+      field: 'actions',
+      sortable: false,
+      headerName: 'Acciones',
+      renderCell: ({ row }: TypeCell) => {
+        return (<RowOptions id={row.id} data={row} />)
+      }
+    }
+  ]
+
+  const [pageSize, setPageSize] = useState<number>(10)
+  const [hidden, setHidden] = useState<boolean>(false)
+  const [openRoad, setOpenRoad] = useState(false)
+  const [data, setData] = useState<any>()
+  const [openEdit, setOpenEdit] = useState(false)
+  const [openfilters, setOpenFilters] = useState(false)
+  const [filters, setFilters] = useState(defaultFilter)
+
+  const dispatch = useDispatch<AppDispatch>()
+  const store = useSelector((state: RootState) => state.road)
+  useEffect(() => {
+    dispatch(fetchData())
+  }, [])
+
+  const toggleDrawer = () => setHidden(!hidden)
+  const toggleRoad = () => setOpenRoad(!openRoad)
+  const toggleEdit = () => setOpenEdit(!openEdit)
+  const toggleFilter = () => setOpenFilters(!openfilters)
+
+  const handleData = (dta: RoadData) => {
+    setData(dta)
+    toggleRoad()
+  }
+  const handleEdit = (dta: RoadData) => {
+    setData(dta)
+    toggleEdit()
+  }
+
+
+  const handleChangeFields = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFilters({
+      ...filters,
+      [name]: value
+    })
+  }
+
+  const handleFilters = () => {
+
+  }
+  const handleReset = () => {
+
+  }
+  if (!hidden && !openRoad && !openEdit) {
+    return (
+      <Grid container spacing={6} >
+        <Grid item xs={12}>
+          <Card>
+            <CardHeader title='Registro de rutas' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
+            <Box sx={{ p: 5, pb: 3, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter}>
+                {openfilters ? 'Cerrar filtrado' : 'Filtrar por columnas'}
+              </Button>
+              <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={toggleDrawer} variant='contained'>
+                Nuevo ruta
+              </Button>
+            </Box>
+            {openfilters ? <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
+              <Card sx={{ p: 2 }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={3}>
+                    <FormControl fullWidth sx={{ mb: 1 }}>
+                      <TextField label='Nombre de horario'
+                        variant='standard'
+                        name="name"
+                        fullWidth
+                        autoComplete='off'
+                        value={filters.name}
+                        onChange={handleChangeFields}
+                        InputProps={{
+                          startAdornment: <FilterListIcon />,
+                        }}
+                      />
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={3}>
+                    <FormControl fullWidth sx={{ mb: 1 }}>
+                      <TextField label='Fecha de creación'
+                        variant='standard'
+                        name="createdAt"
+                        fullWidth
+                        value={filters.createdAt}
+                        onChange={handleChangeFields}
+                        autoComplete='off'
+                        InputProps={{
+                          startAdornment: <FilterListIcon />,
+                        }}
+                      />
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={3}>
+                    <FormControl fullWidth sx={{ mb: 1 }}>
+                      <TextField label='Ruta'
+                        variant='standard'
+                        fullWidth
+                        name="road"
+                        value={filters.road}
+                        onChange={handleChangeFields}
+                        autoComplete='off'
+                        InputProps={{
+                          startAdornment: <FilterListIcon />,
+                        }}
+                      />
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={3}>
+                    <FormControl fullWidth sx={{ mb: 1 }}>
+                      <TextField label='Estado'
+                        variant='standard'
+                        fullWidth
+                        name="status"
+                        value={filters.status}
+                        onChange={handleChangeFields}
+                        autoComplete='off'
+                        InputProps={{
+                          startAdornment: <FilterListIcon />,
+                        }}
+                      />
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Box>
+                      <Button variant="contained" sx={{ mr: 3 }} onClick={handleFilters}>Filtrar</Button>
+                      <Button variant="outlined" onClick={handleReset}>Restablecer</Button>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Card>
+            </Box> : ''}
+            {store.isLoading ? <Box sx={{ textAlign: 'center' }}>Cargando datos...</Box> : !store.isError ?
+              <DataGrid
+                autoHeight
+                rows={store.data}
+                columns={columns}
+                pageSize={pageSize}
+                disableSelectionOnClick
+                rowsPerPageOptions={[10, 25, 50]}
+                sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+                onPageSizeChange={(newPageSize: number) => setPageSize(newPageSize)}
+              /> : ''
+            }
+          </Card>
         </Grid>
+      </Grid>
     )
   }
-  else{
-    return(
-      <Maps toggle={toggleDrawer} title='Registrar Rutas'/>
+  else {
+    return (
+      <>
+        {openRoad ? <ViewMap data={data} onClose={toggleRoad} /> : ''}
+        {hidden ? <Maps toggle={toggleDrawer} title='Registrar Rutas' /> : ''}
+        {openEdit ? <MapsEdit title='Editar rutas' toggle={toggleEdit} data={data} /> : ''}
+      </>
     )
   }
 }

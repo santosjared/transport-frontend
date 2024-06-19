@@ -5,11 +5,22 @@ import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import { Box, Button, Checkbox, FormControl } from '@mui/material';
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useService } from 'src/hooks/useService';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { useDispatch } from 'react-redux';
+import { AppDispatch, RootState} from 'src/store';
+import { useSelector } from 'react-redux';
+import { fetchData as fetchBusDta } from 'src/store/apps/bus';
+import { fetchData as fetchTarifaDta} from 'src/store/apps/tarifa';
+import { fetchData as fetchHorarioDta} from 'src/store/apps/horario';
+import { fetchData as fetchRutaDta } from 'src/store/apps/road';
+import { addLinea } from 'src/store/apps/linea';
+import { isImage } from 'src/utils/verificateImg';
+import getConfig from 'src/configs/environment'
+import Swal from 'sweetalert2';
 
 interface Props {
   toggle: () => void
@@ -21,74 +32,109 @@ const checkedIcon = <CheckBoxIcon fontSize="small" />;
 const AddLinea = ({ toggle }: Props) => {
 
   const [onSelectRuote, setOnSelectRoute] = useState<any>(null)
-  const [name, setName] = useState<string | null>(null)
+  const [name, setName] = useState<string >('')
   const [onSelectHorario, setOnSelectHorario] = useState<any>([])
   const [onSelectTarifa, setOnSelectTarifa] = useState<any>([])
   const [onSelectBus, setOnSelectBus] = useState<any>([])
+  const [nameError,setNameError] = useState('')
+  const [busData,setBusdata] = useState<any[]>([])
 
-  const { Get, Post } = useService()
-  const routs = useQuery('road', () => Get('/road'))
-  const horario = useQuery('horario', () => Get('/horario'))
-  const tarifa = useQuery('tarifa', () => Get('/tarifa'))
-  const bus = useQuery('bus', () => Get('/bus'))
+  const [isLoading,setIsLoading] = useState(false)
+  const dispatch = useDispatch<AppDispatch>()
+  const {Get } = useService()
 
-  const queryClient = useQueryClient()
-  const mutation = useMutation((Data: object) => Post('/linea', Data), {
-    onSuccess: () => {
-      queryClient.invalidateQueries('linea')
+  const storeHorario = useSelector((state:RootState)=>state.horario)
+  const storeTarifa = useSelector((state:RootState)=>state.tarifa)
+  const storeRuta = useSelector((state:RootState)=>state.road)
+
+  useEffect(() => {
+    const fetch = async () => {
+      const response = await Get('/linea/allBusNotAsigned')
+      setBusdata(response.data.result)
     }
-  })
-
-  React.useEffect(() => {
-    if (mutation.isError) {
-      console.log(mutation.error)
-    }
-  }, [mutation.error])
-
+    fetch();
+    dispatch(fetchBusDta())
+    dispatch(fetchTarifaDta())
+    dispatch(fetchHorarioDta())
+    dispatch(fetchRutaDta())
+  }, [])
   const handleClose = () => {
-    toggle()
     handleReset()
   }
-  const handleSaveOnclick = () => {
-    if (name) {
-      const IdBuses = onSelectBus.map((bus: any) => bus.id)
-      const IdHorario = onSelectHorario.map((horario: any) => horario.id)
-      const IdTarifa = onSelectTarifa.map((tarifa: any) => tarifa.id)
+  const onSubmit = async (e:FormEvent) =>{
+    e.preventDefault()
+    setIsLoading(true)
+     const IdBuses = onSelectBus.map((bus: any) => bus._id)
+      const IdHorario = onSelectHorario.map((horario: any) => horario._id)
+      const IdTarifa = onSelectTarifa.map((tarifa: any) => tarifa._id)
       const data = {
         name: name,
-        route: onSelectRuote? onSelectRuote.id : '',
+        road: onSelectRuote? onSelectRuote._id : '',
         horario: IdHorario,
-        tarifa: IdTarifa,
+        rate: IdTarifa,
         buses: IdBuses
       }
-      mutation.mutate(data)
-      if (mutation.isSuccess) {
-        toggle()
+      try {
+        const response = await dispatch(addLinea(data))
+        if (response.payload.success) {
+          Swal.fire({ title: '¡Éxito!', text: 'Datos guardados exitosamente', icon: "success" });
+          handleReset()
+        } else {
+          if (response.payload.data) {
+            const { data } = response.payload
+            setNameError(data.name)
+          } else { Swal.fire({ title: '¡Error!', text: 'ocurio un error al guardar los datos', icon: "error" }); handleReset() }
+        }
+      } catch (error) {
+        Swal.fire({ title: '¡Error!', text: 'ocurio un error al guardar los datos', icon: "error" });
         handleReset()
-      }
-    }
+      } finally {
+        setIsLoading(false)
+      }  
   }
   const handleReset = () => {
-    setName(null)
+    setName('')
+    setNameError('')
     setOnSelectRoute(null)
     setOnSelectHorario([])
     setOnSelectTarifa([])
     setOnSelectBus([])
+    toggle()
+  }
+  const renderImg = (url: any) => {
+    // const img = isImage(`${getConfig().backendURI}${url}`)
+    // img.then((result)=>{
+    //   if (result) {
+    //     return (
+    //       <Box sx={{ display: 'flex', border: 'solid 1px #E0E0E0', borderRadius: 0.5 }}>
+    //       <img src={`${getConfig().backendURI}${url}`} height={35} width={35} style={{ borderRadius: 5 }}></img>
+    //     </Box>
+    //     )
+    //   } else {
+    //     return ''
+    //   }
+    // })
+    return( <Box sx={{ display: 'flex', border: 'solid 1px #E0E0E0', borderRadius: 0.5 }}>
+    <img src={`${getConfig().backendURI}${url}`} height={35} width={35} style={{ borderRadius: 5 }} alt='B'onError={()=>{}}></img>
+  </Box>)
   }
   return (
-    <> {routs.isLoading || horario.isLoading || tarifa.isLoading || bus.isLoading ? 'loadin...' :
+    <> {busData.length ===0 || storeHorario.isLoading || storeTarifa.isLoading || storeRuta.isLoading ? 'Cargando...' :
+    <form onSubmit={onSubmit}>
       <Stack spacing={8} sx={{ border: 1, padding: 5, borderRadius: 1 }}>
         <FormControl fullWidth>
-          <TextField label='Nombre de la linea'
-            placeholder='Linea 110'
+          <TextField label='Linea'
+            placeholder='110'
             value={name}
             autoComplete='off'
+            error={Boolean(nameError)}
+            helperText={nameError}
             onChange={(e) => setName(e.target.value)}
           />
         </FormControl>
         <FormControl fullWidth >
           <Autocomplete
-            options={routs.data?.data}
+            options={storeRuta.data}
             getOptionLabel={(option: any) => option.name}
             onChange={(event, value) => setOnSelectRoute(value)}
             value={onSelectRuote}
@@ -115,7 +161,7 @@ const AddLinea = ({ toggle }: Props) => {
           <Autocomplete
             multiple
             id="checkboxes-tags-demo"
-            options={horario.data?.data}
+            options={storeHorario.data}
             value={onSelectHorario}
             disableCloseOnSelect
             onChange={(e, value) => setOnSelectHorario(value)}
@@ -140,7 +186,7 @@ const AddLinea = ({ toggle }: Props) => {
           <Autocomplete
             multiple
             id="checkboxes-tags-demo"
-            options={tarifa.data?.data}
+            options={storeTarifa.data}
             disableCloseOnSelect
             value={onSelectTarifa}
             onChange={(e, value) => setOnSelectTarifa(value)}
@@ -165,7 +211,7 @@ const AddLinea = ({ toggle }: Props) => {
           <Autocomplete
             multiple
             id="checkboxes-tags-demo"
-            options={bus.data?.data}
+            options={busData}
             disableCloseOnSelect
             value={onSelectBus}
             onChange={(e, value) => setOnSelectBus(value)}
@@ -178,6 +224,7 @@ const AddLinea = ({ toggle }: Props) => {
                   style={{ marginRight: 8 }}
                   checked={selected}
                 />
+                {renderImg(option.photo)}
                 {option.trademark} - {option.plaque}
               </li>
             )}
@@ -190,11 +237,12 @@ const AddLinea = ({ toggle }: Props) => {
           <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
             Cancel
           </Button>
-          <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} onClick={handleSaveOnclick} startIcon={<SaveIcon />}>
+          <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<SaveIcon />}>
             Guardar
           </Button>
         </Box>
       </Stack>
+      </form>
     }  </>
   );
 }

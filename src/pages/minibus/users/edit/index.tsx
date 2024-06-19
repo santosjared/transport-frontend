@@ -134,7 +134,6 @@ const EditUser = ({ toggle, id,store }: Props) => {
     const {GetId}=useService()
     const dispatch = useDispatch<AppDispatch>()
     useEffect(()=>{
-        console.log('hace cambios')
         if(id){
             const fetch = async()=>{
                 const response = await GetId('/users',id)

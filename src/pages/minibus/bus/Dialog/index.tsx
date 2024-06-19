@@ -1,4 +1,4 @@
-import { Ref, useState, forwardRef, ReactElement, MouseEvent, Fragment, useEffect } from 'react'
+import { Ref, useState, forwardRef, ReactElement, MouseEvent, Fragment, useEffect, useCallback } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -24,10 +24,18 @@ import DialogContent from '@mui/material/DialogContent'
 import ListItemAvatar from '@mui/material/ListItemAvatar'
 import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction'
 import Icon from 'src/@core/components/icon'
-import { FormControl } from '@mui/material'
+import { Divider, FormControl } from '@mui/material'
 import { useService } from 'src/hooks/useService'
 import { useQuery } from 'react-query'
 import getConfig from 'src/configs/environment'
+import { useDispatch } from 'react-redux'
+import { AppDispatch, RootState } from 'src/store'
+import { useSelector } from 'react-redux'
+import { fetchData } from 'src/store/apps/bus'
+import { fetchDataUser } from 'src/store/apps/bus/fectchUsers'
+import { HttpStatus } from 'src/utils/HttpStatus'
+import Swal from 'sweetalert2'
+
 
 interface Props{
     toggle:()=>void
@@ -42,26 +50,38 @@ const Transition = forwardRef(function Transition(
     return <Fade ref={ref} {...props} />
   })
 const DialogUsers = ({open, toggle,id}:Props)=>{
-    
+  const dispatch = useDispatch<AppDispatch>()
+  const store = useSelector((state:RootState)=>state.userAndBus)
+  const [value, setValue] = useState<string>('')
     const {Get,GetId, Update}=useService()
-    const {data, isLoading, isError} = useQuery('choferes',()=>Get('/choferes'))
-    const [users, setUsers] = useState<any[]>([])
+    const handleFilter = useCallback((val: string) => {
+      dispatch(fetchDataUser({filter:val}))
+      setValue(val)
+    }, [])
     useEffect(()=>{
-    },[])
+      dispatch(fetchDataUser({skip:0,limit:9}))
+    },[dispatch,open])
 
     const handleAddIdUser = (userId:number | string)=>{ 
       const data ={
         id:id,
         userId:userId
       }
-      Update('/bus/user', data, id)
-      toggle()
+      Update('/bus/user', data, id).then((respose)=>{
+        if(respose.status==HttpStatus.OK){
+          dispatch(fetchData())
+          toggle()
+        }else{
+          toggle()
+          Swal.fire({ title: '¡Error!', text: 'ha ocurrido un error al momento de asignar usuario', icon: "error" });
+        }
+      })
     }
     return(
         <Dialog
         fullWidth
         open={open}
-        maxWidth='md'
+        maxWidth='sm'
         scroll='body'
         onClose={toggle}
         TransitionComponent={Transition}
@@ -76,7 +96,7 @@ const DialogUsers = ({open, toggle,id}:Props)=>{
           </IconButton>
           <Box sx={{ mb: 4, textAlign: 'center' }}>
             <Typography variant='h5' sx={{ mb: 3, lineHeight: '2rem' }}>
-              Lista de choferes
+              Lista de usuarios
             </Typography>
           </Box>
           <InputLabel
@@ -89,19 +109,20 @@ const DialogUsers = ({open, toggle,id}:Props)=>{
               fontSize: ['1.125rem', '1.25rem']
             }}
           >
-            Buscar chofer específico
+            Busqueda de usuarios
           </InputLabel>
           <FormControl fullWidth sx={{mb:6}}>
             <TextField 
-            label='Bucar Choferes'
+            label='Bucar usuarios'
+            onChange={e=>handleFilter(e.target.value)}
             />
           </FormControl>
-          <Typography variant='h6'>{`${data?.data.length} Choferes`}</Typography>
-          <List dense sx={{ py: 4 }}>
-            {users.map((user:any) => {
+          <Typography variant='h6'>{`${store.total<10?store.total:10} Usuarios de ${store.total}`}</Typography>
+          <List dense sx={{ py: 4 }} key={id}>
+            {store.data.map((user:any, index) => {
               return (
-                <ListItem
-                  key={user.name}
+                <Fragment key={user.id}><ListItem
+                  key={user.id}
                   sx={{
                     pb: 2,
                     pt:0,
@@ -113,17 +134,18 @@ const DialogUsers = ({open, toggle,id}:Props)=>{
                     '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.08)'},
                     cursor:'pointer'
                   }}
-                  onClick={()=>handleAddIdUser(user.id)}
-                >
+                  onClick={()=>handleAddIdUser(user._id)}
+                > 
                   <ListItemAvatar>
                     <Avatar src={`${getConfig().backendURI}${user.profile}`} alt={user.name} />
                   </ListItemAvatar>
                   <ListItemText
-                    primary={user.name}
-                    secondary={user.lastName}
+                    primary={`${user.name} ${user.lastName}`}
+                    secondary={`CI: ${user.ci}`}
                     sx={{ m: 0, '& .MuiListItemText-primary, & .MuiListItemText-secondary': { lineHeight: '1.25rem' } }}
                   />
                 </ListItem>
+                <Divider variant="inset" component="li" /></Fragment>
               )
             })}
           </List>

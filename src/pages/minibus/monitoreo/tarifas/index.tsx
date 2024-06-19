@@ -16,27 +16,12 @@ const Transition = forwardRef(function Transition(
 })
 
 const ListTarifa = ({ open, toggle, data }: Props) => {
-
   const [tarifa, setTarifa] = useState([])
-  const [allTarifa, setAllTarifa] = useState<any[]>([])
-
-  const { GetId } = useService()
-
   useEffect(() => {
     if (data) {
-      setTarifa(data.tarifa)
+      setTarifa(data.rate)
     }
   }, [data])
-  useEffect(() => {
-    const allData = async () => {
-      const tarifas = await Promise.all(tarifa.map(async (id) => {
-        const response = await GetId('/tarifa', id)
-        return response.data
-      }))
-      setAllTarifa(tarifas)
-    }
-    allData()
-  }, [tarifa])
   return (
     <Dialog
       fullWidth
@@ -56,16 +41,16 @@ const ListTarifa = ({ open, toggle, data }: Props) => {
         <Box sx={{ mb: 4, textAlign: 'center' }}>
           <Typography variant='h5' sx={{ mb: 0, lineHeight: '2rem' }}>Lista de Tarifas</Typography>
         </Box>
-        {allTarifa.map((alltarifas) => (
-          <Grid container spacing={2}>
-            <Grid item xs={allTarifa.length == 1? 12:6}>
+        {tarifa.map((tarifas:any) => (
+          <Grid key={tarifas.id}container spacing={2}>
+            <Grid item xs={tarifa.length == 1? 12:6}>
               <Card>
                 <Typography sx={{ display: 'flex', justifyContent: 'center', 
                 backgroundColor:theme=>`${theme.palette.primary.main}`, 
-                color:'#ffffff'}} variant="overline">{alltarifas.name}</Typography>
+                color:'#ffffff'}} variant="overline">{tarifas.name}</Typography>
                 <CardContent sx={{paddingTop:2}}>
-                  {alltarifas.tarifas.map((tarifas: any) => (
-                    <Typography variant="subtitle2">{`${tarifas.tipo}: ${tarifas.tarifa}`}</Typography>
+                  {tarifas.rates.map((tarifas: any) => (
+                    <Typography key={tarifas.tipo}variant="subtitle2">{`${tarifas.tipo}: ${tarifas.tarifa}`}</Typography>
                   ))}
 
                 </CardContent>

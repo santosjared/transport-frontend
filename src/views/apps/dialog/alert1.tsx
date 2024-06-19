@@ -14,7 +14,7 @@ const SnackbarConsecutive = () => {
   // ** 
   const [open, setOpen] = useState<boolean>(false)
   const [snackPack, setSnackPack] = useState<SnackbarMessage[]>([])
-  const [messageInfo, setMessageInfo] = useState<SnackbarMessage | undefined>(undefined)
+  const [messageInfo, setMessageInfo] = useState<SnackbarMessage | undefined>({key:0,message:'success'})
 
   useEffect(() => {
     if (snackPack.length && !messageInfo) {

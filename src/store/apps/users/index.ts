@@ -2,15 +2,14 @@ import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { useService } from 'src/hooks/useService'
 import { HttpStatus } from 'src/utils/HttpStatus'
-import { da } from 'date-fns/locale'
 
 interface Redux {
   dispatch: Dispatch<any>
 }
-interface Props{ 
+interface Props{
   userData: { [key: string]: any }
-  licenceData?: { [key: string]: any } 
-  idUser: number | string 
+  licenceData?: { [key: string]: any }
+  idUser: number | string
   idLicence?: number | string
 }
 
@@ -18,16 +17,7 @@ export const fetchData = createAsyncThunk('appUser/fetchUser',
 async (filtrs?: { [key: string]: any }) => {
   const {Get} = useService()
   if(filtrs){
-    const {filter, skip,limit}=filtrs
-    if(filter){
-      const response = await Get(`/users?filter=${filter}`)
-      return response.data
-    }
-    if(skip&&limit){
-      const response = await Get(`/users?skip=${skip}&limit=${limit}`)
-      return response.data
-    }
-    const response = await Get('/users')
+    const response = await Get('/users',filtrs)
     return response.data
   }
   const response = await Get('/users')
@@ -38,7 +28,7 @@ async (filtrs?: { [key: string]: any }) => {
 export const addUser = createAsyncThunk('appUsers/addUsers',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
     const {Post}= useService()
-    const response = await Post('/users', data) 
+    const response = await Post('/users', data)
     if(response.status === HttpStatus.BAD_REQUEST){
       return response
     }
@@ -47,16 +37,17 @@ export const addUser = createAsyncThunk('appUsers/addUsers',
       return response.data
     }
     if(response.status === HttpStatus.INTERNAL_SERVER_ERROR){
-      
+
     }
   }
 )
 
 export const deleteUser = createAsyncThunk('appUsers/deleteUsers',
-  async (id: number | string, {dispatch }: Redux) => {
+  async (props:{filters:any,id:string}, {dispatch }: Redux) => {
+    const {filters,id} = props
     const {Delete} = useService()
     const response = await Delete('/users', id)
-    dispatch(fetchData())
+    dispatch(fetchData(filters))
     return response.data
   }
 )
@@ -123,10 +114,10 @@ export const appUsersSlice = createSlice({
         state.isError = false;
     })
     .addCase(fetchData.fulfilled, (state, action) => {
-        state.isLoading = false; 
-        state.isSuccess = true;  
-        state.isError = false;   
-        state.data = action.payload.result; 
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.data = action.payload.result;
         state.total = action.payload.total
     })
     .addCase(fetchData.rejected, (state) => {

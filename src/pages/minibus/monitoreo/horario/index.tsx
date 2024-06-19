@@ -1,7 +1,6 @@
-import { Box, Card, CardContent, CardHeader, Dialog, DialogContent, Fade, FadeProps, FormControl, Grid, IconButton, InputLabel, List, ListItem, ListItemText, TextField, Typography } from "@mui/material"
+import { Box, Card, CardContent, Dialog, DialogContent, Divider, Fade, FadeProps, FormControl, Grid, IconButton, InputLabel, List, ListItem, ListItemText, TextField, Typography } from "@mui/material"
 import { ReactElement, Ref, forwardRef, useEffect, useState } from "react"
 import Icon from "src/@core/components/icon"
-import { useService } from "src/hooks/useService"
 
 interface Props {
   open: boolean,
@@ -17,26 +16,13 @@ const Transition = forwardRef(function Transition(
 
 const ListHorario = ({ open, toggle, data }: Props) => {
 
-  const [tarifa, setTarifa] = useState([])
-  const [allTarifa, setAllTarifa] = useState<any[]>([])
-
-  const { GetId } = useService()
+  const [horario, setHorario] = useState([])
 
   useEffect(() => {
     if (data) {
-      setTarifa(data.tarifa)
+      setHorario(data.horario)
     }
   }, [data])
-  useEffect(() => {
-    const allData = async () => {
-      const tarifas = await Promise.all(tarifa.map(async (id) => {
-        const response = await GetId('/tarifa', id)
-        return response.data
-      }))
-      setAllTarifa(tarifas)
-    }
-    allData()
-  }, [tarifa])
   return (
     <Dialog
       fullWidth
@@ -54,20 +40,32 @@ const ListHorario = ({ open, toggle, data }: Props) => {
         ><Icon icon='mdi:close' /></IconButton>
 
         <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <Typography variant='h5' sx={{ mb: 0, lineHeight: '2rem' }}>Lista de Tarifas</Typography>
+          <Typography variant='h5' sx={{ mb: 0, lineHeight: '2rem' }}>Lista de horario</Typography>
         </Box>
-        {allTarifa.map((alltarifas) => (
-          <Grid container spacing={2}>
-            <Grid item xs={allTarifa.length == 1? 12:6}>
+        {horario.map((horarios:any) => (
+          <Grid key={horarios.id } container spacing={2}>
+            <Grid item xs={horario.length == 1? 12:6}>
               <Card>
                 <Typography sx={{ display: 'flex', justifyContent: 'center', 
                 backgroundColor:theme=>`${theme.palette.primary.main}`, 
-                color:'#ffffff'}} variant="overline">{alltarifas.name}</Typography>
+                color:'#ffffff'}} variant="overline">{horarios.name}</Typography>
                 <CardContent sx={{paddingTop:2}}>
-                  {alltarifas.tarifas.map((tarifas: any) => (
-                    <Typography variant="subtitle2">{`${tarifas.tipo}: ${tarifas.tarifa}`}</Typography>
+                <Typography sx={{textAlign:'center'}}>Lugar de Salida: {horarios.place}</Typography>
+                  <Typography>Primera Salida: {horarios.firstOut}</Typography>
+                  <Typography>Última Salida: {horarios.lastOut}</Typography>
+                  <Divider/>
+                  <Grid key={horarios.id}container spacing={2}>
+                  <Grid item xs={12}>
+                  <Typography sx={{mt:1, display:'flex', justifyContent:'center'}}>Días</Typography>
+                  </Grid>
+                  {horarios.days.map((day: any) => (
+                    <Grid key={day}item xs={horario.length == 1? 4:6} sm={horario.length == 1? 3:4}>
+                    <Typography noWrap variant="subtitle2">{day}</Typography></Grid>
                   ))}
-
+                  {horarios.otherDay?
+                  <Grid item xs={horario.length == 1? 4:6} sm={horario.length == 1? 3:4}><Typography  variant="subtitle2">{horarios.otherDay}</Typography></Grid>:''
+                  }
+                   </Grid>
                 </CardContent>
               </Card>
             </Grid>

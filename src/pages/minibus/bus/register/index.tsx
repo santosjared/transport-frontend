@@ -6,57 +6,70 @@ import FormControl from "@mui/material/FormControl"
 import TextField from "@mui/material/TextField"
 import FormHelperText from "@mui/material/FormHelperText"
 import Button from "@mui/material/Button"
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from 'src/store';
-import { Autocomplete, Avatar, Card, CardMedia, IconButton, InputLabel, List, ListItem, MenuItem, Select, Typography } from '@mui/material';
+import { Autocomplete, Card, CardMedia, Grid, IconButton, InputLabel, MenuItem, Paper, Select, SelectChangeEvent, Typography, makeStyles } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useService } from 'src/hooks/useService';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { markersBus } from 'src/utils/markerBus';
 import { typesBus } from 'src/utils/typeBus';
-
 import { useDropzone } from 'react-dropzone'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import Icon from 'src/@core/components/icon';
+import { addBus } from 'src/store/apps/bus';
+import Swal from 'sweetalert2';
 
+
+const status = ['Activo', 'En mantenimiento', 'Inactivo', 'Otro']
 interface Props {
     toggle: () => void
 }
-interface BusData{
+interface BusData {
     trademark: string;
     model: number;
     type: string;
     plaque: string;
     cantidad: number;
+    status: string;
     photo: File | null;
-    ruat:File | null;
+    ruat: File | null;
+    otherMarker: string;
+    otherType: string;
+    otherState: string;
 }
 const defaultData = {
-    trademark:'',
-    model: '',
-    type: '',
+    trademark: markersBus[0],
+    model: 1990,
+    type: typesBus[0],
     plaque: '',
-    cantidad: '',
-    photo:  null,
+    cantidad: 16,
+    status: status[0],
+    photo: null,
     ruat: null,
-    otherMarker:'',
-    otherType:''
+    otherMarker: '',
+    otherType: '',
+    otherState: ''
 }
 const defaultErrors = {
-    trademark:'',
+    trademark: '',
     model: '',
     type: '',
     plaque: '',
     cantidad: '',
-    photo:  null,
-    ruat: null,
-    otherMarker:'',
-    otherType:''
+    status: '',
+    photo: '',
+    ruat: '',
 }
-type FileProp = {
-    name: string
-    type: string
-    size: number
-  }
+const DragAndDrog = styled(Box)(({ theme }) => ({
+    border: `2px dashed #ababab`,
+    borderRadius: theme.spacing(1),
+    textAlign: 'center',
+    cursor: 'pointer',
+    height: 70,
+    padding: 5
+}))
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
     clipPath: 'inset(50%)',
@@ -68,48 +81,48 @@ const VisuallyHiddenInput = styled('input')({
     whiteSpace: 'nowrap',
     width: 1,
 });
+
 const RegisterBus = ({ toggle }: Props) => {
-    const [formBus,setFormBus] = useState(defaultData)
-    const [formErrors,setFormErrors] = useState(defaultErrors)
-    const [errorMessage, setErrorMessage] = useState('')
+    const [formBus, setFormBus] = useState<BusData>(defaultData)
+    const [formErrors, setFormErrors] = useState(defaultErrors)
     const [photo, setPhoto] = useState<string>('/images/default/licence.png')
     const [file, setFile] = useState<File | null>(null)
-    const [trademark, setTrademark] = useState<string | null>(null)
-    const [model, setModel] = useState<string | null>(null)
-    const [type, setType] = useState<string | null>(null)
-    const [plaque, setPlaque] = useState<string | null>('')
-    const [cantidad, setCantidad] = useState<string | null>(null)
-    const [files, setFiles] = useState<File[]>([])
-
-    const { Post } = useService()
-
-    const queryClient = useQueryClient()
-    const mutation = useMutation((Data: object) => Post('/bus', Data), {
-        onSuccess: () => {
-            queryClient.invalidateQueries('bus')
+    const [ruatFile, setRuatFile] = useState<File | null>(null);
+    const [isLoading, setIsLoading] = useState(false)
+    const dispatch = useDispatch<AppDispatch>()
+    const { getRootProps, getInputProps, isDragAccept } = useDropzone({
+        accept: { 'application/pdf': ['.pdf'] },
+        onDrop: (acceptedFiles: File[]) => {
+            const firstAcceptedFile = acceptedFiles[0];
+            if (firstAcceptedFile && firstAcceptedFile.type === 'application/pdf') {
+                formErrors.ruat = ''
+                setRuatFile(firstAcceptedFile);
+            } else {
+                formErrors.ruat = 'solo se admite archivo pdf'
+            }
         }
-    })
-    const handleSaveOnclick = () => {
-        const data = {
-            trademark: trademark,
-            model: model,
-            type: type,
-            plaque: plaque,
-            cantidad: cantidad,
-            photo: file
-        }
-        mutation.mutate(data)
-        handleReset();
-        toggle();
+    });
+    const handleChangeFields = (e: ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target
+        setFormBus({
+            ...formBus,
+            [name]: value
+        })
+        setFormErrors({
+            ...formErrors,
+            [name]: ''
+        })
     }
-    const handleReset = () => {
-        setTrademark(null)
-        setModel(null)
-        setType(null)
-        setPlaque(null)
-        setCantidad(null)
-        setFile(null)
-        setPhoto('/images/default/licence.png')
+    const handleChangeSelects = (e: SelectChangeEvent) => {
+        const { name, value } = e.target
+        setFormBus({
+            ...formBus,
+            [name]: value
+        })
+        setFormErrors({
+            ...formErrors,
+            [name]: ''
+        })
     }
     const handleChangeImage = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
@@ -118,198 +131,240 @@ const RegisterBus = ({ toggle }: Props) => {
             if (file?.type.startsWith('image/')) {
                 const imgURL = URL.createObjectURL(file);
                 setPhoto(imgURL);
-                setErrorMessage('')
+                formErrors.photo = ''
             } else {
-                setErrorMessage('Por favor, selecciona un archivo de imagen válido.')
+                formErrors.photo = 'Por favor, selecciona un archivo de imagen válido.'
                 setPhoto('/images/default/licence.png')
             }
         }
     }
-    const handleClose = () => {
-        handleReset();
+    const handleReset = () => {
+        setFormErrors(defaultErrors)
+        setFormBus(defaultData)
+        setFile(null)
+        setRuatFile(null)
+        setPhoto('/images/default/licence.png')
         toggle();
-
     }
-    const { getRootProps, getInputProps } = useDropzone({
-        onDrop: (acceptedFiles: File[]) => {
-          setFiles(acceptedFiles.map((file: File) => Object.assign(file)))
+    const onSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true)
+        if (formBus.trademark === 'Otro') {
+            formBus.trademark = formBus.otherMarker
         }
-      })
-    const renderFilePreview = (file: FileProp) => {
-        if (file.type.startsWith('image')) {
-          return <img width={38} height={38} alt={file.name} src={URL.createObjectURL(file as any)} />
-        } else {
-          return <i className='ri-file-text-line' />
+        if (formBus.type === 'Otro') {
+            formBus.type = formBus.otherType
         }
-      }
-    const handleRemoveAllFiles = () => {
-        setFiles([])
-      }
-      const handleRemoveFile = (file: FileProp) => {
-        const uploadedFiles = files
-        const filtered = uploadedFiles.filter((i: FileProp) => i.name !== file.name)
-    
-        setFiles([...filtered])
-      }
-    
-      const fileList = files.map((file: FileProp) => (
-        <ListItem key={file.name}>
-          <div className='file-details'>
-            <div className='file-preview'>{renderFilePreview(file)}</div>
-            <div>
-              <Typography className='file-name'>{file.name}</Typography>
-              <Typography className='file-size' variant='body2'>
-                {Math.round(file.size / 100) / 10 > 1000
-                  ? `${(Math.round(file.size / 100) / 10000).toFixed(1)} mb`
-                  : `${(Math.round(file.size / 100) / 10).toFixed(1)} kb`}
-              </Typography>
-            </div>
-          </div>
-          <IconButton onClick={() => handleRemoveFile(file)}>
-            <i className='ri-close-line text-xl' />
-          </IconButton>
-        </ListItem>
-      ))
+        if (formBus.status === 'Otro'){
+            formBus.status = formBus.otherState
+        }
+        formBus.photo = file
+        formBus.ruat = ruatFile
+        setFormBus(formBus)
+        try {
+            const response = await dispatch(addBus(formBus))
+            if (response.payload.success) {
+                Swal.fire({ title: '¡Éxito!', text: 'Datos guardados exitosamente', icon: "success" });
+                handleReset()
+            } else {
+                if (response.payload.data) {
+                    const { data } = response.payload
+                    formErrors.cantidad = data.cantidad
+                    formErrors.model = data.model
+                    formErrors.photo = data.photo
+                    formErrors.plaque = data.plaque
+                    formErrors.ruat = data.ruat
+                    formErrors.trademark = data.trademark
+                    formErrors.type = data.type
+                    formErrors.status = data.status
+                } else { Swal.fire({ title: '¡Error!', text: 'ocurio un error al guardar los datos', icon: "error" }); handleReset() }
+            }
+        } catch (error) {
+            Swal.fire({ title: '¡Error!', text: 'ocurio un error al guardar los datos', icon: "error" });
+            handleReset()
+        } finally {
+            setIsLoading(false)
+            setFormErrors(formErrors)
+        }
+    }
     return (
         <Box sx={{ border: '1px solid #EEEDED', borderRadius: 1, p: 5 }}>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-                <Card>
-                    <CardMedia sx={{ height: 200 }} image={photo} />
-                    <Button component="label" size='large' variant="contained"
-                        sx={{ width: '100%', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
-                        startIcon={<CloudUploadIcon />}>
-                        Seleccionar Foto de MicroBus
-                        <VisuallyHiddenInput
+            <form onSubmit={onSubmit}>
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                    <Card>
+                        <CardMedia sx={{ height: 200 }} image={photo} />
+                        <Button component="label" size='large' variant="contained"
+                            sx={{ width: '100%', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+                            startIcon={<CloudUploadIcon />}>
+                            Seleccionar Foto de MicroBus
+                            <VisuallyHiddenInput
+                                autoComplete='off'
+                                type="file"
+                                onChange={handleChangeImage}
+                                accept='image/*' />
+                        </Button>
+                        {formErrors.photo && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.photo}</FormHelperText>}
+                    </Card>
+                </FormControl>
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                    <InputLabel id="demo-simple-select-label">Marca</InputLabel>
+                    <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        name="trademark"
+                        value={formBus.trademark}
+                        label="Marca"
+                        error={Boolean(formErrors.trademark)}
+                        onChange={handleChangeSelects}
+                        autoComplete='off'
+                    >
+                        {markersBus.map((mark) => (<MenuItem
+                            value={mark}
+                            key={mark}
+                        >{mark}</MenuItem>))}
+                    </Select>
+                    {formErrors.trademark && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.trademark}</FormHelperText>}
+                </FormControl>
+                {formBus.trademark == 'Otro' ?
+                    <FormControl fullWidth sx={{ mb: 6 }}>
+                        <TextField
+                            name='otherMarker'
+                            value={formBus.otherMarker}
+                            label='Otra Marca'
+                            placeholder='Nissan'
+                            error={Boolean(formErrors.trademark)}
+                            helperText={formErrors.trademark}
                             autoComplete='off'
-                            type="file"
-                            onChange={handleChangeImage}
-                            accept='image/*' />
+                            onChange={handleChangeFields}
+                        />
+                    </FormControl> : ''}
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                    <InputLabel id="demo-simple-select-label">Tipo de Vehículo</InputLabel>
+                    <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        name="type"
+                        value={formBus.type}
+                        label="Tipo de Vehículo"
+                        error={Boolean(formErrors.type)}
+                        onChange={handleChangeSelects}
+                        autoComplete='off'
+                    >
+                        {typesBus.map((mark) => (<MenuItem
+                            value={mark}
+                            key={mark}
+                        >{mark}</MenuItem>))}
+                    </Select>
+                    {formErrors.type && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.type}</FormHelperText>}
+                </FormControl>
+                {formBus.type === 'Otro' ?
+                    <FormControl fullWidth sx={{ mb: 6 }}>
+                        <TextField
+                            value={formBus.otherType}
+                            name='otherType'
+                            label='Otro tipo de vehículo'
+                            placeholder='Civilian'
+                            error={Boolean(formErrors.type)}
+                            helperText={formErrors.type}
+                            autoComplete='off'
+                            onChange={handleChangeFields}
+                        />
+                    </FormControl> : ''}
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                    <TextField
+                        name='model'
+                        label='Modelo'
+                        type='number'
+                        placeholder='2006'
+                        autoComplete='off'
+                        value={formBus.model}
+                        error={Boolean(formErrors.model)}
+                        helperText={formErrors.model}
+                        onChange={handleChangeFields}
+                    />
+                </FormControl>
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                    <TextField
+                        label='Placa del Vehículo'
+                        name='plaque'
+                        placeholder='XYZ 897'
+                        autoComplete='off'
+                        value={formBus.plaque}
+                        error={Boolean(formErrors.plaque)}
+                        helperText={formErrors.plaque}
+                        onChange={handleChangeFields}
+                    />
+                </FormControl>
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                    <TextField
+                        name='cantidad'
+                        type='number'
+                        label='Cantidad de asientos'
+                        placeholder='32'
+                        value={formBus.cantidad}
+                        error={Boolean(formErrors.cantidad)}
+                        helperText={formErrors.cantidad}
+                        autoComplete='off'
+                        onChange={handleChangeFields}
+                    />
+                </FormControl>
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                    <InputLabel id="demo-simple-select-label">Estado de Vehículo</InputLabel>
+                    <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        name="status"
+                        value={formBus.status}
+                        label="Estado de Vehículo"
+                        error={Boolean(formErrors.status)}
+                        onChange={handleChangeSelects}
+                        autoComplete='off'
+                    >
+                        {status.map((mark) => (<MenuItem
+                            value={mark}
+                            key={mark}
+                        >{mark}</MenuItem>))}
+                    </Select>
+                </FormControl>
+                {formBus.status === 'Otro' ? <FormControl fullWidth sx={{ mb: 6 }}>
+                    <TextField
+                        name='otherState'
+                        label='Otro estado'
+                        placeholder='Otro estado'
+                        value={formBus.otherState}
+                        error={Boolean(formErrors.status)}
+                        helperText={formErrors.status}
+                        autoComplete='off'
+                        onChange={handleChangeFields}
+                    />
+                </FormControl> : ''}
+                <Grid container justifyContent="center" alignItems="center">
+                    <Grid item xs={12}>
+                        <DragAndDrog {...getRootProps()} sx={{ mb: 0, backgroundColor: isDragAccept ? '#C0C0C0' : '#F0F0F0', }}>
+                            <input {...getInputProps()} />
+                            {ruatFile ? <Card sx={{ backgroundColor: '#F9F9F9' }}>
+                                <Typography className='file-name'><PictureAsPdfIcon color='error' sx={{ position: 'relative', top: 10 }} /> {ruatFile.name}</Typography>
+                                <Typography className='file-size' variant='body2'>
+                                    {Math.round(ruatFile.size / 100) / 10 > 1000
+                                        ? `${(Math.round(ruatFile.size / 100) / 10000).toFixed(1)} mb`
+                                        : `${(Math.round(ruatFile.size / 100) / 10).toFixed(1)} kb`}
+                                </Typography>
+                            </Card> : <><Typography variant='subtitle2'>Subir documento pdf de Ruat</Typography>
+                                <CloudUploadIcon /></>}
+
+                        </DragAndDrog>
+                        {formErrors.ruat && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.ruat}</FormHelperText>}
+                    </Grid>
+                </Grid>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 6 }}>
+                    <Button size='large' variant='outlined' color='secondary' onClick={handleReset} startIcon={<CancelIcon />}>
+                        Cancel
                     </Button>
-                    {errorMessage && <FormHelperText sx={{ color: 'error.main' }}>{errorMessage}</FormHelperText>}
-                </Card>
-            </FormControl>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-                <InputLabel id="demo-simple-select-label">Marca</InputLabel>
-                <Select
-                    labelId="demo-simple-select-label"
-                    id="demo-simple-select"
-                    name="trademark"
-                    value={"formUser.gende"}
-                    label="Marca"
-                    //onChange={handleGenderOnchange}
-                    autoComplete='off'
-                >
-                    {markersBus.map((mark) => (<MenuItem
-                        value={mark}
-                        key={mark}
-                    >{mark}</MenuItem>))}
-                </Select>
-            </FormControl>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-                <TextField
-                    value={trademark}
-                    label='Otra Marca'
-                    placeholder='Nissan'
-                    autoComplete='off'
-                    onChange={(e) => setTrademark(e.target.value)}
-                />
-            </FormControl>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-                <InputLabel id="demo-simple-select-label">Tipo de Vehículo</InputLabel>
-                <Select
-                    labelId="demo-simple-select-label"
-                    id="demo-simple-select"
-                    name="trademark"
-                    value={"formUser.gende"}
-                    label="Tipo de Vehículo"
-                    //onChange={handleGenderOnchange}
-                    autoComplete='off'
-                >
-                    {typesBus.map((mark) => (<MenuItem
-                        value={mark}
-                        key={mark}
-                    >{mark}</MenuItem>))}
-                </Select>
-            </FormControl>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-                <TextField
-                    value={type}
-                    label='Otro tipo de vehículo'
-                    placeholder='Civilian'
-                    autoComplete='off'
-                    onChange={(e) => setType(e.target.value)}
-                />
-            </FormControl>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-                <TextField
-                    value={model}
-                    label='Modelo'
-                    placeholder='2006'
-                    autoComplete='off'
-                    onChange={(e) => setModel(e.target.value)}
-                />
-                {<FormHelperText sx={{ color: 'error.main' }}></FormHelperText>}
-            </FormControl>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-                <TextField
-                    value={plaque}
-                    label='Placa del Vehículo'
-                    placeholder='XYZ 897'
-                    autoComplete='off'
-                    onChange={(e) => setPlaque(e.target.value)}
-                />
-                {<FormHelperText sx={{ color: 'error.main' }}></FormHelperText>}
-            </FormControl>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-                <TextField
-                    value={cantidad}
-                    type='number'
-                    label='Cantidad de asientos'
-                    placeholder='32'
-                    autoComplete='off'
-                    onChange={(e) => setCantidad(e.target.value)}
-                />
-                {<FormHelperText sx={{ color: 'error.main' }}></FormHelperText>}
-            </FormControl>
-            <>
-      <div {...getRootProps({ className: 'dropzone' })}>
-        <input {...getInputProps()} />
-        <div className='flex items-center flex-col'>
-          <Avatar variant='rounded' className='bs-12 is-12 mbe-9'>
-            <i className='ri-upload-2-line' />
-          </Avatar>
-          <Typography variant='h4' className='mbe-2.5'>
-            Drop files here or click to upload.
-          </Typography>
-          <Typography color='text.secondary'>
-            Drop files here or click{' '}
-            <a href='/' onClick={e => e.preventDefault()} className='text-textPrimary no-underline'>
-              browse
-            </a>{' '}
-            thorough your machine
-          </Typography>
-        </div>
-      </div>
-      {files.length ? (
-        <>
-          <List>{fileList}</List>
-          <div className='buttons'>
-            <Button color='error' variant='outlined' onClick={handleRemoveAllFiles}>
-              Remove All
-            </Button>
-            <Button variant='contained'>Upload Files</Button>
-          </div>
-        </>
-      ) : null}
-    </>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
-                    Cancel
-                </Button>
-                <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} onClick={handleSaveOnclick} startIcon={<SaveIcon />}>
-                    Guaradar
-                </Button>
-            </Box>
+                    <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<SaveIcon />}>
+                        Guaradar
+                    </Button>
+                </Box>
+            </form>
         </Box>
     )
 }
