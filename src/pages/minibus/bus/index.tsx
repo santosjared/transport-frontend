@@ -22,6 +22,7 @@ import Icon from "src/@core/components/icon"
 import Details from './details'
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CustomRenderCell from './profile'
+import { useService } from 'src/hooks/useService'
 
 interface UsersType {
   name: string;
@@ -342,10 +343,19 @@ const Bus = () => {
   const [openEdit,setOpenEdit]=useState(false)
   const [userData, setUserdata] = useState<any>(null)
   const [openfilters, setOpenFilters] = useState(false)
+  const [rules,setRules] = useState<any>(null)
   const [filters,setFilters] = useState(defaultFilter)
 
   const [id,setId] = useState('')
 
+  const {Get} = useService()
+  useEffect(()=>{
+    const fetch = async() =>{
+      const data = await Get('/auth')
+      console.log(data.data)
+    }
+    fetch()
+  },[])
   const dispatch = useDispatch<AppDispatch>()
   const  store = useSelector((state: RootState) => state.bus)
   useEffect(() => {
@@ -499,13 +509,13 @@ const handleReset = () => {
                     variant="standard"
                     labelId="demo-simple-select-label"
                     id="demo-simple-select"
-                    name="status"
+                    name="ruat"
                     value={filters.ruat}
                     onChange={handleChangeSelects}
-                    label="Age"
+                    label="Ruat"
                   >
-                    <MenuItem value='connected'>Con documentos</MenuItem>
-                    <MenuItem value='disconnected'>Sin documento</MenuItem>
+                    <MenuItem value='document'>Con documentos</MenuItem>
+                    <MenuItem value='notdocument'>Sin documento</MenuItem>
                   </Select>
                 </FormControl>
               </FormControl>
@@ -534,10 +544,9 @@ const handleReset = () => {
           </Grid>
         </Card>
       </Box> : ''}
-      { <DataGrid
+      <DataGrid
             autoHeight
             rows={store.data}
-
             columns={columns}
             pagination
             pageSize={pageSize}
@@ -548,17 +557,17 @@ const handleReset = () => {
             paginationMode="server"
             onPageChange={(newPage) => setPage(newPage)}
             sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
-          />}
+          />
         </Card>
       </Grid>
       <AddDraw open={draw} toggle={toggleDrawer} title='Registro de Microbus'>
-        <RegisterBus toggle={toggleDrawer} />
+        <RegisterBus toggle={toggleDrawer}/>
       </AddDraw>
       <AddDraw open={openEdit} toggle={toggleEdit} title='Editar Microbus'>
-      <EditBus toggle={toggleEdit} id={id} store={openEdit}/>
+      <EditBus toggle={toggleEdit} id={id} store={openEdit} page={page} pageSize={pageSize}/>
       </AddDraw>
-      <DialogUsers open={openUsers} toggle={DrawUser} id={idBus} />
-      <Details open={openDetails} toggle={toggleDetails} data={userData} busId={idBus}/>
+      <DialogUsers open={openUsers} toggle={DrawUser} id={idBus} page={page} pageSize={pageSize}/>
+      <Details open={openDetails} toggle={toggleDetails} data={userData} busId={idBus} page={page} pageSize={pageSize}/>
     </Grid>
   )
 }

@@ -2,11 +2,12 @@ import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { useService } from 'src/hooks/useService'
 import axiosInstance from 'src/store/instancesAxios'
+import { HttpStatus } from 'src/utils/HttpStatus'
 
 interface Redux {
   dispatch: Dispatch<any>
 }
-export const fetchData = createAsyncThunk('appRol/fetchRol', 
+export const fetchData = createAsyncThunk('appRol/fetchRol',
 async (filtrs?: { [key: string]: any }) => {
     const {Get} = useService()
     if(filtrs){
@@ -19,11 +20,28 @@ async (filtrs?: { [key: string]: any }) => {
 
 export const addRol = createAsyncThunk('appRol/addRol',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
-    const {Post}= useService()
-    const response = await Post('/roles', data) 
-    dispatch(fetchData())
-    return response.data
+  const {Post}= useService()
+  const response = await Post('/roles', data)
+  if(response.status === HttpStatus.BAD_REQUEST){
+    const res = {
+      success:false,
+      data:response.data.message
+    }
+    return res
   }
+  if(response.status === HttpStatus.CREATED){
+    const res = {
+      success:true,
+      data:response.data
+    }
+    dispatch(fetchData())
+    return res
+  }
+  if(response === HttpStatus.INTERNAL_SERVER_ERROR){
+
+  }
+  return response
+}
 )
 
 export const deleteRol = createAsyncThunk('appRol/deleteRol',
@@ -69,10 +87,10 @@ export const appUsersSlice = createSlice({
         state.isError = false;
     })
     .addCase(fetchData.fulfilled, (state, action) => {
-        state.isLoading = false; 
-        state.isSuccess = true;  
-        state.isError = false;   
-        state.data = action.payload; 
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.data = action.payload;
     })
     .addCase(fetchData.rejected, (state) => {
         state.isLoading = false;

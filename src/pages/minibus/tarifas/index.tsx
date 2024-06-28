@@ -150,7 +150,7 @@ const Tarifas = () => {
   ]
 
   const [pageSize, setPageSize] = useState<number>(10)
-  const [value, setValue] = useState<string>('')
+  const [page, setPage] = useState(0);
   const [OpenAdd, setOpenAdd] = useState<boolean>(false)
   const [data, setData] = useState<rateData | null>(null)
   const [openList, setOpenList] = useState(false)
@@ -162,8 +162,8 @@ const Tarifas = () => {
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.tarifa)
   useEffect(() => {
-    dispatch(fetchData())
-  }, [])
+    dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
+  }, [page,pageSize])
   const toggleDrawer = () => setOpenAdd(!OpenAdd)
   const toggleList = () => setOpenList(!openList)
   const toggleEdit = () => setOpenEdit(!openEdit)
@@ -184,11 +184,12 @@ const Tarifas = () => {
       [name]: value
     })
   }
-  const handleFilters = () => {
-
+  const handleFilters = ()=>{
+    dispatch(fetchData({ filter: filters, skip: page * pageSize, limit: pageSize }))
   }
   const handleReset = () => {
-
+    setFilters(defaultFilter)
+    dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }
 
   return (
@@ -204,7 +205,7 @@ const Tarifas = () => {
               Nuevo tarifa
             </Button>
           </Box>
-          {openfilters ? <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3}}>
+          {openfilters && <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3}}>
             <Card sx={{ p: 2, width:{  xs:'auto',sm:'50%', lg:'50%'}}}>
               <Grid container spacing={2}>
                 <Grid item xs={6}>
@@ -224,9 +225,10 @@ const Tarifas = () => {
                 </Grid>
                 <Grid item xs={6}>
                   <FormControl fullWidth sx={{ mb: 1 }}>
-                    <TextField label='Modelo'
+                    <TextField label='Fecha de creación'
                       variant='standard'
-                      name="model"
+                      name="createdAt"
+                      type="date"
                       fullWidth
                       value={filters.createdAt}
                       onChange={handleChangeFields}
@@ -245,26 +247,28 @@ const Tarifas = () => {
                 </Grid>
               </Grid>
             </Card>
-          </Box> : ''}
-          {store.isLoading ? <Box sx={{ textAlign: 'center' }}>Cargando datos...</Box> : !store.isError ?
-            <DataGrid
-              autoHeight
-              rows={store.data}
-              columns={columns}
-              pageSize={pageSize}
-              disableSelectionOnClick
-              rowsPerPageOptions={[10, 25, 50]}
-              sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
-              onPageSizeChange={(newPageSize: number) => setPageSize(newPageSize)}
-            /> : ''
-          }
+          </Box>}
+          <DataGrid
+            autoHeight
+            rows={store.data}
+            columns={columns}
+            pagination
+            pageSize={pageSize}
+            disableSelectionOnClick
+            onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+            rowsPerPageOptions={[10, 25, 50]}
+            rowCount={store.total}
+            paginationMode="server"
+            onPageChange={(newPage) => setPage(newPage)}
+            sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+          />
         </Card>
       </Grid>
       <AddDraw open={OpenAdd} toggle={toggleDrawer} title='Registro de Tarifas'>
         <AddTarifas toggle={toggleDrawer} />
       </AddDraw>
       <AddDraw open={openEdit} toggle={toggleEdit} title="Editatr Tarifas">
-        <EditTarifas toggle={toggleEdit} data={editData} />
+        <EditTarifas toggle={toggleEdit} data={editData} page={page} pageSize={pageSize}/>
       </AddDraw>
       <ListTarifa open={openList} toggle={toggleList} data={data} />
     </Grid>

@@ -15,7 +15,6 @@ import TextField from '@mui/material/TextField'
 import IconButton from '@mui/material/IconButton'
 import InputLabel from '@mui/material/InputLabel'
 import Typography from '@mui/material/Typography'
-import CardContent from '@mui/material/CardContent'
 import Fade, { FadeProps } from '@mui/material/Fade'
 import ListItemText from '@mui/material/ListItemText'
 import Autocomplete from '@mui/material/Autocomplete'
@@ -41,6 +40,8 @@ interface Props{
     toggle:()=>void
     open:boolean
     id:string | number
+    page:number
+    pageSize:number
 }
 
 const Transition = forwardRef(function Transition(
@@ -49,27 +50,27 @@ const Transition = forwardRef(function Transition(
   ) {
     return <Fade ref={ref} {...props} />
   })
-const DialogUsers = ({open, toggle,id}:Props)=>{
+const DialogUsers = ({open, toggle,id, page,pageSize}:Props)=>{
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state:RootState)=>state.userAndBus)
   const [value, setValue] = useState<string>('')
-    const {Get,GetId, Update}=useService()
+    const {Update}=useService()
     const handleFilter = useCallback((val: string) => {
       dispatch(fetchDataUser({filter:val}))
       setValue(val)
     }, [])
     useEffect(()=>{
       dispatch(fetchDataUser({skip:0,limit:9}))
-    },[dispatch,open])
+    },[open])
 
-    const handleAddIdUser = (userId:number | string)=>{ 
+    const handleAddIdUser = (userId:number | string)=>{
       const data ={
         id:id,
         userId:userId
       }
       Update('/bus/user', data, id).then((respose)=>{
         if(respose.status==HttpStatus.OK){
-          dispatch(fetchData())
+          dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
           toggle()
         }else{
           toggle()
@@ -112,7 +113,7 @@ const DialogUsers = ({open, toggle,id}:Props)=>{
             Busqueda de usuarios
           </InputLabel>
           <FormControl fullWidth sx={{mb:6}}>
-            <TextField 
+            <TextField
             label='Bucar usuarios'
             onChange={e=>handleFilter(e.target.value)}
             />
@@ -135,7 +136,7 @@ const DialogUsers = ({open, toggle,id}:Props)=>{
                     cursor:'pointer'
                   }}
                   onClick={()=>handleAddIdUser(user._id)}
-                > 
+                >
                   <ListItemAvatar>
                     <Avatar src={`${getConfig().backendURI}${user.profile}`} alt={user.name} />
                   </ListItemAvatar>

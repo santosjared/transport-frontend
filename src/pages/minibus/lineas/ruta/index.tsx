@@ -1,61 +1,49 @@
-import { Button } from '@mui/material';
+import { Box, Card, CardContent, Divider, Typography } from '@mui/material';
 import dynamic from 'next/dynamic';
-import { useMemo} from 'react';
-import { useDispatch } from 'react-redux';
+import { Fragment, useMemo} from 'react';
 import AddDrawMap from 'src/components/addDrawMap';
-import { AppDispatch } from 'src/store';
-import { desasignedRoad } from 'src/store/apps/linea';
-import Swal from 'sweetalert2';
-
 interface Props{
     data:any
-    id:string
     onClose:() => void;
+    toggleRutas:() => void;
 }
-const ViewMap = ({id,data,onClose}:Props)=>{
+const ViewMap = ({data,onClose, toggleRutas}:Props)=>{
   const Map = useMemo(() => dynamic(
     () => import('../../../../components/map'),
-    { 
+    {
       loading: () => <p>Cargando la mapa...</p>,
       ssr: false
     }
   ), [data])
-  const dispatch = useDispatch<AppDispatch>()
-  const handleDesasingned = async () =>{
-        const confirme = await Swal.fire({
-          title: '¿Estas seguro de desasignar la ruta?',
-          icon: "warning",
-          showCancelButton: true,
-          cancelButtonColor: "#3085d6",
-          cancelButtonText:'Cancelar',
-          confirmButtonText: 'confirmar',
-        }).then(async(result)=>{return await result.isConfirmed});
-        if(confirme)
-        {
-            dispatch(desasignedRoad(id)).then((result)=>{
-              if(result.payload){
-                Swal.fire({
-                  title: '¡Éxito!',
-                  text: 'ruta desasignado exitosamente',
-                  icon: "success"
-                });
-                onClose()
-              }
-            })
-        }
-
+  const toggle = ()=>{
+    onClose()
+    toggleRutas()
   }
     return(
-        <AddDrawMap 
+        <AddDrawMap
         title={data.name}
-        toggle={onClose}
+        toggle={toggle}
         >
-          <Button variant='contained' sx={{mb:6, ml:3}} onClick={handleDesasingned}>desasignar ruta</Button>
-          <Map 
+          <Map
           center={data.center}
           geoJSON={data.geojson}
           >
           </Map>
+          <Box sx={{display:'flex', justifyContent:'center', mt:6, mb:6}}>
+            <Card sx={{width:400}}>
+              <CardContent>
+            <Typography variant='body1'> Rutas</Typography>
+            <Divider/>
+            {data.routes.map((value:string)=>(
+              <Fragment key={value}>
+                <Typography variant='body2'> {value}</Typography>
+                <Divider/>
+              </Fragment>
+            ))}
+            </CardContent>
+            </Card>
+          </Box>
+
         </AddDrawMap>
     )
 }

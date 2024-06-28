@@ -29,8 +29,6 @@ interface RoadData {
 const defaultFilter = {
   createdAt: '',
   name: '',
-  status: '',
-  road: ''
 }
 
 interface TypeCell {
@@ -180,6 +178,7 @@ const Roads = () => {
   ]
 
   const [pageSize, setPageSize] = useState<number>(10)
+  const [page, setPage] = useState(0);
   const [hidden, setHidden] = useState<boolean>(false)
   const [openRoad, setOpenRoad] = useState(false)
   const [data, setData] = useState<any>()
@@ -190,7 +189,7 @@ const Roads = () => {
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.road)
   useEffect(() => {
-    dispatch(fetchData())
+    dispatch(fetchData({filter: '', skip: page * pageSize, limit: pageSize }))
   }, [])
 
   const toggleDrawer = () => setHidden(!hidden)
@@ -216,11 +215,12 @@ const Roads = () => {
     })
   }
 
-  const handleFilters = () => {
-
+  const handleFilters = ()=>{
+    dispatch(fetchData({ filter: filters, skip: page * pageSize, limit: pageSize }))
   }
   const handleReset = () => {
-
+    setFilters(defaultFilter)
+    dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }
   if (!hidden && !openRoad && !openEdit) {
     return (
@@ -236,90 +236,63 @@ const Roads = () => {
                 Nuevo ruta
               </Button>
             </Box>
-            {openfilters ? <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
-              <Card sx={{ p: 2 }}>
-                <Grid container spacing={2}>
-                  <Grid item xs={3}>
-                    <FormControl fullWidth sx={{ mb: 1 }}>
-                      <TextField label='Nombre de horario'
-                        variant='standard'
-                        name="name"
-                        fullWidth
-                        autoComplete='off'
-                        value={filters.name}
-                        onChange={handleChangeFields}
-                        InputProps={{
-                          startAdornment: <FilterListIcon />,
-                        }}
-                      />
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={3}>
-                    <FormControl fullWidth sx={{ mb: 1 }}>
-                      <TextField label='Fecha de creación'
-                        variant='standard'
-                        name="createdAt"
-                        fullWidth
-                        value={filters.createdAt}
-                        onChange={handleChangeFields}
-                        autoComplete='off'
-                        InputProps={{
-                          startAdornment: <FilterListIcon />,
-                        }}
-                      />
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={3}>
-                    <FormControl fullWidth sx={{ mb: 1 }}>
-                      <TextField label='Ruta'
-                        variant='standard'
-                        fullWidth
-                        name="road"
-                        value={filters.road}
-                        onChange={handleChangeFields}
-                        autoComplete='off'
-                        InputProps={{
-                          startAdornment: <FilterListIcon />,
-                        }}
-                      />
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={3}>
-                    <FormControl fullWidth sx={{ mb: 1 }}>
-                      <TextField label='Estado'
-                        variant='standard'
-                        fullWidth
-                        name="status"
-                        value={filters.status}
-                        onChange={handleChangeFields}
-                        autoComplete='off'
-                        InputProps={{
-                          startAdornment: <FilterListIcon />,
-                        }}
-                      />
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Box>
-                      <Button variant="contained" sx={{ mr: 3 }} onClick={handleFilters}>Filtrar</Button>
-                      <Button variant="outlined" onClick={handleReset}>Restablecer</Button>
-                    </Box>
-                  </Grid>
+            {openfilters && <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3}}>
+            <Card sx={{ p: 2, width:{  xs:'auto',sm:'50%', lg:'50%'}}}>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <FormControl fullWidth sx={{ mb: 1 }}>
+                    <TextField label='nombre de tarifas'
+                      variant='standard'
+                      name="name"
+                      fullWidth
+                      autoComplete='off'
+                      value={filters.name}
+                      onChange={handleChangeFields}
+                      InputProps={{
+                        startAdornment: <FilterListIcon />,
+                      }}
+                    />
+                  </FormControl>
                 </Grid>
-              </Card>
-            </Box> : ''}
-            {store.isLoading ? <Box sx={{ textAlign: 'center' }}>Cargando datos...</Box> : !store.isError ?
-              <DataGrid
-                autoHeight
-                rows={store.data}
-                columns={columns}
-                pageSize={pageSize}
-                disableSelectionOnClick
-                rowsPerPageOptions={[10, 25, 50]}
-                sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
-                onPageSizeChange={(newPageSize: number) => setPageSize(newPageSize)}
-              /> : ''
-            }
+                <Grid item xs={6}>
+                  <FormControl fullWidth sx={{ mb: 1 }}>
+                    <TextField label='Fecha de creación'
+                      variant='standard'
+                      name="createdAt"
+                      type="date"
+                      fullWidth
+                      value={filters.createdAt}
+                      onChange={handleChangeFields}
+                      autoComplete='off'
+                      InputProps={{
+                        startAdornment: <FilterListIcon />,
+                      }}
+                    />
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <Box>
+                    <Button variant="contained" sx={{ mr: 3 }} onClick={handleFilters}>Filtrar</Button>
+                    <Button variant="outlined" onClick={handleReset}>Restablecer</Button>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Card>
+          </Box>}
+          <DataGrid
+            autoHeight
+            rows={store.data}
+            columns={columns}
+            pagination
+            pageSize={pageSize}
+            disableSelectionOnClick
+            onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+            rowsPerPageOptions={[10, 25, 50]}
+            rowCount={store.total}
+            paginationMode="server"
+            onPageChange={(newPage) => setPage(newPage)}
+            sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+          />
           </Card>
         </Grid>
       </Grid>
@@ -328,9 +301,9 @@ const Roads = () => {
   else {
     return (
       <>
-        {openRoad ? <ViewMap data={data} onClose={toggleRoad} /> : ''}
-        {hidden ? <Maps toggle={toggleDrawer} title='Registrar Rutas' /> : ''}
-        {openEdit ? <MapsEdit title='Editar rutas' toggle={toggleEdit} data={data} /> : ''}
+        {openRoad && <ViewMap data={data} onClose={toggleRoad} />}
+        {hidden && <Maps toggle={toggleDrawer} title='Registrar Rutas' />}
+        {openEdit && <MapsEdit title='Editar rutas' toggle={toggleEdit} data={data} page={page} pageSize={pageSize}/>}
       </>
     )
   }

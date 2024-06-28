@@ -14,12 +14,14 @@ export type RegisterParams = {
 
 export type UserDataType = {
   id: number
-  role: string
-  email: string
-  fullName: string
-  username: string
-  password: string
-  avatar?: string | null
+  name:string
+  lastName:string
+  rol:string
+  // email: string
+  // fullName: string
+  // username: string
+  // password: string
+  // avatar?: string | null
 }
 
 export type AuthValuesType = {

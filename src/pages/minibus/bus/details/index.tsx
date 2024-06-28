@@ -22,6 +22,8 @@ interface Props {
   toggle: () => void
   data: any
   busId:string
+  page:number
+  pageSize:number
 }
 const Transition = forwardRef(function Transition(
   props: FadeProps & { children?: ReactElement<any, any> },
@@ -30,7 +32,7 @@ const Transition = forwardRef(function Transition(
   return <Fade ref={ref} {...props} />
 })
 
-const Details = ({ open, toggle, data , busId}: Props) => {
+const Details = ({ open, toggle, data , busId, page, pageSize}: Props) => {
 
   const [isImg, setIsImg] = useState<any>(false)
   const [isImgF, setIsImgF] = useState<any>(false)
@@ -62,7 +64,7 @@ const Details = ({ open, toggle, data , busId}: Props) => {
       Update('/bus/designed',{},busId).then((response)=>{
         if(response.status === HttpStatus.OK){
           toggle()
-          dispatch(fetchData())
+          dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
           Swal.fire({
             title: '¡Éxito!',
             text: 'Usuario desasigando',
@@ -176,11 +178,11 @@ const Details = ({ open, toggle, data , busId}: Props) => {
                       <Typography variant='body2'>{data.licenceId.category}</Typography>
                     </Box>
                   </Box>
-                  {isImgF ? 
+                  {isImgF ?
                        <Box sx={{ display: 'flex', border: 'solid 1px #E0E0E0', borderRadius: 0.5, width:260 , mb:6}}>
                        <img src={`${getConfig().backendURI}${data.licenceId.licenceFront}`} height={150} width={255} style={{ borderRadius: 5 }}></img>
                      </Box> : ''}
-                     {isImgB ? 
+                     {isImgB ?
                        <Box sx={{ display: 'flex', border: 'solid 1px #E0E0E0', borderRadius: 0.5, width:260 }}>
                        <img src={`${getConfig().backendURI}${data.licenceId.licenceBack}`} height={150} width={255} style={{ borderRadius: 5 }}></img>
                      </Box> : ''}
@@ -193,16 +195,16 @@ const Details = ({ open, toggle, data , busId}: Props) => {
           : ''}
       </DialogContent>
     </Dialog>
-    <Dialogconfirme open={suspendDialogOpen} 
-    setOpen={setSuspendDialogOpen} 
-    setConfirme={setIsConfirmed} title={'¿Estas seguro en desasignar el chofer?'} 
+    <Dialogconfirme open={suspendDialogOpen}
+    setOpen={setSuspendDialogOpen}
+    setConfirme={setIsConfirmed} title={'¿Estas seguro en desasignar el chofer?'}
     icon={"warning"}
     buttoConfirmed="Si, desasignar chofer"
     buttonCancel="cancelar"
     />
-     <Dialogconfirme open={openFail} 
-    setOpen={setOpenFail} 
-    title={'Error'} 
+     <Dialogconfirme open={openFail}
+    setOpen={setOpenFail}
+    title={'Error'}
     message="No hemos podido desasignar chofer, bus no encontrado"
     icon={"error"}
     buttonCancel="Aceptar"
@@ -211,4 +213,4 @@ const Details = ({ open, toggle, data , busId}: Props) => {
     </>
   )
 }
-export default Details   
+export default Details

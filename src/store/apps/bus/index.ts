@@ -8,7 +8,8 @@ interface Redux {
 }
 interface Props{
   data: { [key: string]: any };
-  id:string
+  id:string,
+  filters:any
 }
 export const fetchData = createAsyncThunk('appBus/fetchBus',
 async (filtrs?: { [key: string]: any }) => {
@@ -57,7 +58,7 @@ export const deleteBus = createAsyncThunk('appBus/deleteBus',
   }
 )
 export const updateBus = createAsyncThunk('appBus/updateBus',
-  async ({data,id}:Props, {dispatch }: Redux) => {
+  async ({data,id, filters}:Props, {dispatch }: Redux) => {
     const {Update}= useService()
     const response = await Update('/bus', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
@@ -72,7 +73,7 @@ export const updateBus = createAsyncThunk('appBus/updateBus',
         success:true,
         data:response.data
       }
-      dispatch(fetchData())
+      dispatch(fetchData(filters))
       return res
     }
     if(response === HttpStatus.INTERNAL_SERVER_ERROR){

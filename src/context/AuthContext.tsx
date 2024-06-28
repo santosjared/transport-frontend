@@ -10,6 +10,8 @@ import axios from 'axios'
 // ** Config
 import authConfig from 'src/configs/auth'
 
+import jwt from 'jsonwebtoken';
+
 // ** Types
 import { AuthValuesType, RegisterParams, LoginParams, ErrCallbackType, UserDataType } from './types'
 
@@ -51,7 +53,7 @@ const AuthProvider = ({ children }: Props) => {
           })
           .then(async response => {
             setLoading(false)
-            setUser({ ...response.data.userData })
+            setUser({ ...response.data })
           })
           .catch(() => {
             localStorage.removeItem('userData')
@@ -76,13 +78,15 @@ const AuthProvider = ({ children }: Props) => {
     axios
       .post(authConfig.loginEndpoint, params)
       .then(async response => {
+
         params.rememberMe
-          ? window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
+          ? window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.token)
           : null
         const returnUrl = router.query.returnUrl
-
-        setUser({ ...response.data.userData })
-        params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(response.data.userData)) : null
+        const decode:any = jwt.verify(response.data.token, 'foundationfreecoderes')
+        const userData = {id:decode.id,name:decode.name,lastName:decode.lastName,rol:decode.rol }
+        setUser(userData)
+        params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(userData)) : null
 
         const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
 

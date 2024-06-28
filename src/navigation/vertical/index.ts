@@ -11,7 +11,7 @@ const navigation = (): VerticalNavItemsType => {
     {
       title:'Monitoreo',
       path:'/minibus/monitoreo',
-      icon:'eos-icons:monitoring'
+      icon:'eos-icons:monitoring',
     },
     {
       title:'Registro de usuarios',
@@ -20,7 +20,7 @@ const navigation = (): VerticalNavItemsType => {
     },
     {
       title:'Roles y Permiso',
-      path:'/minibus/role',
+      path:'/minibus/rol',
       icon:'carbon:user-role'
     },
     {

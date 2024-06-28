@@ -25,10 +25,10 @@ const AnalyticsSalesCountry = ({linadta}:{linadta:any}) => {
   const [total,setTotal] = useState<number>(0)
 
   const {Get} = useService()
-  
+
   const series = [
     {
-      name: 'solicitados',
+      name: 'promedio',
       data: request
     }
   ]
@@ -129,7 +129,7 @@ const AnalyticsSalesCountry = ({linadta}:{linadta:any}) => {
   return (
     <Card>
       <CardHeader
-        title='Lineas más solicitadas'
+        title='Lineas más buscados'
         subheader={`Total de lineas ${total}`}
         subheaderTypographyProps={{ sx: { lineHeight: 1.429 } }}
         titleTypographyProps={{ sx: { letterSpacing: '0.15px' } }}

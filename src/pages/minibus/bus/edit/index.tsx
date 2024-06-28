@@ -29,6 +29,8 @@ interface Props {
     toggle: () => void
     id:string
     store:any
+    page:number
+    pageSize:number
 }
 interface BusData {
     trademark: string;
@@ -86,7 +88,7 @@ const VisuallyHiddenInput = styled('input')({
     width: 1,
 });
 
-const EditBus = ({ toggle ,id, store}: Props) => {
+const EditBus = ({ toggle ,id, store, page, pageSize}: Props) => {
     const [formBus, setFormBus] = useState<BusData>(defaultData)
     const [formErrors, setFormErrors] = useState(defaultErrors)
     const [photo, setPhoto] = useState<string>('/images/default/licence.png')
@@ -211,7 +213,7 @@ const EditBus = ({ toggle ,id, store}: Props) => {
         formBus.ruat = ruatFile
         setFormBus(formBus)
         try {
-            const response = await dispatch(updateBus({data:formBus,id:id}))
+            const response = await dispatch(updateBus({data:formBus,id:id,filters:{skip: page * pageSize, limit: pageSize}}))
             if (response.payload.success) {
                 Swal.fire({ title: '¡Éxito!', text: 'Datos actualizados exitosamente', icon: "success" });
                 handleReset()
@@ -399,8 +401,8 @@ const EditBus = ({ toggle ,id, store}: Props) => {
                                         : `${(Math.round(ruatFile.size / 100) / 10).toFixed(1)} kb`}
                                 </Typography>
                             </Card> :!ruatFile && formBus.ruat?
-                            <Typography className='file-name'><PictureAsPdfIcon color='error' sx={{ position: 'relative', top: 10 }} /> 
-                            {formBus.ruat.toString().substring(formBus.ruat.toString().lastIndexOf('/')+1)}</Typography>: 
+                            <Typography className='file-name'><PictureAsPdfIcon color='error' sx={{ position: 'relative', top: 10 }} />
+                            {formBus.ruat.toString().substring(formBus.ruat.toString().lastIndexOf('/')+1)}</Typography>:
                             <><Typography variant='subtitle2'>Subir documento pdf de Ruat</Typography>
                                 <CloudUploadIcon /></>}
 

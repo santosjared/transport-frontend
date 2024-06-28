@@ -178,7 +178,7 @@ const Horario = () => {
   ]
 
   const [pageSize, setPageSize] = useState<number>(10)
-  const [value, setValue] = useState<string>('')
+  const [page, setPage] = useState(0);
   const [draw, setDraw] = useState<boolean>(false)
   const [data, setData] = useState<any>(null)
   const [openListDays, setOpenListDays] = useState(false)
@@ -191,8 +191,8 @@ const Horario = () => {
   const store = useSelector((state: RootState) => state.horario)
 
   useEffect(() => {
-    dispatch(fetchData())
-  }, [dispatch])
+    dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
+  }, [page,pageSize])
 
   const toggleDrawer = () => setDraw(!draw)
   const toggleListDays = () => setOpenListDays(!openListDays)
@@ -220,11 +220,12 @@ const Horario = () => {
       [name]: value
     })
   }
-  const handleFilters = () => {
-
+  const handleFilters = ()=>{
+    dispatch(fetchData({ filter: filters, skip: page * pageSize, limit: pageSize }))
   }
   const handleReset = () => {
-
+    setFilters(defaultFilter)
+    dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }
 
   return (
@@ -262,7 +263,7 @@ const Horario = () => {
                   <FormControl fullWidth sx={{ mb: 1 }}>
                     <TextField label='place'
                       variant='standard'
-                      name="model"
+                      name="place"
                       fullWidth
                       value={filters.place}
                       onChange={handleChangeFields}
@@ -278,7 +279,7 @@ const Horario = () => {
                     <TextField label='Hora de Salida'
                       variant='standard'
                       fullWidth
-                      name="Tipo"
+                      name="firstOut"
                       value={filters.firstOut}
                       onChange={handleChangeFields}
                       autoComplete='off'
@@ -290,10 +291,10 @@ const Horario = () => {
                 </Grid>
                 <Grid item xs={2.4}>
                   <FormControl fullWidth sx={{ mb: 1 }}>
-                    <TextField label='lastOut'
+                    <TextField label='Ult. Salida'
                       variant='standard'
                       fullWidth
-                      name="plaque"
+                      name="lastOut"
                       value={filters.lastOut}
                       onChange={handleChangeFields}
                       autoComplete='off'
@@ -308,7 +309,7 @@ const Horario = () => {
                     <TextField label='Días'
                       variant='standard'
                       fullWidth
-                      name="cantidad"
+                      name="days"
                       value={filters.days}
                       onChange={handleChangeFields}
                       autoComplete='off'
@@ -327,25 +328,27 @@ const Horario = () => {
               </Grid>
             </Card>
           </Box> : ''}
-          {store.isLoading ? <Box sx={{ textAlign: 'center' }}>Cargando datos...</Box> : !store.isError ?
-            <DataGrid
-              autoHeight
-              rows={store.data}
-              columns={columns}
-              pageSize={pageSize}
-              disableSelectionOnClick
-              rowsPerPageOptions={[10, 25, 50]}
-              sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
-              onPageSizeChange={(newPageSize: number) => setPageSize(newPageSize)}
-            /> : ''
-          }
+          <DataGrid
+            autoHeight
+            rows={store.data}
+            columns={columns}
+            pagination
+            pageSize={pageSize}
+            disableSelectionOnClick
+            onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+            rowsPerPageOptions={[10, 25, 50]}
+            rowCount={store.total}
+            paginationMode="server"
+            onPageChange={(newPage) => setPage(newPage)}
+            sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+          />
         </Card>
       </Grid>
       <AddDraw open={draw} toggle={toggleDrawer} title='Registro de Horarios'>
         <RegisterHorario toggle={toggleDrawer} />
       </AddDraw>
       <AddDraw open={openEdit} toggle={toggleEdit} title='Editar Horario'>
-        <EditHorario toggle={toggleEdit} store={editData} />
+        <EditHorario toggle={toggleEdit} store={editData} page={page} pageSize={pageSize} />
       </AddDraw>
       <ListDays open={openListDays} toggle={toggleListDays} data={data} />
     </Grid>

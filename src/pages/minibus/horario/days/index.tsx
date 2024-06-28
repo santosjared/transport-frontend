@@ -1,5 +1,5 @@
 import { Card, CardContent, Dialog, DialogContent, Divider, Fade, FadeProps,Grid, IconButton,Typography } from "@mui/material"
-import { ReactElement, Ref, forwardRef} from "react"
+import { Fragment, ReactElement, Ref, forwardRef} from "react"
 import Icon from "src/@core/components/icon"
 
 
@@ -16,6 +16,13 @@ const Transition = forwardRef(function Transition(
 })
 
 const ListDays = ({ open, toggle, data }: Props) => {
+  const isMorning = (time:string):boolean=>{
+    const [hours, minuts] = time.split(':').map(Number);
+    if(hours<12){
+      return true
+    }
+    return false
+  }
   return (
     <Dialog
       fullWidth
@@ -35,14 +42,41 @@ const ListDays = ({ open, toggle, data }: Props) => {
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <Card>
-                <Typography sx={{ display: 'flex', justifyContent: 'center', 
-                backgroundColor:theme=>`${theme.palette.primary.main}`, 
-                color:'#ffffff'}} variant="overline">Días</Typography>
+                <Typography sx={{ display: 'flex', justifyContent: 'center',
+                backgroundColor:theme=>`${theme.palette.primary.main}`,
+                color:'#ffffff'}} variant="overline">operacion regular desde {isMorning(data.firstOut)?`${data.firstOut} de la mañana`: `${data.firstOut} `}
+                a {isMorning(data.lastOut)?`${data.lastOut} de la mañana`: `${data.lastOut} `}</Typography>
                 <CardContent sx={{paddingTop:2}}>
+                <Grid container spacing={2}>
+                  <Grid item xs={4}>
+                    <Typography variant="body1">Día</Typography>
+                  </Grid>
+                  <Grid item xs={4}>
+                    <Typography variant="body1">Horarios de operación</Typography>
+                  </Grid>
+                  <Grid item xs={4}>
+                    <Typography variant="body1">frecuencia &#40;{data.time}&#41;</Typography>
+                  </Grid>
+                  <Grid item xs={12}><Divider/></Grid>
+
                   {data.days.map((dia: any) => (
-                    <Typography key={dia}variant="subtitle2">{dia}</Typography>
+                    <Fragment key={dia}>
+                      <Grid item xs={4}>
+                      <Typography key={dia}variant="subtitle2">{dia}</Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                      <Typography key={dia}variant="subtitle2">{data.firstOut} - {data.lastOut}</Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                      <Typography key={dia}variant="subtitle2">{data.frequency}</Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                      <Divider/>
+                      </Grid>
+                    </Fragment>
+
                   ))}
-                  {data.otherDay?<Typography variant="subtitle2">{data.otherDay}</Typography>:''}
+                  </Grid>
                   {data.description?<>
                   <Typography variant="subtitle1" sx={{mt:5}}>Descripción</Typography>
                   <Divider/>
@@ -57,4 +91,4 @@ const ListDays = ({ open, toggle, data }: Props) => {
     </Dialog>
   )
 }
-export default ListDays   
+export default ListDays

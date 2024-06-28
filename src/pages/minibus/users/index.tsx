@@ -22,7 +22,9 @@ import Swal from 'sweetalert2'
 import EditUser from './edit'
 import ViewLicence from './licence'
 
-
+interface TypeRol{
+  name:string
+}
 interface UsersType {
   id: string;
   name: string;
@@ -35,7 +37,7 @@ interface UsersType {
   email: string
   profile: string;
   licenceId: any;
-  rol: [];
+  rol:TypeRol ;
 }
 
 const defaultFilter = {
@@ -246,19 +248,17 @@ const Users = () => {
       renderCell: ({ row }: CellType) => {
         return (
           <Typography variant='body2'>
-            {row.rol.length == 0 ? 'Niguno' :
-              row.rol.map((role: any) => (
+            {!row.rol ? 'Niguno' :
                 <Box sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  '& svg': { mr: 3, color: userRoleObj[role.name == 'Administrador' ? 'admin' : role.name == 'Chofer' ? 'driver' : 'other'].color }
+                  '& svg': { mr: 3, color: userRoleObj[row.rol.name == 'Administrador' ? 'admin' : row.rol.name == 'Chofer' ? 'driver' : 'other'].color }
                 }}>
-                  <Icon icon={userRoleObj[role.name == 'Administrador' ? 'admin' : role.name == 'Chofer' ? 'driver' : 'other'].icon} fontSize={20} />
+                  <Icon icon={userRoleObj[row.rol.name == 'Administrador' ? 'admin' : row.rol.name == 'Chofer' ? 'driver' : 'other'].icon} fontSize={20} />
                   <Typography noWrap sx={{ color: 'text.secondary', textTransform: 'capitalize' }}>
-                    {role.name}
+                    {row.rol.name}
                   </Typography>
                 </Box>
-              ))
             }
           </Typography>
         )

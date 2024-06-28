@@ -49,6 +49,7 @@
     "i18next-browser-languagedetector": "7.0.0",
     "i18next-http-backend": "2.0.0",
     "jsonwebtoken": "^8.5.1",
+    "jwt-decode": "^4.0.0",
     "keen-slider": "6.8.3",
     "leaflet": "^1.9.4",
     "leaflet-defaulticon-compatibility": "^0.1.2",

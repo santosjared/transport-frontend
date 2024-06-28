@@ -11,20 +11,21 @@ import { getThreeDigits } from 'src/@core/utils/get-initials'
 interface Props {
     center: [number, number];
     id?:string | null
+    road?:[]
 }
 
-const RealtimeMap: React.FC<Props> = ({ center, id }) => {
+const RealtimeMap: React.FC<Props> = ({ center, id, road }) => {
     const mapRef = useRef<HTMLDivElement>(null);
     const [map, setMap] = useState<L.Map | null>(null);
     const { socket, isConnected, connect } = useSocket();
+    const [isLoading, setIsLoading] = useState(false)
     const [linea, setLinea] = useState<[]>([])
-    const [geojsonR, setGeojsonR] = useState<FeatureCollection | null>(null)
     useEffect(()=>{
         socket?.on('updateLocations', (data) => {
+          console.log(data)
             if(id){
                 const newdata = data.filter((newLinea: { id: string; }) => newLinea.id === id);
                 setLinea(newdata)
-                setGeojsonR(newdata[0].road?newdata[0].road.geojson:null)
             }else{
                 setLinea(data)
             }
@@ -79,15 +80,15 @@ const RealtimeMap: React.FC<Props> = ({ center, id }) => {
                                 width: 1.75rem;
                                 height: 1.75rem;
                                 display: block;
-                                left: -1rem;
-                                top: -1.5rem;
+                                left: -0.9rem;
+                                top: -1.2rem;
                                 position: relative;
                                 border-radius: 2rem;
                                 border: 1px solid #FFFFFF;`;
                                 const icon = L.divIcon({
                                     className: "my-custom-pin",
-                                    iconAnchor: [0, 24],
-                                    popupAnchor: [0, -36],
+                                    iconAnchor: [-10, 10],
+                                    popupAnchor: [10, -20],
                                     html: `<div style="${markerHtmlStyles}"><h3 style="position: relative;
                                     display: flex;
                                     top: -11px;
@@ -117,10 +118,21 @@ const RealtimeMap: React.FC<Props> = ({ center, id }) => {
             }
     }, [linea]);
     useEffect(() => {
-        if (map && geojsonR) {
-            L.geoJSON(geojsonR).addTo(map)
+        if (map && road) {
+          road.map((value:any)=>{
+            L.geoJSON(value.geojson).addTo(map)
+          })
         }
-    }, [geojsonR, map])
+    }, [road, map, isLoading, linea])
+    useEffect(() => {
+      if (road) {
+        setIsLoading(true);
+        const timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }, [road]);
     return <div ref={mapRef} style={{ height: '500px' }} />;
 };
 

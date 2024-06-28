@@ -2,11 +2,20 @@ import { Box, Dialog, DialogContent, Divider, Fade, FadeProps, FormControl, Icon
 import { Fragment, ReactElement, Ref, forwardRef, useState } from "react";
 import Icon from "src/@core/components/icon";
 
+interface openOptins {
+  all:string;
+  roadm:string;
+  roadr:string;
+  busnear:string;
+  rate:string;
+  horario:string;
+}
 interface Props {
   open: boolean;
   toggle: () => void;
   data: any;
-  handleSelectionLine: (id: string) => void;
+  options:keyof openOptins
+  handleSelectionLine: (id: string, key: keyof openOptins) => void;
 }
 
 const Transition = forwardRef(function Transition(
@@ -16,7 +25,7 @@ const Transition = forwardRef(function Transition(
   return <Fade ref={ref} {...props} />;
 });
 
-const ListLinea = ({ open, toggle, data, handleSelectionLine }: Props) => {
+const ListLinea = ({ open, toggle, data, handleSelectionLine, options }: Props) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,7 +85,7 @@ const ListLinea = ({ open, toggle, data, handleSelectionLine }: Props) => {
                   "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.08)" },
                   cursor: "pointer"
                 }}
-                onClick={() => handleSelectionLine(value.id)}
+                onClick={() => handleSelectionLine(value, options)}
               >
                 <ListItemText
                   primary={`linea ${value.name}`}

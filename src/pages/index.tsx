@@ -28,8 +28,8 @@ const Home = () => {
       return
     }
 
-    if (auth.user && auth.user.role) {
-      const homeRoute = getHomeRoute(auth.user.role)
+    if (auth.user && auth.user.rol) {
+      const homeRoute = getHomeRoute(auth.user.rol)
 
       // Redirect user to Home URL
       router.replace(homeRoute)

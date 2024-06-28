@@ -1,21 +1,36 @@
-import { Box, Button, Card, CardContent, Checkbox, Dialog, DialogContent, Divider, Fade, FadeProps, FormControl, FormControlLabel, Grid, IconButton, InputLabel, List, ListItem, ListItemText, TextField, Typography, useMediaQuery, useTheme } from "@mui/material"
-import { ReactElement, Ref, forwardRef, useEffect, useState } from "react"
-import { useDispatch } from "react-redux"
-import Icon from "src/@core/components/icon"
-import { useService } from "src/hooks/useService"
-import { AppDispatch } from "src/store"
-import { asignedBus, desasignedBus,fetchData } from "src/store/apps/linea"
-import { isImage } from "src/utils/verificateImg"
-import getConfig from 'src/configs/environment'
-import { DataGrid, GridSelectionModel } from "@mui/x-data-grid"
+import { Box, Button, Card, CardContent, CardHeader, Dialog, DialogContent, Divider, Fade, FadeProps, FormControl, Grid, IconButton, List, ListItem, ListItemText, MenuItem, TextField, Typography } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { ChangeEvent, Fragment, ReactElement, Ref, forwardRef, useEffect, useState } from "react";
+import AddDrawMap from "src/components/addDrawMap";
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import { useService } from "src/hooks/useService";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "src/store";
+import { asignedBus, asignedHorario, desasignedBus, desasignedHorario, fetchData } from "src/store/apps/linea";
 import FilterListIcon from '@mui/icons-material/FilterList';
+import CustomChip from 'src/@core/components/mui/chip'
+import { isImage } from "src/utils/verificateImg";
+import getConfig from 'src/configs/environment'
+import CustomRenderCell from "../../bus/profile";
 
 interface Props {
-  open: boolean,
-  toggle: () => void
-  data: any
+  toggle: () => void;
+  id: string;
 }
 
+interface UsersType {
+  name: string;
+  lastName: string;
+  ci: string;
+  address: string;
+  phone: string;
+  gender: string;
+  contry: string;
+  email: string
+  profile: string;
+  rol: [];
+}
 type Bus = {
   id: string,
   trademark: string,
@@ -23,18 +38,25 @@ type Bus = {
   type: string,
   plaque: string,
   cantidad: number,
-  photo: string
+  gps: string,
+  photo: string,
+  status: string,
+  ruat: string
+  userId: UsersType
 }
 interface TypeCell {
   row: Bus
 }
+const defaultFilter = {
+  trademark: '',
+  model: '',
+  type: '',
+  plaque: '',
+  cantidad: '',
+  status: '',
+  userId: ''
+}
 
-const Transition = forwardRef(function Transition(
-  props: FadeProps & { children?: ReactElement<any, any> },
-  ref: Ref<unknown>
-) {
-  return <Fade ref={ref} {...props} />
-})
 
 const renderImg = (row: Bus) => {
 
@@ -55,208 +77,378 @@ const renderImg = (row: Bus) => {
   } else {
     return ''
   }
-
 }
+const ViewHorario = ({ toggle, id }: Props) => {
 
-const columns = [
-  {
-    flex: 0.2,
-    minWidth: 200,
-    field: 'trademark',
-    headerName: 'Marca',
-    renderCell: ({ row }: TypeCell) => {
-      return (
-        <Box sx={{ display: 'flex' }}>
-          {renderImg(row)}
-          <Box sx={{ display: 'flex', paddingTop: 2, paddingLeft: 1 }}>
-            <Typography noWrap variant='body2'>
-              {row.trademark}
-            </Typography>
+  const columns = [
+    {
+      flex: 0.2,
+      minWidth: 200,
+      field: 'trademark',
+      headerName: 'Marca',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Box sx={{ display: 'flex' }}>
+            {renderImg(row)}
+            <Box sx={{ display: 'flex', paddingTop: 2, paddingLeft: 1 }}>
+              <Typography noWrap variant='body2'>
+                {row.trademark}
+              </Typography>
+            </Box>
           </Box>
-        </Box>
-      )
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 90,
+      field: 'model',
+      sortable: false,
+      headerName: 'Modelo',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant='body2'>
+            {row.model}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 90,
+      field: 'type',
+      sortable: false,
+      headerName: 'Tipo',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant='body2'>
+            {row.type}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 90,
+      field: 'plaque',
+      sortable: false,
+      headerName: 'Placa',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant='body2'>
+            {row.plaque}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 20,
+      field: 'cantidad',
+      headerName: 'Asientos',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant='body2'>
+            {row.cantidad}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 230,
+      field: 'chofer',
+      headerName: 'Chofer',
+      renderCell: ({ row }: TypeCell) => <CustomRenderCell row={row} />
+    },
+    {
+      flex: 0.2,
+      minWidth: 130,
+      field: 'status',
+      variant: 'outlined',
+      headerName: 'Estado',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <CustomChip
+            skin='light'
+            size='small'
+            label={row.status}
+            color={row.status === 'Activo' ? 'success' : row.status === 'En mantenimiento' ? 'warning' : row.status === 'Inactivo' ? 'secondary' : 'info'}
+            sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
+          />
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'desasignar',
+      headerName: 'Desasignar',
+      width: 40,
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }} onClick={() => handleDesasigned(row)}>
+            <IconButton sx={{ backgroundColor: theme => theme.palette.primary.main, color: '#fff' }}>
+              <ArrowForwardIosIcon />
+            </IconButton>
+          </Box>
+        )
+      }
+    },
+  ]
+  const columns2 = [
+    {
+      flex: 0.2,
+      field: 'asignar',
+      headerName: 'asignar',
+      width: 40,
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }} onClick={() => handleAsigned(row)}>
+            <IconButton sx={{ backgroundColor: theme => theme.palette.primary.main, color: '#fff' }}>
+              <ArrowBackIosNewIcon />
+            </IconButton>
+          </Box>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 200,
+      field: 'trademark',
+      headerName: 'Marca',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Box sx={{ display: 'flex' }}>
+            {renderImg(row)}
+            <Box sx={{ display: 'flex', paddingTop: 2, paddingLeft: 1 }}>
+              <Typography noWrap variant='body2'>
+                {row.trademark}
+              </Typography>
+            </Box>
+          </Box>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 90,
+      field: 'model',
+      sortable: false,
+      headerName: 'Modelo',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant='body2'>
+            {row.model}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 90,
+      field: 'type',
+      sortable: false,
+      headerName: 'Tipo',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant='body2'>
+            {row.type}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 90,
+      field: 'plaque',
+      sortable: false,
+      headerName: 'Placa',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant='body2'>
+            {row.plaque}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 20,
+      field: 'cantidad',
+      headerName: 'Asientos',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant='body2'>
+            {row.cantidad}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      minWidth: 230,
+      field: 'chofer',
+      headerName: 'Chofer',
+      renderCell: ({ row }: TypeCell) => <CustomRenderCell row={row} />
+    },
+    {
+      flex: 0.2,
+      minWidth: 130,
+      field: 'status',
+      variant: 'outlined',
+      headerName: 'Estado',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <CustomChip
+            skin='light'
+            size='small'
+            label={row.status}
+            color={row.status === 'Activo' ? 'success' : row.status === 'En mantenimiento' ? 'warning' : row.status === 'Inactivo' ? 'secondary' : 'info'}
+            sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
+          />
+        )
+      }
     }
-  },
-  {
-    flex: 0.2,
-    minWidth: 90,
-    field: 'model',
-    sortable: false,
-    headerName: 'Modelo',
-    renderCell: ({ row }: TypeCell) => {
-      return (
-        <Typography noWrap variant='body2'>
-          {row.model}
-        </Typography>
-      )
-    }
-  },
-  {
-    flex: 0.2,
-    minWidth: 90,
-    field: 'type',
-    sortable: false,
-    headerName: 'Tipo',
-    renderCell: ({ row }: TypeCell) => {
-      return (
-        <Typography noWrap variant='body2'>
-          {row.type}
-        </Typography>
-      )
-    }
-  },
-  {
-    flex: 0.2,
-    minWidth: 90,
-    field: 'plaque',
-    sortable: false,
-    headerName: 'Placa',
-    renderCell: ({ row }: TypeCell) => {
-      return (
-        <Typography noWrap variant='body2'>
-          {row.plaque}
-        </Typography>
-      )
-    }
-  },
-  {
-    flex: 0.2,
-    minWidth: 20,
-    field: 'cantidad',
-    headerName: 'Asientos',
-    renderCell: ({ row }: TypeCell) => {
-      return (
-        <Typography noWrap variant='body2'>
-          {row.cantidad}
-        </Typography>
-      )
-    }
-  }
-]
-
-const ViewBus = ({ open, toggle, data }: Props) => {
-
-  const [dataDB, setDataDB] = useState<any[]>([])
-  const [bus, setBus] = useState<any[]>([])
-  const [pageSize, setPageSize] = useState<number>(10)
-  const [openfilters, setOpenFilters] = useState(false)
-  const [openfilters2, setOpenFilters2] = useState(false)
-  const [selectedIds, setSelectedIds] = useState<GridSelectionModel>([]);
-  const [selectedIds2, setSelectedIds2] = useState<GridSelectionModel>([]);
-
-  const toggleFilter = () => setOpenFilters(!openfilters)
-  const toggleFilter2 = () => setOpenFilters2(!openfilters2)
-  const {Get } = useService()
+  ]
+  const [pageSizeAsigned, setPageSizeAsigned] = useState<number>(10)
+  const [pageSizeDesasigned, setPageSizeDesasigned] = useState<number>(10)
+  const [pageDesasigned, setPageDesasigned] = useState<number>(0)
+  const [buses, setBuses] = useState<any[]>([])
+  const [dataBus, setDataBus] = useState<any[]>([])
+  const [linea, setLinea] = useState<any>({ id: '' })
+  const [filtersAsigned, setFiltersAsigned] = useState(defaultFilter)
+  const [filtersDesasigned, setFiltersDesasigned] = useState(defaultFilter)
+  const [total, setTotal] = useState<number>(0)
+  const { GetId, Get } = useService()
+  const dispatch = useDispatch<AppDispatch>()
   useEffect(() => {
-    if (data.length !== 0) {
+    if (id) {
       const fetch = async () => {
-        const response = await Get('/linea/allBusNotAsigned')
-        setDataDB(response.data.result)
+        const lineaDB = await GetId('/linea/lineaOne', id)
+        const response = await Get('/linea/allBusNotAsigned', { filter: '', skip: pageDesasigned * pageSizeDesasigned, limit: pageSizeDesasigned })
+        setBuses(response.data.result)
+        setTotal(response.data.total)
+        setLinea(lineaDB.data)
+        setDataBus(lineaDB.data.buses)
       }
       fetch();
-      setBus(data.buses)
     }
-  }, [data])
-  const dispatch = useDispatch<AppDispatch>()
-  const handleSelectionChange = (newSelection:GridSelectionModel) => {
-    const selectedIDs = newSelection as number[];
-    const selectedData = selectedIDs.map((id) => bus.find((row) => row.id === id)!);
-    const selectedIdsOnly = selectedData.map((row) => row._id);
-    setSelectedIds(selectedIdsOnly);
-  };
-  const handleSelectionChange2 = (newSelection:GridSelectionModel) => {
-    const selectedIDs = newSelection as number[];
-    const selectedData = selectedIDs.map((id) => dataDB.find((row) => row.id === id)!);
-    const selectedIdsOnly = selectedData.map((row) => row._id);
-    setSelectedIds2(selectedIdsOnly);
-  };
-  const handleDesasigned = async () => {
+  }, [id, toggle, pageDesasigned,pageSizeDesasigned])
+
+
+  const handleDesasigned = async (busdata: any) => {
     try {
-      const response = await dispatch(desasignedBus({ data: { buses:selectedIds  }, id: data.id }))
+      const response = await dispatch(desasignedBus({ data: { buses: [busdata._id] }, id: linea.id }))
       if (response.payload.success) {
         dispatch(fetchData())
-        setBus(response.payload.data.buses)
+        // setDataBus(response.payload.data.buses)
 
-        const res = await Get('/linea/allBusNotAsigned')
-        setDataDB(res.data.result)
+        const res = await Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
+        // setBuses(res.data.result)
+        setTotal(res.data.total)
       }
     } catch (error) { } finally {
-      handleReset()
+
     }
   }
-  const handleAsigned = async () => {
+  const handleAsigned = async (bus: any) => {
     try {
-      const response = await dispatch(asignedBus({ data: { buses:selectedIds2  }, id: data.id }))
+      const response = await dispatch(asignedBus({ data: { buses: [bus._id] }, id: linea.id }))
       if (response.payload.success) {
         dispatch(fetchData())
-        setBus(response.payload.data.buses)
+        // setDataBus(response.payload.data.buses)
 
-        const res = await Get('/linea/allBusNotAsigned')
-        setDataDB(res.data.result)
+        const res = await Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
+        // setBuses(res.data.result)
+        setTotal(res.data.total)
       }
     } catch (error) { } finally {
-      handleReset()
     }
-
   }
-  const handleReset = () => {
-  
+  const handleChangeFieldsAsigned = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFiltersAsigned({
+      ...filtersAsigned,
+      [name]: value
+    })
   }
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const handleFiltersAsigned = () => {
+    const filteredBuses = dataBus.filter((bus: any) => {
+      return (
+        (filtersAsigned.trademark === '' || bus.trademark.includes(filtersAsigned.trademark)) &&
+        (filtersAsigned.model === '' || bus.model.includes(filtersAsigned.model)) &&
+        (filtersAsigned.type === '' || bus.type.includes(filtersAsigned.type)) &&
+        (filtersAsigned.plaque === '' || bus.plaque.includes(filtersAsigned.plaque)) &&
+        (filtersAsigned.cantidad === '' || bus.cantidad.includes(filtersAsigned.cantidad)) &&
+        (filtersAsigned.status === '' || bus.status.includes(filtersAsigned.status)) &&
+        (filtersAsigned.userId === '' || bus.userId?.name.includes(filtersAsigned.userId))
 
+      );
+    });
+    setDataBus(filteredBuses)
+    // dispatch(fetchData({ filter: filters, skip: page * pageSize, limit: pageSize }))
+  }
+  const handleResetFiltersAsigned = async () => {
+    setFiltersAsigned(defaultFilter)
+    const lineaDB = await GetId('/linea/lineaOne', id)
+    setDataBus(lineaDB.data.buses)
+    // dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
+  }
+
+
+  const handleFiltersDesasigned = async () => {
+    const res = await Get('/linea/allBusNotAsigned', { filter: filtersDesasigned })
+    setBuses(res.data.result)
+    setTotal(res.data.total)
+    // dispatch(fetchData({ filter: filters, skip: page * pageSize, limit: pageSize }))
+  }
+  const handleResetFiltersDesasigned = async () => {
+    const res = await Get('/linea/allBusNotAsigned', { filter: '', skip: pageDesasigned * pageSizeDesasigned, limit: pageSizeDesasigned })
+    setBuses(res.data.result)
+    setTotal(res.data.total)
+    setFiltersDesasigned(defaultFilter)
+    // dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
+  }
+  const handleChangeFieldsDesasigned = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFiltersDesasigned({
+      ...filtersDesasigned,
+      [name]: value
+    })
+  }
   return (
-    <Dialog
-      fullWidth
-      open={open}
-      maxWidth='xl'
-      scroll='body'
-      onClose={toggle}
-      TransitionComponent={Transition}
-      fullScreen={fullScreen}
-    >
-      <DialogContent sx={{ px: { xs: 4, sm: 5 }, py: { xs: 12, sm: 12.5 }, position: 'relative' }}>
-        <IconButton
-          size='small'
-          onClick={toggle}
-          sx={{ position: 'absolute', right: '1rem', top: '1rem' }}
-        ><Icon icon='mdi:close' /></IconButton>
-        {data.length !== 0 ? <><Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-          <Typography variant="h5">linea {data.name}</Typography>
-        </Box>
-          <Divider />
-          <Grid container spacing={2}>
-            <Grid item xs={6} sx={{ borderRight: `1px solid #E0E0E0`, pr: 2 }}>
-              <Box sx={{ mb: 4, textAlign: 'center' }}>
-                <Typography variant='h5' sx={{ mb: 0, lineHeight: '2rem' }}>Lista de buses asignados </Typography>
-              </Box>
-              <Box sx={{ pt: 5, pl: 5, pr: 5, pb: 3, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                <Button variant="contained" sx={{ height: 43, mb:{xs:3, sm:3, lg:0} }} onClick={toggleFilter}>
-                  {openfilters ? 'Cerrar filtrado' : 'Filtrar por columnas'}
-                </Button>
-                <Button variant="contained" sx={{ height: 43 }} onClick={handleDesasigned}>desasignar buses</Button>
-              </Box>
-              {openfilters ? <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
+    <AddDrawMap toggle={toggle} title={`Asignar o desasignar buses a la linea ${linea.name}`}>
+      <Grid container spacing={1} >
+        <Grid item xs={12}>
+          <CardContent>
+            <Card>
+              <CardHeader title='Buses asignadas ' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
+              <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
                 <Card sx={{ p: 2 }}>
                   <Grid container spacing={2}>
-                    <Grid item xs={2.4}>
+                    <Grid item xs={1.71}>
                       <FormControl fullWidth sx={{ mb: 1 }}>
                         <TextField label='Marca'
                           variant='standard'
+                          name="trademark"
                           fullWidth
                           autoComplete='off'
+                          value={filtersAsigned.trademark}
+                          onChange={handleChangeFieldsAsigned}
                           InputProps={{
                             startAdornment: <FilterListIcon />,
                           }}
                         />
                       </FormControl>
                     </Grid>
-                    <Grid item xs={2.4}>
+                    <Grid item xs={1.71}>
                       <FormControl fullWidth sx={{ mb: 1 }}>
                         <TextField label='Modelo'
                           variant='standard'
+                          name="model"
                           fullWidth
-                          type="number"
+                          value={filtersAsigned.model}
+                          onChange={handleChangeFieldsAsigned}
                           autoComplete='off'
                           InputProps={{
                             startAdornment: <FilterListIcon />,
@@ -264,11 +456,14 @@ const ViewBus = ({ open, toggle, data }: Props) => {
                         />
                       </FormControl>
                     </Grid>
-                    <Grid item xs={2.4}>
+                    <Grid item xs={1.71}>
                       <FormControl fullWidth sx={{ mb: 1 }}>
                         <TextField label='Tipo'
                           variant='standard'
                           fullWidth
+                          name="type"
+                          value={filtersAsigned.type}
+                          onChange={handleChangeFieldsAsigned}
                           autoComplete='off'
                           InputProps={{
                             startAdornment: <FilterListIcon />,
@@ -276,11 +471,14 @@ const ViewBus = ({ open, toggle, data }: Props) => {
                         />
                       </FormControl>
                     </Grid>
-                    <Grid item xs={2.4}>
+                    <Grid item xs={1.71}>
                       <FormControl fullWidth sx={{ mb: 1 }}>
                         <TextField label='Placa'
                           variant='standard'
                           fullWidth
+                          name="plaque"
+                          value={filtersAsigned.plaque}
+                          onChange={handleChangeFieldsAsigned}
                           autoComplete='off'
                           InputProps={{
                             startAdornment: <FilterListIcon />,
@@ -288,12 +486,44 @@ const ViewBus = ({ open, toggle, data }: Props) => {
                         />
                       </FormControl>
                     </Grid>
-                    <Grid item xs={2.4}>
+                    <Grid item xs={1.71}>
                       <FormControl fullWidth sx={{ mb: 1 }}>
-                        <TextField label='Asientos'
+                        <TextField label='Cantidad de Asientos'
                           variant='standard'
                           fullWidth
-                          type="number"
+                          name="cantidad"
+                          value={filtersAsigned.cantidad}
+                          onChange={handleChangeFieldsAsigned}
+                          autoComplete='off'
+                          InputProps={{
+                            startAdornment: <FilterListIcon />,
+                          }}
+                        />
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={1.71}>
+                      <FormControl fullWidth sx={{ mb: 1 }}>
+                        <TextField label='Chofer'
+                          variant='standard'
+                          fullWidth
+                          name="userId"
+                          value={filtersAsigned.userId}
+                          onChange={handleChangeFieldsAsigned}
+                          autoComplete='off'
+                          InputProps={{
+                            startAdornment: <FilterListIcon />,
+                          }}
+                        />
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={1.71}>
+                      <FormControl fullWidth sx={{ mb: 1 }}>
+                        <TextField label='Estado'
+                          variant='standard'
+                          fullWidth
+                          name="status"
+                          value={filtersAsigned.status}
+                          onChange={handleChangeFieldsAsigned}
                           autoComplete='off'
                           InputProps={{
                             startAdornment: <FilterListIcon />,
@@ -303,62 +533,56 @@ const ViewBus = ({ open, toggle, data }: Props) => {
                     </Grid>
                     <Grid item xs={12}>
                       <Box>
-                        <Button variant="contained" sx={{ mr: 3, mb:{xs:3,sm:0} }}>Filtrar</Button>
-                        <Button variant="outlined">Restablecer</Button>
+                        <Button variant="contained" sx={{ mr: 3 }} onClick={handleFiltersAsigned}>Filtrar</Button>
+                        <Button variant="outlined" onClick={handleResetFiltersAsigned}>Restablecer</Button>
                       </Box>
                     </Grid>
                   </Grid>
                 </Card>
-              </Box> : ''}
+              </Box>
               <DataGrid
                 autoHeight
-                rows={bus}
+                rows={dataBus}
                 columns={columns}
-                pageSize={pageSize}
-                // rowCount={store.total}
-                checkboxSelection
+                pageSize={pageSizeAsigned}
+                disableSelectionOnClick
                 rowsPerPageOptions={[10, 25, 50]}
-                sx={{
-                  '& .MuiDataGrid-columnHeaders': { borderRadius: 0.5 },
-                  '& .MuiDataGrid-columnHeader': { backgroundColor: '#B0F2C2' }
-                }}
-                // onPageChange={(newPageNumber) => setPageNumber(newPageNumber)}
-                onPageSizeChange={(newPageSize: number) => setPageSize(newPageSize)}
-                pagination
-                onSelectionModelChange={handleSelectionChange}
+                sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+                onPageSizeChange={(newPageSize: number) => setPageSizeAsigned(newPageSize)}
               />
-            </Grid>
-            <Grid item xs={6}>
-              <Box sx={{ mb: 4, textAlign: 'center' }}>
-                <Typography variant='h5' sx={{ mb: 0, lineHeight: '2rem' }}>Lista de buses no asignados </Typography>
-              </Box>
-              <Box sx={{ pt: 5, pl: 5, pr: 5, pb: 3, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                <Button variant="contained" sx={{ height: 43, mb:{xs:3, sm:3, lg:0} }}  onClick={toggleFilter2}>
-                  {openfilters2 ? 'Cerrar filtrado' : 'Filtrar por columnas'}
-                </Button>
-                <Button variant="contained" sx={{ height: 43 }} onClick={handleAsigned}>asignar buses</Button>
-              </Box>
-              {openfilters2 ? <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
+            </Card>
+          </CardContent>
+        </Grid>
+        <Grid item xs={12}>
+          <CardContent>
+            <Card>
+              <CardHeader title='Buses no asignadas ' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
+              <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
                 <Card sx={{ p: 2 }}>
                   <Grid container spacing={2}>
-                    <Grid item xs={2.4}>
+                    <Grid item xs={1.71}>
                       <FormControl fullWidth sx={{ mb: 1 }}>
                         <TextField label='Marca'
                           variant='standard'
+                          name="trademark"
                           fullWidth
                           autoComplete='off'
+                          value={filtersDesasigned.trademark}
+                          onChange={handleChangeFieldsDesasigned}
                           InputProps={{
                             startAdornment: <FilterListIcon />,
                           }}
                         />
                       </FormControl>
                     </Grid>
-                    <Grid item xs={2.4}>
+                    <Grid item xs={1.71}>
                       <FormControl fullWidth sx={{ mb: 1 }}>
                         <TextField label='Modelo'
                           variant='standard'
+                          name="model"
                           fullWidth
-                          type="number"
+                          value={filtersDesasigned.model}
+                          onChange={handleChangeFieldsDesasigned}
                           autoComplete='off'
                           InputProps={{
                             startAdornment: <FilterListIcon />,
@@ -366,11 +590,14 @@ const ViewBus = ({ open, toggle, data }: Props) => {
                         />
                       </FormControl>
                     </Grid>
-                    <Grid item xs={2.4}>
+                    <Grid item xs={1.71}>
                       <FormControl fullWidth sx={{ mb: 1 }}>
                         <TextField label='Tipo'
                           variant='standard'
                           fullWidth
+                          name="type"
+                          value={filtersDesasigned.type}
+                          onChange={handleChangeFieldsDesasigned}
                           autoComplete='off'
                           InputProps={{
                             startAdornment: <FilterListIcon />,
@@ -378,11 +605,14 @@ const ViewBus = ({ open, toggle, data }: Props) => {
                         />
                       </FormControl>
                     </Grid>
-                    <Grid item xs={2.4}>
+                    <Grid item xs={1.71}>
                       <FormControl fullWidth sx={{ mb: 1 }}>
                         <TextField label='Placa'
                           variant='standard'
                           fullWidth
+                          name="plaque"
+                          value={filtersDesasigned.plaque}
+                          onChange={handleChangeFieldsDesasigned}
                           autoComplete='off'
                           InputProps={{
                             startAdornment: <FilterListIcon />,
@@ -390,12 +620,44 @@ const ViewBus = ({ open, toggle, data }: Props) => {
                         />
                       </FormControl>
                     </Grid>
-                    <Grid item xs={2.4}>
+                    <Grid item xs={1.71}>
                       <FormControl fullWidth sx={{ mb: 1 }}>
-                        <TextField label='Asientos'
+                        <TextField label='Cantidad de Asientos'
                           variant='standard'
                           fullWidth
-                          type="number"
+                          name="cantidad"
+                          value={filtersDesasigned.cantidad}
+                          onChange={handleChangeFieldsDesasigned}
+                          autoComplete='off'
+                          InputProps={{
+                            startAdornment: <FilterListIcon />,
+                          }}
+                        />
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={1.71}>
+                      <FormControl fullWidth sx={{ mb: 1 }}>
+                        <TextField label='Chofer'
+                          variant='standard'
+                          fullWidth
+                          name="userId"
+                          value={filtersDesasigned.userId}
+                          onChange={handleChangeFieldsDesasigned}
+                          autoComplete='off'
+                          InputProps={{
+                            startAdornment: <FilterListIcon />,
+                          }}
+                        />
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={1.71}>
+                      <FormControl fullWidth sx={{ mb: 1 }}>
+                        <TextField label='Estado'
+                          variant='standard'
+                          fullWidth
+                          name="status"
+                          value={filtersDesasigned.status}
+                          onChange={handleChangeFieldsDesasigned}
                           autoComplete='off'
                           InputProps={{
                             startAdornment: <FilterListIcon />,
@@ -405,35 +667,33 @@ const ViewBus = ({ open, toggle, data }: Props) => {
                     </Grid>
                     <Grid item xs={12}>
                       <Box>
-                        <Button variant="contained" sx={{ mr: 3, mb:{xs:3,sm:0} }}>Filtrar</Button>
-                        <Button variant="outlined">Restablecer</Button>
+                        <Button variant="contained" sx={{ mr: 3 }} onClick={handleFiltersDesasigned}>Filtrar</Button>
+                        <Button variant="outlined" onClick={handleResetFiltersDesasigned}>Restablecer</Button>
                       </Box>
                     </Grid>
                   </Grid>
                 </Card>
-              </Box> : ''}
+              </Box>
               <DataGrid
                 autoHeight
-                rows={dataDB}
-                columns={columns}
-                pageSize={pageSize}
-                // rowCount={store.total}
-                checkboxSelection
-                rowsPerPageOptions={[10, 25, 50]}
-                sx={{
-                  '& .MuiDataGrid-columnHeaders': { borderRadius: 0.5 },
-                  '& .MuiDataGrid-columnHeader': { backgroundColor: '#EF9A9A' }
-                }}
-                // onPageChange={(newPageNumber) => setPageNumber(newPageNumber)}
-                onPageSizeChange={(newPageSize: number) => setPageSize(newPageSize)}
+                rows={buses}
+                columns={columns2}
                 pagination
-                onSelectionModelChange={handleSelectionChange2}
+                pageSize={pageSizeDesasigned}
+                disableSelectionOnClick
+                onPageSizeChange={(newPageSize) => setPageSizeDesasigned(newPageSize)}
+                rowsPerPageOptions={[10, 25, 50]}
+                rowCount={total}
+                paginationMode="server"
+                onPageChange={(newPage) => setPageDesasigned(newPage)}
+                sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
               />
-            </Grid>
-          </Grid>
-        </> : ''}
-      </DialogContent>
-    </Dialog>
+            </Card>
+          </CardContent>
+        </Grid>
+      </Grid>
+    </AddDrawMap>
   )
-}
-export default ViewBus
+};
+
+export default ViewHorario;

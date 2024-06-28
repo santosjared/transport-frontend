@@ -40,11 +40,11 @@ export const appUsersSlice = createSlice({
           state.isError = false;
       })
       .addCase(fetchDataUser.fulfilled, (state, action) => {
-          state.isLoading = false; 
-          state.isSuccess = true;  
-          state.isError = false;   
+          state.isLoading = false;
+          state.isSuccess = true;
+          state.isError = false;
           state.data = action.payload.result;
-          state.total = action.payload.total 
+          state.total = action.payload.total
       })
       .addCase(fetchDataUser.rejected, (state) => {
           state.isLoading = false;

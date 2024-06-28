@@ -4,7 +4,7 @@ import * as React from 'react';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
-import { Box, Button, Checkbox, FormControl } from '@mui/material';
+import { Box, Button, Checkbox, FormControl, FormHelperText } from '@mui/material';
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useService } from 'src/hooks/useService';
@@ -21,22 +21,30 @@ import { addLinea } from 'src/store/apps/linea';
 import { isImage } from 'src/utils/verificateImg';
 import getConfig from 'src/configs/environment'
 import Swal from 'sweetalert2';
+import RenderImg from '../cuntomphoto';
 
 interface Props {
   toggle: () => void
 }
 
+const defaultErrors = {
+  name: '',
+  road: '',
+  horario: '',
+  rate: '',
+  buses: ''
+}
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 const AddLinea = ({ toggle }: Props) => {
 
-  const [onSelectRuote, setOnSelectRoute] = useState<any>(null)
+  const [onSelectRuote, setOnSelectRoute] = useState<any>([])
   const [name, setName] = useState<string >('')
   const [onSelectHorario, setOnSelectHorario] = useState<any>([])
   const [onSelectTarifa, setOnSelectTarifa] = useState<any>([])
   const [onSelectBus, setOnSelectBus] = useState<any>([])
-  const [nameError,setNameError] = useState('')
+  const [formErrors,setFormErrors] = useState(defaultErrors)
   const [busData,setBusdata] = useState<any[]>([])
 
   const [isLoading,setIsLoading] = useState(false)
@@ -67,9 +75,10 @@ const AddLinea = ({ toggle }: Props) => {
      const IdBuses = onSelectBus.map((bus: any) => bus._id)
       const IdHorario = onSelectHorario.map((horario: any) => horario._id)
       const IdTarifa = onSelectTarifa.map((tarifa: any) => tarifa._id)
+      const IdRoad = onSelectRuote.map((road:any)=>road._id)
       const data = {
         name: name,
-        road: onSelectRuote? onSelectRuote._id : '',
+        road: IdRoad,
         horario: IdHorario,
         rate: IdTarifa,
         buses: IdBuses
@@ -82,7 +91,12 @@ const AddLinea = ({ toggle }: Props) => {
         } else {
           if (response.payload.data) {
             const { data } = response.payload
-            setNameError(data.name)
+            formErrors.buses = data.buses
+            formErrors.horario = data.horario
+            formErrors.name = data.name
+            formErrors.rate = data.rate
+            formErrors.road = data.road
+            setFormErrors(formErrors)
           } else { Swal.fire({ title: '¡Error!', text: 'ocurio un error al guardar los datos', icon: "error" }); handleReset() }
         }
       } catch (error) {
@@ -90,33 +104,21 @@ const AddLinea = ({ toggle }: Props) => {
         handleReset()
       } finally {
         setIsLoading(false)
-      }  
+      }
   }
   const handleReset = () => {
     setName('')
-    setNameError('')
-    setOnSelectRoute(null)
+    formErrors.buses = ''
+    formErrors.horario = ''
+    formErrors.name = ''
+    formErrors.rate = ''
+    formErrors.road = ''
+    setFormErrors(formErrors)
+    setOnSelectRoute([])
     setOnSelectHorario([])
     setOnSelectTarifa([])
     setOnSelectBus([])
     toggle()
-  }
-  const renderImg = (url: any) => {
-    // const img = isImage(`${getConfig().backendURI}${url}`)
-    // img.then((result)=>{
-    //   if (result) {
-    //     return (
-    //       <Box sx={{ display: 'flex', border: 'solid 1px #E0E0E0', borderRadius: 0.5 }}>
-    //       <img src={`${getConfig().backendURI}${url}`} height={35} width={35} style={{ borderRadius: 5 }}></img>
-    //     </Box>
-    //     )
-    //   } else {
-    //     return ''
-    //   }
-    // })
-    return( <Box sx={{ display: 'flex', border: 'solid 1px #E0E0E0', borderRadius: 0.5 }}>
-    <img src={`${getConfig().backendURI}${url}`} height={35} width={35} style={{ borderRadius: 5 }} alt='B'onError={()=>{}}></img>
-  </Box>)
   }
   return (
     <> {busData.length ===0 || storeHorario.isLoading || storeTarifa.isLoading || storeRuta.isLoading ? 'Cargando...' :
@@ -127,35 +129,36 @@ const AddLinea = ({ toggle }: Props) => {
             placeholder='110'
             value={name}
             autoComplete='off'
-            error={Boolean(nameError)}
-            helperText={nameError}
-            onChange={(e) => setName(e.target.value)}
+            error={Boolean(formErrors.name)}
+            helperText={formErrors.name}
+            onChange={(e) => {setName(e.target.value); setFormErrors({...formErrors, name:''})}}
           />
         </FormControl>
         <FormControl fullWidth >
           <Autocomplete
+            multiple
+            id="checkboxes-tags-demo"
             options={storeRuta.data}
-            getOptionLabel={(option: any) => option.name}
-            onChange={(event, value) => setOnSelectRoute(value)}
+            disableCloseOnSelect
             value={onSelectRuote}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label='Asignar ruta'
-                autoComplete='off'
-                InputProps={{
-                  ...params.InputProps,
-                  startAdornment: (
-                    <>
-                      {params.InputProps.startAdornment}
-                    </>
-                  )
-                }}
-              />
-
+            onChange={(e, value) => {setOnSelectRoute(value); setFormErrors({...formErrors,road:''})}}
+            getOptionLabel={(option: any) => option.name}
+            renderOption={(props, option: any, { selected }) => (
+              <li {...props}>
+                <Checkbox
+                  icon={icon}
+                  checkedIcon={checkedIcon}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option.name}
+              </li>
             )}
-            sx={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+            renderInput={(params) => (
+              <TextField {...params} autoComplete='off' label='Asignar rutas' />
+            )}
           />
+          {formErrors.road && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.road}</FormHelperText>}
         </FormControl>
         <FormControl fullWidth >
           <Autocomplete
@@ -164,7 +167,7 @@ const AddLinea = ({ toggle }: Props) => {
             options={storeHorario.data}
             value={onSelectHorario}
             disableCloseOnSelect
-            onChange={(e, value) => setOnSelectHorario(value)}
+            onChange={(e, value) => {setOnSelectHorario(value); setFormErrors({...formErrors, horario:''})}}
             getOptionLabel={(option: any) => option.name}
             renderOption={(props, option: any, { selected }) => (
               <li {...props}>
@@ -181,6 +184,7 @@ const AddLinea = ({ toggle }: Props) => {
               <TextField {...params} autoComplete='off' label='Asignar horario' />
             )}
           />
+          {formErrors.horario && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.horario}</FormHelperText>}
         </FormControl>
         <FormControl fullWidth >
           <Autocomplete
@@ -189,7 +193,7 @@ const AddLinea = ({ toggle }: Props) => {
             options={storeTarifa.data}
             disableCloseOnSelect
             value={onSelectTarifa}
-            onChange={(e, value) => setOnSelectTarifa(value)}
+            onChange={(e, value) => {setOnSelectTarifa(value); setFormErrors({...formErrors, rate:''})}}
             getOptionLabel={(option: any) => option.name}
             renderOption={(props, option: any, { selected }) => (
               <li {...props}>
@@ -206,6 +210,7 @@ const AddLinea = ({ toggle }: Props) => {
               <TextField {...params} autoComplete='off' label='Asignar tarifa' />
             )}
           />
+          {formErrors.rate && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.rate}</FormHelperText>}
         </FormControl>
         <FormControl fullWidth >
           <Autocomplete
@@ -214,8 +219,8 @@ const AddLinea = ({ toggle }: Props) => {
             options={busData}
             disableCloseOnSelect
             value={onSelectBus}
-            onChange={(e, value) => setOnSelectBus(value)}
-            getOptionLabel={(option: any) => option.trademark}
+            onChange={(e, value) => {setOnSelectBus(value); setFormErrors({...formErrors, buses:''})}}
+            getOptionLabel={(option: any) => `${option.trademark} - ${option.plaque}`}
             renderOption={(props, option: any, { selected }) => (
               <li {...props}>
                 <Checkbox
@@ -224,7 +229,7 @@ const AddLinea = ({ toggle }: Props) => {
                   style={{ marginRight: 8 }}
                   checked={selected}
                 />
-                {renderImg(option.photo)}
+                {<RenderImg url={option}/>}
                 {option.trademark} - {option.plaque}
               </li>
             )}
@@ -232,6 +237,7 @@ const AddLinea = ({ toggle }: Props) => {
               <TextField {...params} autoComplete='off' label='Asignar minibus' />
             )}
           />
+          {formErrors.buses && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.buses}</FormHelperText>}
         </FormControl>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>

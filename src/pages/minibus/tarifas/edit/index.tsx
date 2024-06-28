@@ -17,6 +17,8 @@ import Swal from 'sweetalert2'
 interface Props {
   toggle: () => void;
   data:any
+  page:number
+  pageSize:number
 }
 interface InputsTarifa {
   tipo: string
@@ -43,7 +45,7 @@ const defaultErrors = {
   tipo: '',
   tarifa: ''
 }
-const EditTarifas = ({ toggle, data }: Props) => {
+const EditTarifas = ({ toggle, data, page, pageSize }: Props) => {
 
   const [formErrors, setFormErrors] = useState(defaultErrors)
   const [tarifaForms, setTarifaForms] = useState<tarifaData>(defaultDta)
@@ -80,7 +82,7 @@ const EditTarifas = ({ toggle, data }: Props) => {
     e.preventDefault()
     setIsLoading(true)
     try {
-      const response = await dispatch(updateTarifa({data:tarifaForms,id:data.id}))
+      const response = await dispatch(updateTarifa({data:tarifaForms,id:data.id,filters:{skip: page * pageSize, limit: pageSize}}))
       if (response.payload.success) {
         Swal.fire({ title: '¡Éxito!', text: 'Datos actualizados exitosamente', icon: "success" });
         handleReset()
@@ -114,6 +116,7 @@ const EditTarifas = ({ toggle, data }: Props) => {
   const handleReset = () => {
     setTarifaForms(defaultDta)
     setFormErrors(defaultErrors)
+    setIsLoading(false)
     toggle()
   }
   return (

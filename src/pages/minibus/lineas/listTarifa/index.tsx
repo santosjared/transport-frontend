@@ -1,243 +1,255 @@
-import { Box, Button, Card, CardContent, Checkbox, Dialog, DialogContent, Divider, Fade, FadeProps, FormControl, FormControlLabel, Grid, IconButton, InputLabel, List, ListItem, ListItemText, TextField, Typography, useMediaQuery, useTheme } from "@mui/material"
-import { ReactElement, Ref, forwardRef, useEffect, useState } from "react"
-import { useDispatch } from "react-redux"
-import Icon from "src/@core/components/icon"
-import { useService } from "src/hooks/useService"
-import { AppDispatch } from "src/store"
-import {asignedTarifa, desasignedTarifa, fetchData } from "src/store/apps/linea"
+import { Box, Card, CardContent, CardHeader, Dialog, DialogContent, Divider, Fade, FadeProps, FormControl, Grid, IconButton, List, ListItem, ListItemText, TextField, Typography } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { Fragment, ReactElement, Ref, forwardRef, useEffect, useState } from "react";
+import Icon from "src/@core/components/icon";
+import AddDrawMap from "src/components/addDrawMap";
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import { useService } from "src/hooks/useService";
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "src/store";
+import { asignedHorario, asignedTarifa, desasignedTarifa, fetchData } from "src/store/apps/linea";
+import ListTarifa from "../../tarifas/list";
 
 interface Props {
-  open: boolean,
-  toggle: () => void
-  data: any
+  toggle: () => void;
+  id: string;
 }
 
+interface TarifaData {
+  name: string
+  nro: number
+}
+interface TypeCell {
+  row: TarifaData
+}
 
-const Transition = forwardRef(function Transition(
-  props: FadeProps & { children?: ReactElement<any, any> },
-  ref: Ref<unknown>
-) {
-  return <Fade ref={ref} {...props} />
-})
+const ViewTarifa = ({ toggle, id }: Props) => {
 
-const ViewTarifa = ({ open, toggle, data }: Props) => {
+  const columns = [
+    {
+      flex: 0.2,
+      field: 'Nro',
+      width: 20,
+      headerName: 'Nro',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant="body2">
+            {row.nro}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'name',
+      headerName: 'Nombre de la tarifa',
+      width: 250,
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant="body2">
+            {row.name}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'previa',
+      headerName: 'tarifas',
+      width: 90,
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Fragment>
+            <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={()=>{previa(row)}} />
+            <Typography noWrap variant="body2" sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={()=>{previa(row)}}>
+              ver tarifa
+            </Typography>
+          </Fragment>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'desasignar',
+      headerName: 'Desasignar',
+      width: 40,
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }} onClick={()=>handleDesasigned(row)}>
+            <IconButton sx={{ backgroundColor: theme => theme.palette.primary.main, color: '#fff' }}>
+              <ArrowForwardIosIcon />
+            </IconButton>
+          </Box>
+        )
+      }
+    },
+  ]
 
-  const [checkedItems, setCheckedItems] = useState<{ [key: number]: boolean }>({});
-  const [checkedItems2, setCheckedItems2] = useState<{ [key: number]: boolean }>({});
-  const [selectAll, setSelectAll] = useState(false);
-  const [selectAll2, setSelectAll2] = useState(false);
-  const [dataDB, setDataDB] = useState<any[]>([])
-  const [desasignedId, setDesasignedId] = useState<string[]>([])
-  const [asignedId, setAsignedId] = useState<string[]>([])
-  const [tarifa, setTarifa] = useState<any[]>([])
+  const columns2 = [
+    {
+      flex: 0.2,
+      field: 'asignar',
+      headerName: 'asignar',
+      width: 40,
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <IconButton sx={{ backgroundColor: theme => theme.palette.primary.main, color: '#fff' }} onClick={()=>handleAsigned(row)}>
+            <ArrowBackIosNewIcon />
+          </IconButton>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'Nro',
+      width: 20,
+      headerName: 'Nro',
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant="body2">
+            {row.nro}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'name',
+      headerName: 'Nombre de la tarifa',
+      width: 250,
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Typography noWrap variant="body2">
+            {row.name}
+          </Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'previa',
+      headerName: 'tarifas',
+      width: 90,
+      renderCell: ({ row }: TypeCell) => {
+        return (
+          <Fragment>
+            <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={()=>{previa(row)}} />
+            <Typography noWrap variant="body2" sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={()=>{previa(row)}}>
+              ver tarifa
+            </Typography>
+          </Fragment>
+        )
+      }
+    },
+  ]
+
+  const [pageSize, setPageSize] = useState<number>(10)
+  const [pageSize2, setPageSize2] = useState<number>(10)
+  const [tarifas, setTarifas] = useState<any[]>([])
+  const [dataTarifa, setDataTarifa] = useState<[]>([])
+  const [linea, setLinea] = useState<any>({id:''})
+  const [openTrifa, setOpenTarifa] = useState(false)
+  const [data,setdata] = useState<any>()
   const { GetId } = useService()
 
+  const dispatch = useDispatch<AppDispatch>()
+  const toggleTarifa = () =>setOpenTarifa(!openTrifa)
   useEffect(() => {
-    if (data.length !== 0) {
+    if (id) {
       const fetch = async () => {
-        const response = await GetId('/linea/tarifa', data.id)
-        setDataDB(response.data)
+        const lineaDB = await GetId('/linea/lineaOne', id)
+        if(lineaDB.data){
+          const response = await GetId('/linea/tarifa', lineaDB.data.id)
+          const newdata = response.data.map((value: any, index: number) => ({
+            ...value,
+            nro: index + 1,
+          }));
+          setTarifas(newdata)
+        }
+        const newTarifa = lineaDB.data.rate.map((value: any, index: number) => ({
+          ...value,
+          nro: index + 1,
+        }));
+        setLinea(lineaDB.data)
+        setDataTarifa(newTarifa)
       }
       fetch();
-      setTarifa(data.rate)
     }
-  }, [data])
-  const dispatch = useDispatch<AppDispatch>()
-  const handleToggle = (index: number, id: string) => {
-    const newCheckedItems = { ...checkedItems, [index]: !checkedItems[index] };
-    setCheckedItems(newCheckedItems);
-    if (!checkedItems[index]) {
-      setDesasignedId([...desasignedId, id])
-    } else {
-      setDesasignedId(desasignedId.filter((newId) => newId !== id));
-    }
-    const allChecked = Object.values(newCheckedItems).every(item => item);
-    setSelectAll(allChecked);
-
-  };
-  const handleSelectAll = () => {
-    const newCheckedItems: { [key: number]: boolean } = {};
-    let newIds: string[] = []
-    const newValue = !selectAll;
-    tarifa.forEach((rate: any, index: number) => {
-      newIds = [...newIds, rate._id]
-      newCheckedItems[index] = newValue;
-    });
-    if (newValue) {
-      setDesasignedId(newIds)
-    } else {
-      setDesasignedId([])
-    }
-    setCheckedItems(newCheckedItems);
-    setSelectAll(newValue);
-  };
-  const handleToggle2 = (index: number, id: string) => {
-    const newCheckedItems = { ...checkedItems2, [index]: !checkedItems2[index] };
-    setCheckedItems2(newCheckedItems);
-
-    if (!checkedItems2[index]) {
-      setAsignedId([...asignedId, id])
-    } else {
-      setAsignedId(asignedId.filter((newId) => newId !== id));
-    }
-    const allChecked = Object.values(newCheckedItems).every(item => item);
-    setSelectAll2(allChecked);
-  };
-  const handleSelectAll2 = () => {
-    const newCheckedItems: { [key: number]: boolean } = {};
-    let newIds: string[] = [];
-    const newValue = !selectAll2;
-    dataDB.forEach((rate: any, index: number) => {
-      newIds = [...newIds, rate._id]
-      newCheckedItems[index] = newValue;
-    });
-    if (newValue) {
-      setAsignedId(newIds)
-    } else {
-      setAsignedId([])
-    }
-    setCheckedItems2(newCheckedItems);
-    setSelectAll2(newValue);
-  };
-  const handleDesasigned = async () => {
+  }, [id, toggle])
+  const previa = (data:any) => {
+    setdata(data)
+    toggleTarifa()
+  }
+  const handleDesasigned = async (tarifadata:any) => {
     try {
-      const response = await dispatch(desasignedTarifa({ data: { rate: desasignedId }, id: data.id }))
+      const response = await dispatch(desasignedTarifa({ data: { rate: [tarifadata._id] }, id: linea.id }))
       if (response.payload.success) {
         dispatch(fetchData())
-        setTarifa(response.payload.data.rate)
+        setDataTarifa(response.payload.data.rate)
 
-        const res = await GetId('/linea/tarifa', data.id)
-        setDataDB(res.data)
+        const res = await GetId('/linea/tarifa', linea.id)
+        setTarifas(res.data)
       }
     } catch (error) { } finally {
-      handleReset()
+
     }
   }
-  const handleAsigned = async () => {
+  const handleAsigned = async (tarifas:any) => {
     try {
-      const response = await dispatch(asignedTarifa({ data: { rate: asignedId }, id: data.id }))
+      const response = await dispatch(asignedTarifa({ data: { rate:[tarifas._id]  }, id: linea.id }))
       if (response.payload.success) {
         dispatch(fetchData())
-        setTarifa(response.payload.data.rate)
+        setDataTarifa(response.payload.data.rate)
 
-        const res = await GetId('/linea/tarifa', data.id)
-        setDataDB(res.data)
+        const res = await GetId('/linea/tarifa', linea.id)
+        setTarifas(res.data)
       }
     } catch (error) { } finally {
-      handleReset()
     }
-
   }
-  const handleReset = () => {
-    setSelectAll(false)
-    setSelectAll2(false)
-    setCheckedItems({})
-    setCheckedItems2({})
-    setDesasignedId([])
-    setAsignedId([])
-  }
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
-
   return (
-    <Dialog
-      fullWidth
-      open={open}
-      maxWidth='md'
-      scroll='body'
-      onClose={toggle}
-      TransitionComponent={Transition}
-      fullScreen={fullScreen}
-    >
-      <DialogContent sx={{ px: { xs: 4, sm: 5 }, py: { xs: 12, sm: 12.5 }, position: 'relative' }}>
-        <IconButton
-          size='small'
-          onClick={toggle}
-          sx={{ position: 'absolute', right: '1rem', top: '1rem' }}
-        ><Icon icon='mdi:close' /></IconButton>
-        {data.length !== 0 ? <><Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-          <Typography variant="h5">linea {data.name}</Typography>
-        </Box>
-          <Divider />
-          <Grid container spacing={2}>
-            <Grid item xs={6} sx={{ borderRight: `1px solid #E0E0E0`, pr: 2 }}>
-              <Box sx={{ mb: 4, textAlign: 'center' }}>
-                <Typography variant='h5' sx={{ mb: 0, lineHeight: '2rem' }}>Lista de tarifas asignados </Typography>
-              </Box>
-              <Card sx={{
-                display: { xs: 'block', sm: 'flex' },
-                justifyContent: 'space-between',
-                border: '1px solid #E0E0E0', padding: 1, mb: 3,
-                backgroundColor: '#B0F2C2'
-              }}>
-                <FormControlLabel
-                  control={<Checkbox checked={selectAll} onChange={handleSelectAll} value={'all'} />} label={selectAll ? 'desmarcar todo' :
-                    'marcar todo'} />
-                <Button sx={{ height: { sm: 35 }, top: { sm: 4 }, p: { sm: 2 } }}
-                  disabled={selectAll && desasignedId.length !== 0 ? false : true} variant="contained" onClick={handleDesasigned}>Desasignar tarifas&gt;</Button>
-              </Card>
+    <AddDrawMap toggle={toggle} title={`Asignar o desasignar tarifas a la linea ${linea.name}`}>
+      <Grid container spacing={1} >
+        <Grid item xs={12} sm={6}>
+          <CardContent>
+            <Card>
+              <CardHeader title='Tarifas asignadas ' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
+              <DataGrid
+                autoHeight
+                rows={dataTarifa}
+                columns={columns}
+                pageSize={pageSize}
+                disableSelectionOnClick
+                rowsPerPageOptions={[10, 25, 50]}
+                sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+                onPageSizeChange={(newPageSize: number) => setPageSize(newPageSize)}
+              />
+            </Card>
+          </CardContent>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CardContent>
+            <Card>
+              <CardHeader title='Tarifas no asignadas ' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
+              <DataGrid
+                autoHeight
+                rows={tarifas}
+                columns={columns2}
+                pageSize={pageSize2}
+                disableSelectionOnClick
+                rowsPerPageOptions={[10, 25, 50]}
+                sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+                onPageSizeChange={(newPageSize: number) => setPageSize2(newPageSize)}
+              />
+            </Card>
+          </CardContent>
+        </Grid>
+        <ListTarifa open={openTrifa} toggle={toggleTarifa} data={data} />
+      </Grid>
+    </AddDrawMap>
+  );
+};
 
-              {tarifa.map((rate: any, index: any) => (
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <Card sx={{ mb: 3 }}>
-                      <Box sx={{ pl: 2, height: 30, pb: 9, backgroundColor: '#B0F2C2' }}>
-                        <FormControlLabel sx={{ width: '100%' }}
-                          control={<Checkbox checked={checkedItems[index] || false} onChange={() => handleToggle(index, rate._id)} value={rate.id} />}
-                          label={<Typography variant="overline" sx={{ color: '#707070' }}>{rate.name}</Typography>} />
-                      </Box>
-                        <CardContent sx={{ paddingTop: 2 }}>
-                          {rate.rates.map((tarifas: any) => (
-                            <Typography key={tarifas.tipo} variant="subtitle2">{`${tarifas.tipo}: ${tarifas.tarifa}`}</Typography>
-                          ))}
-                        </CardContent>
-                    </Card>
-                  </Grid>
-                </Grid>
-              ))}
-            </Grid>
-            <Grid item xs={6}>
-              <Box sx={{ mb: 4, textAlign: 'center' }}>
-                <Typography variant='h5' sx={{ mb: 0, lineHeight: '2rem' }}>Lista de tarifas no asignados </Typography>
-              </Box>
-              <Card sx={{
-                display: { xs: 'block', sm: 'flex' },
-                justifyContent: 'space-between', border: '1px solid #E0E0E0', padding: 1, mb: 3,
-                backgroundColor: '#EF9A9A'
-              }}>
-                <FormControlLabel
-                  control={<Checkbox checked={selectAll2} onChange={handleSelectAll2} value={'all2'} />} label={selectAll2 ? 'desmarcar todo' :
-                    'marcar todo'} />
-                <Button sx={{ height: { sm: 35 }, top: { sm: 4 }, p: { sm: 2 } }}
-                  disabled={selectAll2 && asignedId.length !== 0 ? false : true}
-                  variant="contained"
-                  onClick={handleAsigned}
-                >&lt;asignar tarifas</Button>
-              </Card>
-
-              {dataDB.map((rate: any, index: number) => (
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <Card sx={{ mb: 3 }}>
-                      <Box sx={{ pl: 2, pb: 9, height: 30, backgroundColor: '#EF9A9A' }}>
-                        <FormControlLabel
-                          control={<Checkbox checked={checkedItems2[index] || false} onChange={() => handleToggle2(index, rate._id)} value={rate._id} />}
-                          label={<Typography variant="overline" sx={{ color: '#707070' }}>{rate.name}</Typography>} />
-                      </Box>
-                      <CardContent sx={{ paddingTop: 2 }}>
-                      {rate.rates.map((tarifas: any) => (
-                            <Typography key={tarifas.tipo} variant="subtitle2">{`${tarifas.tipo}: ${tarifas.tarifa}`}</Typography>
-                          ))}
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                </Grid>
-              ))}
-            </Grid>
-          </Grid>
-        </> : ''}
-      </DialogContent>
-    </Dialog>
-  )
-}
-export default ViewTarifa
+export default ViewTarifa;

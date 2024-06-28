@@ -17,9 +17,13 @@ export interface SimpleDialogProps {
 
 const ListRoad = (props: SimpleDialogProps) =>{
   const { onClose, open , handleHidden, setId} = props;
-  
+
+  const getToken = () => {
+    return localStorage.getItem('accessToken');
+  };
   const {Get} = useService()
-  const {data,isError} = useQuery('roads',()=>Get('/road'))
+  const {data,isError} = useQuery('roads',()=>Get('/road',{
+    headers: { 'Authorization': `Bearer ${getToken()}` }}))
 
   const handleClose = () => {
     onClose();

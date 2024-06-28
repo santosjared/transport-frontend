@@ -7,26 +7,34 @@ interface Props{
   location:any
     geojson: FeatureCollection;
     center: [number, number];
+  isProcessingQueue:boolean
+  names:string[];
+  setIsProcessingQueue:(state:boolean) => void;
+  setNames:(names:string[]) =>void;
     setCenter:(position: LatLng | null)=>void;
     setZoom:(zoom:number)=>void
     setGeojson: (geojson: FeatureCollection) => void;
 }
-const RenderMap = ({geojson,setGeojson,center,setCenter,setZoom,location}:Props)=>{
+const RenderMap = ({geojson,setGeojson,center,setCenter,setZoom,location, names,setNames,isProcessingQueue,setIsProcessingQueue}:Props)=>{
   const DrawMap = useMemo(()=>dynamic(()=>import('../drawMap')),[geojson])
   const Map = useMemo(() => dynamic(
     () => import('../../../../components/map'),
-    { 
+    {
       loading: () => <p>Cargando la Mapa</p>,
       ssr: false
     }
   ), [location])
     return(
-          <Map 
+          <Map
           center={center}
           setPosition={setCenter}
           setZoom={setZoom}
           >
-            <DrawMap 
+            <DrawMap
+            names={names}
+            setNames={setNames}
+            isProcessingQueue={isProcessingQueue}
+            setIsProcessingQueue={setIsProcessingQueue}
             geojson={geojson}
             setGeojson={setGeojson}
             />

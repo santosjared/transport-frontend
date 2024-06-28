@@ -9,30 +9,24 @@ interface Redux {
 interface Props{
   data: { [key: string]: any };
   id:string
+  filters:any
 }
 export const fetchData = createAsyncThunk('appTarifa/fetchTarifa',
-    async (filtrs?: { [key: string]: any }) => {
-      const {Get} = useService()
-      if(filtrs){
-        const {filter, skip,limit}=filtrs
-        if(filter){
-          const response = await Get(`/tarifa?filter=${filter}`)
-          return response.data
-        }
-        if(skip&&limit){
-          const response = await Get(`/tarifa?skip=${skip}&limit=${limit}`)
-          return response.data
-        }
-      }
-      const response = await Get('/tarifa')
-      return response.data
-    
-})
+async (filtrs?: { [key: string]: any }) => {
+  const {Get} = useService()
+  if(filtrs){
+    const response = await Get('/tarifa',filtrs)
+    return response.data
+  }
+  const response = await Get('/tarifa')
+  return response.data
+}
+)
 
 export const addTarifa = createAsyncThunk('appTarifa/addTarifa',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
     const {Post}= useService()
-    const response = await Post('/tarifa', data) 
+    const response = await Post('/tarifa', data)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -64,9 +58,9 @@ export const deleteTarifa = createAsyncThunk('appTarifa/deleteTarifa',
   }
 )
 export const updateTarifa = createAsyncThunk('appTarifa/updateTarifa',
-  async ({data,id}:Props, {dispatch }: Redux) => {
+  async ({data,id, filters}:Props, {dispatch }: Redux) => {
     const {Update}= useService()
-    const response = await Update('/tarifa', data,id) 
+    const response = await Update('/tarifa', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -79,7 +73,7 @@ export const updateTarifa = createAsyncThunk('appTarifa/updateTarifa',
         success:true,
         data:response.data
       }
-      dispatch(fetchData())
+      dispatch(fetchData(filters))
       return res
     }
     if(response === HttpStatus.INTERNAL_SERVER_ERROR){
@@ -106,10 +100,10 @@ export const appUsersSlice = createSlice({
         state.isError = false;
     })
     .addCase(fetchData.fulfilled, (state, action) => {
-        state.isLoading = false; 
-        state.isSuccess = true;  
-        state.isError = false;   
-        state.data = action.payload.result; 
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.data = action.payload.result;
         state.total = action.payload.total
     })
     .addCase(fetchData.rejected, (state) => {

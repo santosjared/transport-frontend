@@ -2,7 +2,6 @@ import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { useService } from 'src/hooks/useService'
 import { HttpStatus } from 'src/utils/HttpStatus'
-import axios from 'axios'
 
 interface Redux {
   dispatch: Dispatch<any>
@@ -10,33 +9,28 @@ interface Redux {
 interface Props{
   data: { [key: string]: any };
   id:string
+  filtrs:any
 }
 export const fetchData = createAsyncThunk('appHorario/fetchHorario',
-    async (filtrs?: { [key: string]: any }) => {
-      const {Get} = useService()
-      if(filtrs){
-        const {filter, skip,limit}=filtrs
-        if(filter){
-          const response = await Get(`/horario?filter=${filter}`)
-          return response.data
-        }
-        if(skip&&limit){
-          const response = await Get(`/horario?skip=${skip}&limit=${limit}`)
-          return response.data
-        }
-      }
-      const response = await Get('/horario')
-      return response.data
-})
+async (filtrs?: { [key: string]: any }) => {
+  const {Get} = useService()
+  if(filtrs){
+    const response = await Get('/horario',filtrs)
+    return response.data
+  }
+  const response = await Get('/horario')
+  return response.data
+}
+)
 
 export const addHorario = createAsyncThunk('appHorario/addHorario',
     async (data: { [key: string]: any }, {dispatch }: Redux) => {
       const {Post}= useService()
-      const response = await Post('/horario', data) 
+      const response = await Post('/horario', data)
       if(response.status === HttpStatus.BAD_REQUEST){
         const res = {
           success:false,
-          data:response.data
+          data:response.data.message
         }
         return res
       }
@@ -49,7 +43,7 @@ export const addHorario = createAsyncThunk('appHorario/addHorario',
         return res
       }
       if(response === HttpStatus.INTERNAL_SERVER_ERROR){
-  
+
       }
       return response
   }
@@ -64,13 +58,13 @@ export const deleteHorario = createAsyncThunk('appHorario/deleteHorario',
   }
 )
 export const updateHorario = createAsyncThunk('appHorario/updateHorario',
-  async ({data,id}:Props, {dispatch }: Redux) => {
+  async ({data,id, filtrs}:Props, {dispatch }: Redux) => {
     const {Update}= useService()
-    const response = await Update('/horario', data,id) 
+    const response = await Update('/horario', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
-        data:response.data
+        data:response.data.message
       }
       return res
     }
@@ -79,7 +73,7 @@ export const updateHorario = createAsyncThunk('appHorario/updateHorario',
         success:true,
         data:response.data
       }
-      dispatch(fetchData())
+      dispatch(fetchData(filtrs))
       return res
     }
     if(response === HttpStatus.INTERNAL_SERVER_ERROR){
@@ -107,10 +101,10 @@ export const appUsersSlice = createSlice({
         state.isError = false;
     })
     .addCase(fetchData.fulfilled, (state, action) => {
-        state.isLoading = false; 
-        state.isSuccess = true;  
-        state.isError = false;   
-        state.data = action.payload.result; 
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.data = action.payload.result;
         state.total = action.payload.total
     })
     .addCase(fetchData.rejected, (state) => {

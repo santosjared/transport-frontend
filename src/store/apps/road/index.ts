@@ -9,33 +9,28 @@ interface Redux {
 interface Props{
   data: { [key: string]: any };
   id:string
+  filtrs:any
 }
 export const fetchData = createAsyncThunk('appRoad/fetchRoad',
-    async (filtrs?: { [key: string]: any }) => {
-      const {Get} = useService()
-      if(filtrs){
-        const {filter, skip,limit}=filtrs
-        if(filter){
-          const response = await Get(`/road?filter=${filter}`)
-          return response.data
-        }
-        if(skip&&limit){
-          const response = await Get(`/road?skip=${skip}&limit=${limit}`)
-          return response.data
-        }
-      }
-      const response = await Get('/road')
-      return response.data
-})
+async (filtrs?: { [key: string]: any }) => {
+  const {Get} = useService()
+  if(filtrs){
+    const response = await Get('/road',filtrs)
+    return response.data
+  }
+  const response = await Get('/road')
+  return response.data
+}
+)
 
 export const addRoad = createAsyncThunk('appRoad/addRoad',
     async (data: { [key: string]: any }, {dispatch }: Redux) => {
       const {Post}= useService()
-      const response = await Post('/road', data) 
+      const response = await Post('/road', data)
       if(response.status === HttpStatus.BAD_REQUEST){
         const res = {
           success:false,
-          data:response.data
+          data:response.data.message
         }
         return res
       }
@@ -48,7 +43,7 @@ export const addRoad = createAsyncThunk('appRoad/addRoad',
         return res
       }
       if(response === HttpStatus.INTERNAL_SERVER_ERROR){
-  
+
       }
       return response
   }
@@ -63,13 +58,13 @@ export const deleteRoad = createAsyncThunk('appRoad/deleteRoad',
   }
 )
 export const updateRoad = createAsyncThunk('appRoad/updateRoad',
-  async ({data,id}:Props, {dispatch }: Redux) => {
+  async ({data,id, filtrs}:Props, {dispatch }: Redux) => {
     const {Update}= useService()
-    const response = await Update('/road', data,id) 
+    const response = await Update('/road', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
-        data:response.data
+        data:response.data.message
       }
       return res
     }
@@ -78,7 +73,7 @@ export const updateRoad = createAsyncThunk('appRoad/updateRoad',
         success:true,
         data:response.data
       }
-      dispatch(fetchData())
+      dispatch(fetchData(filtrs))
       return res
     }
     if(response === HttpStatus.INTERNAL_SERVER_ERROR){
@@ -106,10 +101,10 @@ export const appUsersSlice = createSlice({
         state.isError = false;
     })
     .addCase(fetchData.fulfilled, (state, action) => {
-        state.isLoading = false; 
-        state.isSuccess = true;  
-        state.isError = false;   
-        state.data = action.payload.result; 
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.data = action.payload.result;
         state.total = action.payload.total
     })
     .addCase(fetchData.rejected, (state) => {
