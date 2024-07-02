@@ -13,6 +13,7 @@ import CustomChip from 'src/@core/components/mui/chip'
 import { isImage } from "src/utils/verificateImg";
 import getConfig from 'src/configs/environment'
 import CustomRenderCell from "../../bus/profile";
+import Swal from "sweetalert2";
 
 interface Props {
   toggle: () => void;
@@ -337,6 +338,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
 
 
   const handleDesasigned = async (busdata: any) => {
+    if(!busdata.road){
     try {
       const response = await dispatch(desasignedBus({ data: { buses: [busdata._id] }, id: linea.id }))
       if (response.payload.success) {
@@ -350,6 +352,9 @@ const ViewHorario = ({ toggle, id }: Props) => {
     } catch (error) { } finally {
 
     }
+  }else{
+    Swal.fire({title:'Error!', text:'Primero desasigne la ruta del microbus', icon:'warning'})
+  }
   }
   const handleAsigned = async (bus: any) => {
     try {

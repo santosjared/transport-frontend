@@ -1,6 +1,6 @@
 import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { useService } from 'src/hooks/useService'
+import { apiService } from 'src/store/services/apiService'
 import { HttpStatus } from 'src/utils/HttpStatus'
 
 interface Redux {
@@ -13,20 +13,18 @@ interface Props{
 }
 export const fetchData = createAsyncThunk('appTarifa/fetchTarifa',
 async (filtrs?: { [key: string]: any }) => {
-  const {Get} = useService()
   if(filtrs){
-    const response = await Get('/tarifa',filtrs)
+    const response = await apiService.Get('/tarifa',filtrs)
     return response.data
   }
-  const response = await Get('/tarifa')
+  const response = await apiService.Get('/tarifa')
   return response.data
 }
 )
 
 export const addTarifa = createAsyncThunk('appTarifa/addTarifa',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
-    const {Post}= useService()
-    const response = await Post('/tarifa', data)
+    const response = await apiService.Post('/tarifa', data)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -51,16 +49,14 @@ export const addTarifa = createAsyncThunk('appTarifa/addTarifa',
 
 export const deleteTarifa = createAsyncThunk('appTarifa/deleteTarifa',
   async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await Delete('/tarifa', id)
+    const response = await apiService.Delete('/tarifa', id)
     dispatch(fetchData())
     return response.data
   }
 )
 export const updateTarifa = createAsyncThunk('appTarifa/updateTarifa',
   async ({data,id, filters}:Props, {dispatch }: Redux) => {
-    const {Update}= useService()
-    const response = await Update('/tarifa', data,id)
+    const response = await apiService.Update('/tarifa', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,

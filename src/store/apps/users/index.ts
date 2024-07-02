@@ -1,6 +1,6 @@
 import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { useService } from 'src/hooks/useService'
+import { apiService } from 'src/store/services/apiService'
 import { HttpStatus } from 'src/utils/HttpStatus'
 
 interface Redux {
@@ -15,20 +15,18 @@ interface Props{
 
 export const fetchData = createAsyncThunk('appUser/fetchUser',
 async (filtrs?: { [key: string]: any }) => {
-  const {Get} = useService()
   if(filtrs){
-    const response = await Get('/users',filtrs)
+    const response = await apiService.Get('/users',filtrs)
     return response.data
   }
-  const response = await Get('/users')
+  const response = await apiService.Get('/users')
   return response.data
 }
 )
 
 export const addUser = createAsyncThunk('appUsers/addUsers',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
-    const {Post}= useService()
-    const response = await Post('/users', data)
+    const response = await apiService.Post('/users', data)
     if(response.status === HttpStatus.BAD_REQUEST){
       return response
     }
@@ -45,28 +43,25 @@ export const addUser = createAsyncThunk('appUsers/addUsers',
 export const deleteUser = createAsyncThunk('appUsers/deleteUsers',
   async (props:{filters:any,id:string}, {dispatch }: Redux) => {
     const {filters,id} = props
-    const {Delete} = useService()
-    const response = await Delete('/users', id)
+    const response = await apiService.Delete('/users', id)
     dispatch(fetchData(filters))
     return response.data
   }
 )
 export const findOneUser = createAsyncThunk('appUsers/deleteUsers',
   async (id: number | string, {dispatch }: Redux) => {
-    const {GetId} = useService()
-    const response = await GetId('/users', id)
+    const response = await apiService.GetId('/users', id)
     return response.data
   }
 )
 export const updateUser = createAsyncThunk(
   'appupdateUsers/updateUsers',
   async ({ userData,licenceData, idUser, idLicence }: Props,{ dispatch }: any) => {
-    const { Update ,Post} = useService();
     if(licenceData && !idLicence){
-      const createLicence = await Post('/licencia', licenceData)
+      const createLicence = await apiService.Post('/licencia', licenceData)
       if(createLicence.status === HttpStatus.CREATED){
         userData.licenceId=createLicence.data._id
-        const update = await Update('/users', userData,idUser)
+        const update = await apiService.Update('/users', userData,idUser)
         if(update.status === HttpStatus.OK){
           dispatch(fetchData())
           return update.data
@@ -76,9 +71,9 @@ export const updateUser = createAsyncThunk(
     return createLicence.data
   }
   if(licenceData && idLicence){
-      const response = await Update('/licencia', licenceData, idLicence)
+      const response = await apiService.Update('/licencia', licenceData, idLicence)
       if(response.status === HttpStatus.OK){
-        const update = await Update('/users', userData,idUser)
+        const update = await apiService.Update('/users', userData,idUser)
         if(update.status === HttpStatus.OK){
           dispatch(fetchData())
           return update.data
@@ -87,7 +82,7 @@ export const updateUser = createAsyncThunk(
       }
       return response.data
     }
-    const response = await Update('/users', userData,idUser)
+    const response = await apiService.Update('/users', userData,idUser)
     if(response.status=== HttpStatus.OK){
         dispatch(fetchData())
         return response.data

@@ -1,12 +1,15 @@
-import { useState } from "react";
-import { instance } from "src/configs/instances";
-
-// Obtener el token de almacenamiento local
-const getToken = () => {
-  return localStorage.getItem('accessToken');
-};
+import { instance } from 'src/configs/instances';
+import useEncryptedStorage from './useCrypto';
+import authConfig from 'src/configs/auth';
 
 export const useService = () => {
+  const { getDecryptedItem } = useEncryptedStorage();
+
+  // Obtener el token de almacenamiento local
+  const getToken = () => {
+    return getDecryptedItem(authConfig.storageTokenKeyName);
+  };
+
   const getHeaders = (data: { [key: string]: any }) => {
     const token = getToken();
     let headers = {

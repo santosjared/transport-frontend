@@ -1,6 +1,6 @@
 import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { useService } from 'src/hooks/useService'
+import { apiService } from 'src/store/services/apiService'
 import { HttpStatus } from 'src/utils/HttpStatus'
 
 interface Redux {
@@ -14,19 +14,17 @@ interface Props{
 
 export const fetchData = createAsyncThunk('appLinea/fetchLinea',
 async (filtrs?: { [key: string]: any }) => {
-  const {Get} = useService()
   if(filtrs){
-    const response = await Get('/linea',filtrs)
+    const response = await apiService.Get('/linea',filtrs)
     return response.data
   }
-  const response = await Get('/linea')
+  const response = await apiService.Get('/linea')
   return response.data
 })
 
 export const addLinea = createAsyncThunk('appLinea/addLinea',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
-    const {Post}= useService()
-    const response = await Post('/linea', data)
+    const response = await apiService.Post('/linea', data)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -51,8 +49,7 @@ export const addLinea = createAsyncThunk('appLinea/addLinea',
 
 export const deleteLinea = createAsyncThunk('appLinea/deleteLinea',
   async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await Delete('/linea', id)
+    const response = await apiService.Delete('/linea', id)
     dispatch(fetchData())
     return response.data
   }
@@ -60,8 +57,7 @@ export const deleteLinea = createAsyncThunk('appLinea/deleteLinea',
 
 export const updateLinea = createAsyncThunk('appLinea/updateLinea',
   async ({data,id, filtrs}:Props, {dispatch }: Redux) => {
-    const {Update}= useService()
-    const response = await Update('/linea', data,id)
+    const response = await apiService.Update('/linea', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -85,8 +81,7 @@ export const updateLinea = createAsyncThunk('appLinea/updateLinea',
 )
 
 export const desasignedRoad = createAsyncThunk('appLinea/desasignedRoad', async({data,id}:Props, {dispatch}:Redux)=>{
-  const {Update}= useService()
-    const response = await Update('/linea/desasigned', data,id)
+    const response = await apiService.Update('/linea/desasigned', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -110,8 +105,7 @@ export const desasignedRoad = createAsyncThunk('appLinea/desasignedRoad', async(
 
 export const asignedRoad = createAsyncThunk('appLinea/asignedRoad',
 async({data,id}:Props, {dispatch}:Redux)=>{
-  const {Update}= useService()
-    const response = await Update('/linea/asigned', data,id)
+    const response = await apiService.Update('/linea/asigned', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -134,8 +128,7 @@ async({data,id}:Props, {dispatch}:Redux)=>{
 })
 
 export const desasignedHorario = createAsyncThunk('appLinea/desasignedHorario', async({data,id}:Props, {dispatch}:Redux)=>{
-  const {Update}= useService()
-    const response = await Update('/linea/desasignedHorario', data,id)
+    const response = await apiService.Update('/linea/desasignedHorario', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -158,8 +151,7 @@ export const desasignedHorario = createAsyncThunk('appLinea/desasignedHorario', 
 })
 
 export const desasignedTarifa = createAsyncThunk('appLinea/desasignedTarifa', async({data,id}:Props, {dispatch}:Redux)=>{
-  const {Update}= useService()
-    const response = await Update('/linea/desasignedTarifa', data,id)
+    const response = await apiService.Update('/linea/desasignedTarifa', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -182,8 +174,7 @@ export const desasignedTarifa = createAsyncThunk('appLinea/desasignedTarifa', as
 })
 
 export const asignedHorario = createAsyncThunk('appLinea/asignedHorario', async({data,id}:Props, {dispatch}:Redux)=>{
-  const {Update}= useService()
-    const response = await Update('/linea/asignedHorario', data,id)
+    const response = await apiService.Update('/linea/asignedHorario', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -207,8 +198,7 @@ export const asignedHorario = createAsyncThunk('appLinea/asignedHorario', async(
 
 
 export const asignedTarifa = createAsyncThunk('appLinea/asignedTarifa', async({data,id}:Props, {dispatch}:Redux)=>{
-  const {Update}= useService()
-    const response = await Update('/linea/asignedTarifa', data,id)
+    const response = await apiService.Update('/linea/asignedTarifa', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -231,8 +221,7 @@ export const asignedTarifa = createAsyncThunk('appLinea/asignedTarifa', async({d
 })
 
 export const desasignedBus = createAsyncThunk('appLinea/desasignedBus', async({data,id}:Props, {dispatch}:Redux)=>{
-  const {Update}= useService()
-    const response = await Update('/linea/desasignedBus', data,id)
+    const response = await apiService.Update('/linea/desasignedBus', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -255,8 +244,7 @@ export const desasignedBus = createAsyncThunk('appLinea/desasignedBus', async({d
 })
 
 export const asignedBus = createAsyncThunk('appLinea/asignedBus', async({data,id}:Props, {dispatch}:Redux)=>{
-  const {Update}= useService()
-    const response = await Update('/linea/asignedBus', data,id)
+    const response = await apiService.Update('/linea/asignedBus', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,

@@ -57,7 +57,7 @@ const ViewLicence = ({ open, toggle, data }: Props) => {
         ><Icon icon='mdi:close' /></IconButton>
 
         <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <Typography variant='h5' sx={{ mb: 0, lineHeight: '2rem' }}>Licencia de conducir</Typography>
+          <Typography variant='h5' sx={{ mb: 0, lineHeight: '2rem' }}>Detalles del usuario</Typography>
         </Box>
         {data ?
           <Grid container spacing={6}>

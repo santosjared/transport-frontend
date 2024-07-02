@@ -51,7 +51,7 @@ interface liceneTypes{
     dateEmition: Date | null
     dateExpire: Date | null
     licenceFront:File | null
-    licenceBack:File | null 
+    licenceBack:File | null
 }
 interface userTypes{
     profile: File | null,
@@ -297,7 +297,7 @@ const EditUser = ({ toggle, id,store }: Props) => {
                     }})
             }else{
                 dispatch(updateUser({userData:formUser,idUser:userId})).then((response)=>{
-                    if(response.payload){ 
+                    if(response.payload){
                         Swal.fire({title: '¡Éxito!',text: 'Datos actualizados exitosamente',icon: "success"});
                         toggle()
                     }})
@@ -604,7 +604,7 @@ const EditUser = ({ toggle, id,store }: Props) => {
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Button size='large' variant='outlined' color='secondary' onClick={toggle} startIcon={<CancelIcon />}>
-                        Cancel
+                        Cancelar
                     </Button>
                     <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<SaveIcon />}>
                         Guardar

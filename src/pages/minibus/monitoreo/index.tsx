@@ -43,6 +43,7 @@ const Monitoreo = () => {
   const [key, setKey] = useState<keyof openOptins>('all')
   const [subMenuAnchorEl, setSubMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [mainMenuAnchorEl, setMainMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [rules, setRutles] = useState(null)
   const subMenuOpen = Boolean(subMenuAnchorEl);
 
   const handleSubMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -87,15 +88,17 @@ const Monitoreo = () => {
     dispatch(fetchData())
   }, [dispatch])
 
-  // useEffect(() => {
-  //   if (lineaId) {
-  //     const fetch = async () => {
-  //       const response = await GetId('/linea', lineaId)
-  //       setLineaOne(response.data)
-  //     }
-  //     fetch()
-  //   }
-  // }, [lineaId])
+  const {Get} = useService()
+  useEffect(()=>{
+    const fetch = async() =>{
+      const response = await Get('/auth')
+      if(response.data && response.data.access){
+        const rule = response.data.access.find((element:any) => element.name === 'Listar-conexiones')
+        setRutles(rule?rule.name:rule)
+      }
+    }
+    fetch()
+  },[])
   const handleSelectLinea = async (value: any, key: keyof openOptins) => {
     setLineaOne(value)
     if(key === options.horario){
@@ -118,7 +121,7 @@ const Monitoreo = () => {
 
   return (
     <Grid container spacing={5}>
-      <Grid item xs={12} sm={3}>
+      <Grid item xs={12} sm={12} lg={3}>
         <Grid container spacing={2} sx={{ backgroundColor: '#ff4040', padding: 2 }}>
           <Grid item xs={7}>
             <Grid container>
@@ -131,7 +134,7 @@ const Monitoreo = () => {
           </Grid>
         </Grid>
       </Grid>
-      <Grid item xs={12} sm={3}>
+      <Grid item xs={12} sm={12} lg={3}>
         <Grid container spacing={2} sx={{ backgroundColor: '#ff7c39', padding: 2 }}>
           <Grid item xs={7}>
             <Grid container>
@@ -144,7 +147,7 @@ const Monitoreo = () => {
           </Grid>
         </Grid>
       </Grid>
-      <Grid item xs={12} sm={3}>
+      <Grid item xs={12} sm={12} lg={3}>
         <Grid container spacing={2} sx={{ backgroundColor: '#45a749', padding: 2 }}>
           <Grid item xs={7}>
             <Grid container>
@@ -156,7 +159,7 @@ const Monitoreo = () => {
           </Grid>
         </Grid>
       </Grid>
-      <Grid item xs={12} sm={3} >
+      <Grid item xs={12} sm={12} lg={3}>
         <Grid container spacing={2} sx={{ backgroundColor: '#4040fb', padding: 2 }}>
           <Grid item xs={7}>
             <Grid container>
@@ -254,12 +257,12 @@ const Monitoreo = () => {
       <Grid item xs={12} sm={6} md={4}>
         <AnalyticsSalesCountry linadta={LineaOne} />
       </Grid>
-      <Grid item xs={12}>
+      {rules === 'Listar-conexiones' &&<Grid item xs={12}>
         <Card>
           <ListStatusConnect />
         </Card>
 
-      </Grid>
+      </Grid>}
 
       <ListLinea open={open} toggle={toggle} data={store.data} handleSelectionLine={handleSelectLinea} options={key}/>
       <ListTarifa open={openTarifa} toggle={toggleTarifa} data={LineaOne} />

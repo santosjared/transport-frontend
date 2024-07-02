@@ -10,6 +10,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "src/store";
 import { asignedRoad, desasignedRoad, fetchData } from "src/store/apps/linea";
+import Swal from "sweetalert2";
 
 interface Props {
   toggle: () => void;
@@ -190,14 +191,21 @@ const Rutas = ({ togglePrevia, toggle, id, SetSelectionRuta }: Props) => {
   }
   const handleDesasigned = async (roaddata:any) => {
     try {
-      const response = await dispatch(desasignedRoad({ data: { road: [roaddata._id] }, id: linea.id }))
-      if (response.payload.success) {
-        dispatch(fetchData())
-        setDataRoad(response.payload.data.road)
+      const busroad = await GetId('/bus/busroad', roaddata._id)
+      if(!busroad.data){
+        const response = await dispatch(desasignedRoad({ data: { road: [roaddata._id] }, id: linea.id }))
+        if (response.payload.success) {
+          dispatch(fetchData())
+          setDataRoad(response.payload.data.road)
 
-        const res = await GetId('/linea/roads', linea.id)
-        setRoads(res.data)
+          const res = await GetId('/linea/roads', linea.id)
+          setRoads(res.data)
+        }
       }
+      else{
+        Swal.fire({title:'error!', text:'Primero desasigne la ruta del microbus', icon:'warning'})
+      }
+
     } catch (error) { } finally {
 
     }

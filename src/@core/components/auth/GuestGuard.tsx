@@ -1,38 +1,41 @@
 // ** React Imports
-import { ReactNode, ReactElement, useEffect } from 'react'
+import { ReactNode, ReactElement, useEffect } from 'react';
 
 // ** Next Import
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/router';
 
 // ** Hooks Import
-import { useAuth } from 'src/hooks/useAuth'
+import { useAuth } from 'src/hooks/useAuth';
+import useEncryptedStorage from 'src/hooks/useCrypto';
 
 interface GuestGuardProps {
-  children: ReactNode
-  fallback: ReactElement | null
+  children: ReactNode;
+  fallback: ReactElement | null;
 }
 
 const GuestGuard = (props: GuestGuardProps) => {
-  const { children, fallback } = props
-  const auth = useAuth()
-  const router = useRouter()
+  const { children, fallback } = props;
+  const auth = useAuth();
+  const router = useRouter();
+  const { getDecryptedItem } = useEncryptedStorage();
 
   useEffect(() => {
     if (!router.isReady) {
-      return
+      return;
     }
 
-    if (window.localStorage.getItem('userData')) {
-      router.replace('/')
+    const storedUserData = getDecryptedItem('userData');
+
+    if (storedUserData) {
+      router.replace('/');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router.route])
+  }, [router.isReady, router, getDecryptedItem]);
 
   if (auth.loading || (!auth.loading && auth.user !== null)) {
-    return fallback
+    return fallback;
   }
 
-  return <>{children}</>
-}
+  return <>{children}</>;
+};
 
-export default GuestGuard
+export default GuestGuard;

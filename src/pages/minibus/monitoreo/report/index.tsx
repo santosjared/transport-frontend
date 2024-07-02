@@ -35,7 +35,7 @@ const AnalyticsSalesCountry = ({linadta}:{linadta:any}) => {
   useEffect(()=>{
     const fetch = async()=>{
       const response = await Get('/linea/requests')
-      if(response.data){
+      if(response && response.data){
         const requests = response.data.result.map((data:any)=>{
           return data.request
         })

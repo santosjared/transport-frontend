@@ -412,7 +412,7 @@ const EditBus = ({ toggle ,id, store, page, pageSize}: Props) => {
                 </Grid>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 6 }}>
                     <Button size='large' variant='outlined' color='secondary' onClick={handleReset} startIcon={<CancelIcon />}>
-                        Cancel
+                        Cancelar
                     </Button>
                     <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<SaveIcon />}>
                         Guaradar

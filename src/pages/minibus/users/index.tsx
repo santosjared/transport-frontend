@@ -1,5 +1,5 @@
 import React, { useCallback, useState, MouseEvent, useEffect, ChangeEvent } from 'react'
-import { Avatar, Box, Button, Card, CardHeader, FormControl, Grid, IconButton, InputLabel, Select, TextField, Typography } from '@mui/material'
+import { Avatar, Box, Button, Card, CardHeader, FormControl, Grid, IconButton, InputLabel, Select, TextField, Typography, createTheme } from '@mui/material'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import { styled } from '@mui/material/styles'
@@ -21,9 +21,10 @@ import { isImage } from 'src/utils/verificateImg'
 import Swal from 'sweetalert2'
 import EditUser from './edit'
 import ViewLicence from './licence'
+import { useService } from 'src/hooks/useService'
 
-interface TypeRol{
-  name:string
+interface TypeRol {
+  name: string
 }
 interface UsersType {
   id: string;
@@ -37,7 +38,7 @@ interface UsersType {
   email: string
   profile: string;
   licenceId: any;
-  rol:TypeRol ;
+  rol: TypeRol;
 }
 
 const defaultFilter = {
@@ -62,6 +63,14 @@ const userRoleObj: UserRoleType = {
   driver: { icon: 'healthicons:truck-driver-negative', color: 'warning.main' },
   other: { icon: 'mdi:account-outline', color: 'primary.main' }
 }
+const theme = createTheme(
+  {
+    palette: {
+      primary: { main: '#1976d2' },
+    },
+  },
+  // Spanish translations
+);
 const renderClient = (row: UsersType) => {
   const [isImg, setIsImg] = useState<any>(false)
   useEffect(() => {
@@ -112,7 +121,7 @@ const Users = () => {
         confirmButtonText: 'Eliminar',
       }).then(async (result) => { return await result.isConfirmed });
       if (confirme) {
-        dispatch(deleteUser({filters:{filter: '', skip: page * pageSize, limit: pageSize},id:id})).then((result) => {
+        dispatch(deleteUser({ filters: { filter: '', skip: page * pageSize, limit: pageSize }, id: id })).then((result) => {
           if (result.payload) {
             Swal.fire({
               title: '¡Éxito!',
@@ -144,18 +153,18 @@ const Users = () => {
           }}
           PaperProps={{ style: { minWidth: '8rem' } }}
         >
-          <MenuItem onClick={() => { handleRowOptionsClose(); handleViewLicence(user) }} sx={{ '& svg': { mr: 2 } }}>
+          {rules.some((rule:any) => rule.name === 'Detalles-usuarios')&&<MenuItem onClick={() => { handleRowOptionsClose(); handleViewLicence(user) }} sx={{ '& svg': { mr: 2 } }}>
             <Icon icon='ph:user-bold' fontSize={20} color='#00a0f4' />
             Detalles
-          </MenuItem>
-          <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={() => { handleRowOptionsClose(); handleEditOnclik(id) }}>
+          </MenuItem>}
+          {rules.some((rule:any) => rule.name === 'Editar-usuarios')&&<MenuItem sx={{ '& svg': { mr: 2 } }} onClick={() => { handleRowOptionsClose(); handleEditOnclik(id) }}>
             <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4' />
             Editar
-          </MenuItem>
-          <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
+          </MenuItem>}
+          {rules.some((rule:any) => rule.name === 'Eliminar-usuarios')&&<MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
             <Icon icon='ic:outline-delete' fontSize={20} color='#ff4040' />
             Eliminar
-          </MenuItem>
+          </MenuItem>}
         </Menu>
       </>
     )
@@ -249,16 +258,16 @@ const Users = () => {
         return (
           <Typography variant='body2'>
             {!row.rol ? 'Niguno' :
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  '& svg': { mr: 3, color: userRoleObj[row.rol.name == 'Administrador' ? 'admin' : row.rol.name == 'Chofer' ? 'driver' : 'other'].color }
-                }}>
-                  <Icon icon={userRoleObj[row.rol.name == 'Administrador' ? 'admin' : row.rol.name == 'Chofer' ? 'driver' : 'other'].icon} fontSize={20} />
-                  <Typography noWrap sx={{ color: 'text.secondary', textTransform: 'capitalize' }}>
-                    {row.rol.name}
-                  </Typography>
-                </Box>
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                '& svg': { mr: 3, color: userRoleObj[row.rol.name == 'Administrador' ? 'admin' : row.rol.name == 'Chofer' ? 'driver' : 'other'].color }
+              }}>
+                <Icon icon={userRoleObj[row.rol.name == 'Administrador' ? 'admin' : row.rol.name == 'Chofer' ? 'driver' : 'other'].icon} fontSize={20} />
+                <Typography noWrap sx={{ color: 'text.secondary', textTransform: 'capitalize' }}>
+                  {row.rol.name}
+                </Typography>
+              </Box>
             }
           </Typography>
         )
@@ -284,6 +293,7 @@ const Users = () => {
   const [userData, setUserdata] = useState<any>(null)
   const [openfilters, setOpenFilters] = useState(false)
   const [filters, setFilters] = useState(defaultFilter)
+  const [rules, setRules] = useState<string[]>([])
 
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.users)
@@ -291,6 +301,16 @@ const Users = () => {
     dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }, [pageSize, page])
 
+  const { Get } = useService()
+  useEffect(() => {
+    const fetch = async () => {
+      const response = await Get('/auth')
+      if (response.data && response.data.access) {
+        setRules(response.data.access)
+      }
+    }
+    fetch()
+  }, [])
   const toggleDrawer = () => setDrawOpen(!drawOpen)
   const toggleEdit = () => setOpenEdit(!openEdit)
   const toggleLicence = () => setOpenLicence(!openLicence)
@@ -326,9 +346,12 @@ const Users = () => {
             <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter}>
               {openfilters ? 'Cerrar filtrado' : 'Filtrar por columnas'}
             </Button>
-            <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={toggleDrawer} variant='contained'>
-              Nuevo usuario
-            </Button>
+            {rules.some((rule:any) => rule.name === 'Crear-usuarios') && (
+              <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={toggleDrawer} variant='contained'>
+                Nuevo usuario
+              </Button>
+            )}
+
           </Box>
           {openfilters ? <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
             <Card sx={{ p: 2 }}>
@@ -461,11 +484,17 @@ const Users = () => {
             paginationMode="server"
             onPageChange={(newPage) => setPage(newPage)}
             sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+            localeText={{
+              MuiTablePagination: {
+                labelRowsPerPage: 'Filas por página:',
+              },
+            }
+          }
           />
         </Card>
       </Grid>
       <AddDraw open={drawOpen} toggle={toggleDrawer} title='Registro del usuario'>
-        <AddChofer toggle={toggleDrawer} page={page} pageSize={pageSize}/>
+        <AddChofer toggle={toggleDrawer} page={page} pageSize={pageSize} />
       </AddDraw>
 
       <AddDraw open={openEdit} toggle={toggleEdit} title='Editar usuario'>

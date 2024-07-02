@@ -1,6 +1,6 @@
 import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { useService } from 'src/hooks/useService'
+import { apiService } from 'src/store/services/apiService'
 import { HttpStatus } from 'src/utils/HttpStatus'
 
 interface Redux {
@@ -13,20 +13,18 @@ interface Props{
 }
 export const fetchData = createAsyncThunk('appRoad/fetchRoad',
 async (filtrs?: { [key: string]: any }) => {
-  const {Get} = useService()
   if(filtrs){
-    const response = await Get('/road',filtrs)
+    const response = await apiService.Get('/road',filtrs)
     return response.data
   }
-  const response = await Get('/road')
+  const response = await apiService.Get('/road')
   return response.data
 }
 )
 
 export const addRoad = createAsyncThunk('appRoad/addRoad',
     async (data: { [key: string]: any }, {dispatch }: Redux) => {
-      const {Post}= useService()
-      const response = await Post('/road', data)
+      const response = await apiService.Post('/road', data)
       if(response.status === HttpStatus.BAD_REQUEST){
         const res = {
           success:false,
@@ -51,16 +49,14 @@ export const addRoad = createAsyncThunk('appRoad/addRoad',
 
 export const deleteRoad = createAsyncThunk('appRoad/deleteRoad',
   async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await Delete('/road', id)
+    const response = await apiService.Delete('/road', id)
     dispatch(fetchData())
     return response.data
   }
 )
 export const updateRoad = createAsyncThunk('appRoad/updateRoad',
   async ({data,id, filtrs}:Props, {dispatch }: Redux) => {
-    const {Update}= useService()
-    const response = await Update('/road', data,id)
+    const response = await apiService.Update('/road', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,

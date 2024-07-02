@@ -246,7 +246,7 @@ const MapsEdit = ({ toggle, title, data, page, pageSize }: Props) => {
             <Grid item xs={12}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Button size='large' variant='outlined' color='secondary' disabled={isProcessingQueue} onClick={handleCancel} startIcon={<CancelIcon />}>
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button size='large' type='submit' variant='contained' disabled={isProcessingQueue} sx={{ mr: 3 }} startIcon={<SaveIcon />}>
                   Guardar

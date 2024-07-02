@@ -21,8 +21,8 @@ const ACLPage = () => {
         <Card>
           <CardHeader title='Common' />
           <CardContent>
-            <Typography sx={{ mb: 4 }}>No ability is required to view this card</Typography>
-            <Typography sx={{ color: 'primary.main' }}>This card is visible to 'user' and 'admin' both</Typography>
+            <Typography sx={{ mb: 4 }}>No tienes permisos para ver esta pagina</Typography>
+            <Typography sx={{ color: 'primary.main' }}>Solicite permisos al administrador del sistema</Typography>
           </CardContent>
         </Card>
       </Grid>
@@ -31,9 +31,9 @@ const ACLPage = () => {
           <Card>
             <CardHeader title='Analytics' />
             <CardContent>
-              <Typography sx={{ mb: 4 }}>User with 'Analytics' subject's 'Read' ability can view this card</Typography>
-              <Typography sx={{ color: 'error.main' }}>This card is visible to 'admin' only</Typography>
-            </CardContent>
+            <Typography sx={{ mb: 4 }}>No tienes permisos para ver esta pagina</Typography>
+            <Typography sx={{ color: 'primary.main' }}>Solicite permisos al administrador del sistema</Typography>
+          </CardContent>
           </Card>
         </Grid>
       ) : null}

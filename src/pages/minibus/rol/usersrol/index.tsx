@@ -39,7 +39,7 @@ import { fetchData } from 'src/store/apps/rol'
 interface Props{
     toggle:()=>void
     open:boolean
-    id:string | number
+    data:any
 }
 
 const Transition = forwardRef(function Transition(
@@ -48,26 +48,16 @@ const Transition = forwardRef(function Transition(
   ) {
     return <Fade ref={ref} {...props} />
   })
-const UsersNotRol = ({open, toggle,id}:Props)=>{
+const UsersRol = ({open, toggle,data}:Props)=>{
   const dispatch = useDispatch<AppDispatch>()
-  const [users,setUsers] = useState<any[]>([])
   const [value, setValue] = useState<string>('')
     const {Update}=useService()
     const handleFilter = useCallback((val: string) => {
       dispatch(fetchDataUser({filter:val}))
       setValue(val)
     }, [])
-    const{Get} = useService()
-    useEffect(()=>{
-      const fetch = async()=>{
-        const res = await Get('/users/notroles')
-        setUsers(res.data)
-      }
-      fetch()
-    },[open])
-
-    const handleAddIdUser = (userId:number | string)=>{
-      Update('/users/asignedrol', {idrol:id}, userId).then((respose)=>{
+    const handledesasignedUser = (userId:number | string)=>{
+      Update('/users/desasignedrol', {idrol:data.id}, userId).then((respose)=>{
         if(respose.status==HttpStatus.OK){
           dispatch(fetchData())
           toggle()
@@ -94,6 +84,7 @@ const UsersNotRol = ({open, toggle,id}:Props)=>{
           >
             <Icon icon='mdi:close' />
           </IconButton>
+          {data?<Fragment>
           <Box sx={{ mb: 4, textAlign: 'center' }}>
             <Typography variant='h5' sx={{ mb: 3, lineHeight: '2rem' }}>
               Lista de usuarios
@@ -117,9 +108,9 @@ const UsersNotRol = ({open, toggle,id}:Props)=>{
             onChange={e=>handleFilter(e.target.value)}
             />
           </FormControl>
-          <Typography variant='h6'>{`${users.length} Usuarios de ${users.length}`}</Typography>
-          <List dense sx={{ py: 4 }} key={id}>
-            {users.map((user:any, index) => {
+          <Typography variant='h6'>{`${data.Users.length} Usuarios de ${data.Users.length}`}</Typography>
+          <List dense sx={{ py: 4 }}>
+            {data.Users.map((user:any) => {
               return (
                 <Fragment key={user.id}><ListItem
                   key={user.id}
@@ -134,7 +125,7 @@ const UsersNotRol = ({open, toggle,id}:Props)=>{
                     '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.08)'},
                     cursor:'pointer'
                   }}
-                  onClick={()=>handleAddIdUser(user._id)}
+                  onClick={()=>handledesasignedUser(user.id)}
                 >
                   <ListItemAvatar>
                     <Avatar src={`${getConfig().backendURI}${user.profile}`} alt={user.name} />
@@ -149,8 +140,12 @@ const UsersNotRol = ({open, toggle,id}:Props)=>{
               )
             })}
           </List>
+          </Fragment>
+          :
+          <Typography>Ningun usuario asignado</Typography>
+          }
         </DialogContent>
       </Dialog>
     )
 }
-export default UsersNotRol
+export default UsersRol

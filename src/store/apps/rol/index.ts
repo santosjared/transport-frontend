@@ -1,27 +1,29 @@
 import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { useService } from 'src/hooks/useService'
-import axiosInstance from 'src/store/instancesAxios'
+import { apiService } from 'src/store/services/apiService'
 import { HttpStatus } from 'src/utils/HttpStatus'
 
 interface Redux {
   dispatch: Dispatch<any>
 }
+interface Props{
+  data: { [key: string]: any };
+  id:string
+  filtrs?:any
+}
 export const fetchData = createAsyncThunk('appRol/fetchRol',
 async (filtrs?: { [key: string]: any }) => {
-    const {Get} = useService()
     if(filtrs){
-      const response = await Get(`/roles?filter=${filtrs.filter}`)
+      const response = await apiService.Get(`/roles?filter=${filtrs.filter}`)
       return response.data
     }
-    const response = await Get('/roles')
+    const response = await apiService.Get('/roles')
     return response.data
 })
 
 export const addRol = createAsyncThunk('appRol/addRol',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
-  const {Post}= useService()
-  const response = await Post('/roles', data)
+  const response = await apiService.Post('/roles', data)
   if(response.status === HttpStatus.BAD_REQUEST){
     const res = {
       success:false,
@@ -46,30 +48,37 @@ export const addRol = createAsyncThunk('appRol/addRol',
 
 export const deleteRol = createAsyncThunk('appRol/deleteRol',
   async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await Delete('/roles', id)
+    const response = await apiService.Delete('/roles', id)
     dispatch(fetchData())
     return response.data
   }
 )
-export const findOneRol = createAsyncThunk('appRol/deleteRol',
-  async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await Delete('/roles', id)
-    return response.data
+
+export const updateRol = createAsyncThunk('appRol/updateRol',
+  async ({data,id, filtrs}:Props, {dispatch }: Redux) => {
+    const response = await apiService.Update('/roles', data,id)
+    if(response.status === HttpStatus.BAD_REQUEST){
+      const res = {
+        success:false,
+        data:response.data.message
+      }
+      return res
+    }
+    if(response.status === HttpStatus.OK){
+      const res = {
+        success:true,
+        data:response.data
+      }
+      dispatch(fetchData(filtrs))
+      return res
+    }
+    if(response === HttpStatus.INTERNAL_SERVER_ERROR){
+
+    }
+    return response
   }
 )
-export const findFilters = createAsyncThunk('appRol/deleteRol',
-  async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await axiosInstance.get(`/roles`, {
-      params: {
-        filter: id,
-      },
-    })
-    return response.data
-  }
-)
+
 export const appUsersSlice = createSlice({
   name: 'appRol',
   initialState: {

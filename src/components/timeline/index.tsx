@@ -6,6 +6,7 @@ import TimelineContent from '@mui/lab/TimelineContent'
 import TimelineSeparator from '@mui/lab/TimelineSeparator'
 import TimelineConnector from '@mui/lab/TimelineConnector'
 import MuiTimeline from '@mui/lab/Timeline'
+import CustomChip from 'src/@core/components/mui/chip'
 import type { TimelineProps } from '@mui/lab/Timeline'
 import { Box } from '@mui/material'
 
@@ -29,11 +30,10 @@ interface Props {
 }
 
 const TimelineFilled = ({buses}:Props) => {
-
   return (
     <Timeline>
       {buses.map((bus, index)=>(
-        <TimelineItem>
+        <TimelineItem key={bus.id}>
         <TimelineSeparator>
           <TimelineDot color={index == 0 ?'success':index === 1?'info':'primary'} />
           <TimelineConnector />
@@ -45,7 +45,14 @@ const TimelineFilled = ({buses}:Props) => {
             </Typography>
             <Box>
               <Typography variant='body2'>Tiempo de llegada </Typography>
-            <Typography variant='caption'>{bus.time? bus.time:'0 min aproximadamente'} aproximadamente</Typography>
+            <Typography variant='caption'>{bus.time? `${bus.time} aproximadamente`:'0 min aproximadamente'}</Typography>
+            <Box><CustomChip
+            skin='light'
+            size='small'
+            label={bus.status}
+            color={bus.status === 'Acercandose'? 'success' : bus.status === 'cerca de ti'?'info':'error'}
+            sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
+          /></Box>
             </Box>
             </Box>
           <Box>

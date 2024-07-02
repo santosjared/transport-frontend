@@ -17,6 +17,7 @@ import ViewMap from './viewMap'
 import MapsEdit from './edit'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import { useService } from 'src/hooks/useService'
 
 interface RoadData {
   createdAt: string
@@ -94,14 +95,14 @@ const Roads = () => {
           }}
           PaperProps={{ style: { minWidth: '8rem' } }}
         >
-          <MenuItem onClick={() => { handleRowOptionsClose(); handleEdit(data) }} sx={{ '& svg': { mr: 2 } }}>
+         { rules.some((rule:any) => rule.name === 'Editar-ruta') &&<MenuItem onClick={() => { handleRowOptionsClose(); handleEdit(data) }} sx={{ '& svg': { mr: 2 } }}>
             <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4' />
             Editar
-          </MenuItem>
-          <MenuItem onClick={handleDelete} sx={{ '& svg': { mr: 2 } }}>
+          </MenuItem>}
+        {  rules.some((rule:any) => rule.name === 'Eliminar-ruta') &&<MenuItem onClick={handleDelete} sx={{ '& svg': { mr: 2 } }}>
             <Icon icon='mdi:delete-outline' fontSize={20} color='red' />
             Eliminar
-          </MenuItem>
+          </MenuItem>}
         </Menu>
       </>
     )
@@ -185,6 +186,7 @@ const Roads = () => {
   const [openEdit, setOpenEdit] = useState(false)
   const [openfilters, setOpenFilters] = useState(false)
   const [filters, setFilters] = useState(defaultFilter)
+  const [rules,setRules] = useState<string[]>([])
 
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.road)
@@ -197,6 +199,16 @@ const Roads = () => {
   const toggleEdit = () => setOpenEdit(!openEdit)
   const toggleFilter = () => setOpenFilters(!openfilters)
 
+  const {Get} = useService()
+  useEffect(() => {
+    const fetch = async () => {
+      const response = await Get('/auth')
+      if (response.data && response.data.access) {
+        setRules(response.data.access)
+      }
+    }
+    fetch()
+  }, [])
   const handleData = (dta: RoadData) => {
     setData(dta)
     toggleRoad()
@@ -232,9 +244,9 @@ const Roads = () => {
               <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter}>
                 {openfilters ? 'Cerrar filtrado' : 'Filtrar por columnas'}
               </Button>
-              <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={toggleDrawer} variant='contained'>
+              {rules.some((rule:any) => rule.name === 'Crear-ruta') &&<Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={toggleDrawer} variant='contained'>
                 Nuevo ruta
-              </Button>
+              </Button>}
             </Box>
             {openfilters && <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3}}>
             <Card sx={{ p: 2, width:{  xs:'auto',sm:'50%', lg:'50%'}}}>
@@ -292,6 +304,12 @@ const Roads = () => {
             paginationMode="server"
             onPageChange={(newPage) => setPage(newPage)}
             sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+            localeText={{
+              MuiTablePagination: {
+                labelRowsPerPage: 'Filas por página:',
+              },
+            }
+          }
           />
           </Card>
         </Grid>

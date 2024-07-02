@@ -32,74 +32,54 @@ import Icon from 'src/@core/components/icon'
 import { useDispatch } from 'react-redux'
 import { AppDispatch, RootState } from 'src/store'
 import { useSelector } from 'react-redux'
-import { addRol, fetchData } from 'src/store/apps/rol'
+import { addRol, deleteRol, fetchData } from 'src/store/apps/rol'
 import getConfig from 'src/configs/environment'
 import { useService } from 'src/hooks/useService'
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Menu, MenuItem } from '@mui/material'
 import UsersNotRol from './users'
+import UsersRol from './usersrol'
+import AddRol from './addRol'
+import EditRol from './editRol'
+import { deleteLinea } from 'src/store/apps/linea'
+import Swal from 'sweetalert2'
 
 const RolesCards = () => {
   // ** States
-  const [open, setOpen] = useState<boolean>(false)
-  const [dialogTitle, setDialogTitle] = useState<'Agregar' | 'Editar'>('Agregar')
-  const [selectedPermissions, setSelectedPermissions] = useState<{ [key: string]: string[] }>({})
-  const [isIndeterminateCheckbox, setIsIndeterminateCheckbox] = useState<boolean>(false)
-  const [permissions, setPermissions] = useState<any[]>([])
-  const [acces, setAcces] = useState<any[]>([])
-  const [name, setName] = useState<string>('')
   const [anchorEl, setAnchorEl] = useState(null);
   const [openNotrolUser, setOpenNotuser] = useState(false)
   const [rolId,SetRolId] = useState<string>('')
+  const [openDesasigned, setOpenDesasigned] = useState(false)
+  const [rol,setRol] = useState<any>(null)
+  const [openEdit,setOpenEdit] = useState(false)
+  const [rules,setRules] = useState<string[]>([])
+
+  const [openAdd,setOpenAdd] = useState(false)
   const openAnchor = Boolean(anchorEl);
-
-  const { Get } = useService()
-
-  const handleClickOpen = () => setOpen(true)
 
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.rol)
 
   const toggleUsers = ()=>setOpenNotuser(!openNotrolUser)
-
-  useEffect(() => {
-    const fetch = async () => {
-      const res = await Get('/permissions')
-      setPermissions(res.data)
-    }
-    fetch()
-  }, [])
-
-  useEffect(() => {
-    const fetch = async () => {
-      const res = await Get('/componentes')
-      setAcces(res.data)
-    }
-    fetch()
-  }, [])
+  const toggleDesasigned = () =>setOpenDesasigned(!openDesasigned)
+  const toggleAdd = () => setOpenAdd(!openAdd)
+  const toggleEdit = () => setOpenEdit(!openEdit)
 
   useEffect(() => {
     dispatch(fetchData())
   }, [dispatch])
 
-  const handleClose = () => {
-    setOpen(false)
-    setSelectedPermissions({})
-    setIsIndeterminateCheckbox(false)
-  }
-
-  const togglePermission = (rowId: string, permissionId: string) => {
-    const updatedSelectedPermissions = { ...selectedPermissions }
-    const rowPermissions = updatedSelectedPermissions[rowId] || []
-
-    if (rowPermissions.includes(permissionId)) {
-      updatedSelectedPermissions[rowId] = rowPermissions.filter(id => id !== permissionId)
-    } else {
-      updatedSelectedPermissions[rowId] = [...rowPermissions, permissionId]
+  const {Get} = useService()
+  useEffect(() => {
+    const fetch = async () => {
+      const response = await Get('/auth')
+      if (response.data && response.data.access) {
+        setRules(response.data.access)
+      }
     }
+    fetch()
+  }, [])
 
-    setSelectedPermissions(updatedSelectedPermissions)
-  }
   const handleCloseAnchor = () => {
     setAnchorEl(null);
   };
@@ -107,41 +87,47 @@ const RolesCards = () => {
   const handleClick = (event:any) => {
     setAnchorEl(event.currentTarget);
   };
-  const handleSelectAllCheckbox = () => {
-    const allSelected = Object.keys(selectedPermissions).length === acces.length
-    const updatedSelectedPermissions = allSelected ? {} : acces.reduce((acc: any, access: any) => {
-      acc[access._id] = permissions.map(permission => permission._id)
-      return acc
-    }, {})
-    setSelectedPermissions(updatedSelectedPermissions)
-  }
-
-  useEffect(() => {
-    const totalPermissions = permissions.length * acces.length
-    const selectedCount = Object.values(selectedPermissions).reduce((acc, val) => acc + val.length, 0)
-    setIsIndeterminateCheckbox(selectedCount > 0 && selectedCount < totalPermissions)
-  }, [selectedPermissions, permissions, acces])
-
-  const handleCreate = () => {
-    // Convierte el objeto selectedPermissions a un array de objetos { accessId, permissionIds }
-    const accessArray = Object.entries(selectedPermissions).map(([accessId, permissionIds]) => ({
-      accessId,
-      permissionIds
-    }))
-
-    // Crea el objeto dataFul con el nombre del rol y el array de access
-    const dataFul = {
-      name: name,
-      access: accessArray
-    }
-
-    // Despacha la acción addRol con el objeto dataFul
-    dispatch(addRol(dataFul))
-  }
-
   const AsignedRol = (id:string)=>{
     SetRolId(id)
     toggleUsers()
+  }
+  const desasignedRol=(data:any)=>{
+    setRol(data)
+    toggleDesasigned()
+  }
+
+  const handleEdit = (data:any) =>{
+    setRol(data)
+    toggleEdit()
+    handleCloseAnchor()
+  }
+
+  const handleDelet = async (rol:any) =>{
+    handleCloseAnchor()
+    if(rol.Users.length !== 0){
+      Swal.fire({title:'Error!', text:'Primero quite usuarios del rol', icon:'warning'})
+      return
+    }
+    const confirme = await Swal.fire({
+      title: '¿Estas seguro de eliminar?',
+      icon: "warning",
+      showCancelButton: true,
+      cancelButtonColor: "#3085d6",
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ff4040',
+      confirmButtonText: 'Eliminar',
+    }).then(async (result) => { return await result.isConfirmed });
+    if (confirme) {
+      dispatch(deleteRol(rol.id)).then((result) => {
+        if (result.payload) {
+          Swal.fire({
+            title: '¡Éxito!',
+            text: 'Los datos fueron eliminados',
+            icon: "success"
+          });
+        }
+      })
+    }
   }
   const renderCards = () =>
     store.data.map((rol: any, index: number) => (
@@ -163,7 +149,7 @@ const RolesCards = () => {
                   }}
                 >
                   {rol.Users.map((user: any, index: number) => (
-                    <Avatar key={index} alt={user.name} src={`${getConfig().backendURI}/${user.profile}`} />
+                    <Avatar key={index} alt={user.name} src={`${getConfig().backendURI}${user.profile}`} />
                   ))}
                 </AvatarGroup>
                 <IconButton
@@ -182,15 +168,16 @@ const RolesCards = () => {
                   open={openAnchor}
                   onClose={handleCloseAnchor}
                 >
-                  <MenuItem onClick={handleCloseAnchor}>Editar</MenuItem>
-                  <MenuItem onClick={handleCloseAnchor}>Eliminar</MenuItem>
+                  {rules.some((rule:any) => rule.name === 'Editar-rol')&&
+                  <MenuItem onClick={()=>handleEdit(rol)}>Editar</MenuItem>}
+                  {rules.some((rule:any) => rule.name === 'Eliminar-rol')&&<MenuItem onClick={()=>handleDelet(rol)}>Eliminar</MenuItem>}
                 </Menu>
               </Box>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                 <Typography variant='h6'>{rol.name}</Typography>
-                <Typography
+                {rules.some((rule:any) => rule.name === 'Agregar-rol')&&<Typography
                   href='/'
                   variant='body2'
                   component={Link}
@@ -201,20 +188,21 @@ const RolesCards = () => {
                   }}
                 >
                   Agregar usuarios
-                </Typography>
+                </Typography>}
               </Box>
-              <Typography
+
+              {rules.some((rule:any) => rule.name === 'Quitar-rol')&&<Typography
                 href='/'
                 variant='body2'
                 component={Link}
                 sx={{ color: 'primary.main' }}
                 onClick={(e: SyntheticEvent) => {
                   e.preventDefault()
-                  toggleUsers()
+                  desasignedRol(rol)
                 }}
               >
                 Quitar usuarios
-              </Typography>
+              </Typography>}
             </Box>
           </CardContent>
         </Card>
@@ -224,12 +212,12 @@ const RolesCards = () => {
   return (
     <Grid container spacing={6} className='match-height'>
       {renderCards()}
+      {rules.some((rule:any) => rule.name === 'Crear-rol')&&
       <Grid item xs={12} sm={6} lg={4}>
         <Card
           sx={{ cursor: 'pointer' }}
           onClick={() => {
-            handleClickOpen()
-            setDialogTitle('Agregar')
+            toggleAdd()
           }}
         >
           <Grid container sx={{ height: '100%' }}>
@@ -245,8 +233,7 @@ const RolesCards = () => {
                     variant='contained'
                     sx={{ mb: 2.5, whiteSpace: 'nowrap' }}
                     onClick={() => {
-                      handleClickOpen()
-                      setDialogTitle('Agregar')
+                      toggleAdd()
                     }}
                   >
                     Agregar rol
@@ -257,110 +244,11 @@ const RolesCards = () => {
             </Grid>
           </Grid>
         </Card>
-        <UsersNotRol id={rolId} toggle={toggleUsers} open={openNotrolUser}/>
-      </Grid>
-      <Dialog fullWidth maxWidth='md' scroll='body' onClose={handleClose} open={open}>
-        <DialogTitle sx={{ textAlign: 'center' }}>
-          <Typography variant='h5' component='span'>
-            {`${dialogTitle} Role`}
-          </Typography>
-          <Typography variant='body2'>Establecer permisos de roles</Typography>
-        </DialogTitle>
-        <DialogContent sx={{ p: { xs: 6, sm: 12 } }}>
-          <Box sx={{ my: 4 }}>
-            <FormControl fullWidth>
-              <TextField
-                label='Nombre del rol'
-                placeholder='Introduzca el rol'
-                value={name}
-                onChange={e => setName(e.target.value)}
-              />
-            </FormControl>
-          </Box>
-          <Typography variant='h6'>Permisos de roles</Typography>
-          <TableContainer>
-            <Table size='small'>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ pl: '0 !important' }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        fontSize: '0.875rem',
-                        whiteSpace: 'nowrap',
-                        alignItems: 'center',
-                        textTransform: 'capitalize',
-                        '& svg': { ml: 1, cursor: 'pointer' }
-                      }}
-                    >
-                      Acceso de administrador
-                      <Tooltip placement='top' title='Allows a full access to the system'>
-                        <Box sx={{ display: 'flex' }}>
-                          <Icon icon='mdi:information-outline' fontSize='1rem' />
-                        </Box>
-                      </Tooltip>
-                    </Box>
-                  </TableCell>
-                  <TableCell colSpan={permissions.length}>
-                    <FormControlLabel
-                      label='Seleccionar todo'
-                      sx={{ '& .MuiTypography-root': { textTransform: 'capitalize' } }}
-                      control={
-                        <Checkbox
-                          size='small'
-                          onChange={handleSelectAllCheckbox}
-                          indeterminate={isIndeterminateCheckbox}
-                          checked={Object.keys(selectedPermissions).length === acces.length}
-                        />
-                      }
-                    />
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {acces.map((access: any, rowIndex: number) => (
-                  <TableRow key={rowIndex} sx={{ '& .MuiTableCell-root:first-of-type': { pl: '0 !important' } }}>
-                    <TableCell
-                      sx={{
-                        fontWeight: 600,
-                        whiteSpace: 'nowrap',
-                        color: theme => `${theme.palette.text.primary} !important`
-                      }}
-                    >
-                      {access.name}
-                    </TableCell>
-                    {permissions.map((permission) => (
-                      <TableCell key={`${permission._id}-${access._id}`}>
-                        <FormControlLabel
-                          label={permission.name}
-                          control={
-                            <Checkbox
-                              size='small'
-                              id={`${permission._id}-${access._id}`}
-                              onChange={() => togglePermission(access._id, permission._id)}
-                              checked={selectedPermissions[access._id]?.includes(permission._id) || false}
-                            />
-                          }
-                        />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </DialogContent>
-        <DialogActions sx={{ pt: 0, display: 'flex', justifyContent: 'center' }}>
-          <Box className='demo-space-x'>
-            <Button size='large' type='submit' variant='contained' onClick={handleCreate}>
-              Guardar
-            </Button>
-            <Button size='large' color='secondary' variant='outlined' onClick={handleClose}>
-              Cancelar
-            </Button>
-          </Box>
-        </DialogActions>
-      </Dialog>
+      </Grid>}
+      <UsersNotRol id={rolId} toggle={toggleUsers} open={openNotrolUser}/>
+      <UsersRol data={rol} toggle={toggleDesasigned} open={openDesasigned}/>
+      <AddRol open={openAdd} toggle={toggleAdd}/>
+      <EditRol open={openEdit} toggle={toggleEdit} data={rol}/>
     </Grid>
   )
 }

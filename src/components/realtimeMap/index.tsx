@@ -22,7 +22,6 @@ const RealtimeMap: React.FC<Props> = ({ center, id, road }) => {
     const [linea, setLinea] = useState<[]>([])
     useEffect(()=>{
         socket?.on('updateLocations', (data) => {
-          console.log(data)
             if(id){
                 const newdata = data.filter((newLinea: { id: string; }) => newLinea.id === id);
                 setLinea(newdata)

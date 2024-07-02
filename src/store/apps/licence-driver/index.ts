@@ -1,21 +1,19 @@
 import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { useService } from 'src/hooks/useService'
+import { apiService } from 'src/store/services/apiService'
 import { HttpStatus } from 'src/utils/HttpStatus'
 
 interface Redux {
   dispatch: Dispatch<any>
 }
 export const fetchData = createAsyncThunk('appLicenceDriver/fetchLicenceDriver', async () => {
-    const {Get} = useService()
-    const response = await Get('/licencia')
+    const response = await apiService.Get('/licencia')
     return response.data
 })
 
 export const addLicenceDriver = createAsyncThunk('appLicenDriver/addLicenceDriver',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
-    const {Post}= useService()
-    const response = await Post('/licencia', data) 
+    const response = await apiService.Post('/licencia', data)
     dispatch(fetchData())
     return response.data
   }
@@ -23,24 +21,21 @@ export const addLicenceDriver = createAsyncThunk('appLicenDriver/addLicenceDrive
 
 export const deleteLicenceDriver = createAsyncThunk('appLicenceDriver/deleteLicenceDriver',
   async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await Delete('/licencia', id)
+    const response = await apiService.Delete('/licencia', id)
     dispatch(fetchData())
     return response.data
   }
 )
 export const findOneLicenceDriver = createAsyncThunk('appLicenceDriver/findOneLicenceDriver',
   async (id: number | string, {dispatch }: Redux) => {
-    const {GetId} = useService()
-    const response = await GetId('/licencia', id)
+    const response = await apiService.GetId('/licencia', id)
     return response.data
   }
 )
 export const updateLicence = createAsyncThunk(
   'appupdateLicence/updateLicence',
   async ({ data, id }: { data: { [key: string]: any }, id: number | string },{ dispatch }: any) => {
-    const { Update } = useService();
-    const response = await Update('/licencia', data, id);
+    const response = await apiService.Update('/licencia', data, id);
     console.log(response.status)
     if (response.status === HttpStatus.BAD_REQUEST) {
       return response;
@@ -71,10 +66,10 @@ export const appUsersSlice = createSlice({
         state.isError = false;
     })
     .addCase(fetchData.fulfilled, (state, action) => {
-        state.isLoading = false; 
-        state.isSuccess = true;  
-        state.isError = false;   
-        state.data = action.payload; 
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.data = action.payload;
     })
     .addCase(fetchData.rejected, (state) => {
         state.isLoading = false;

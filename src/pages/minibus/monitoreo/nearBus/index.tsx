@@ -1,5 +1,5 @@
 import { Box, CircularProgress, Dialog, DialogContent, Fade, FadeProps, IconButton, Typography } from "@mui/material"
-import { ReactElement, Ref, forwardRef, useEffect, useState } from "react";
+import { ReactElement, Ref, forwardRef, useEffect, useRef, useState } from "react";
 import Icon from "src/@core/components/icon"
 import TimelineFilled from "src/components/timeline";
 import useGeolocation from "src/hooks/useGeoLocation";
@@ -18,45 +18,57 @@ const Transition = forwardRef(function Transition(
   return <Fade ref={ref} {...props} />;
 });
 const NearBus = ({open,toggle, linea}:Props) =>{
+  const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [buses, setBuses] = useState([]);
+  const busesRef = useRef(buses);
+  const { location, error } = useGeolocation();
+  const { socket } = useSocket();
 
-  const [message,setMessage] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [buses,setBuses] = useState<any>(null)
-  const {location, error} = useGeolocation()
-  const {socket} = useSocket()
   useEffect(() => {
-    let intervalId = null;
+    busesRef.current = buses;
+  }, [buses]);
 
-    if (open) {
-      if (!error) {
-        setIsLoading(true);
-        setMessage('');
-        setBuses(null);
-        socket?.emit('nearbus', location);
+  useEffect(() => {
+    let intervalId:any = null;
 
-        intervalId = setInterval(() => {
-          socket?.emit('nearbus', location);
-        }, 25000);
+    const handleBusesEvent = (data:any) => {
+      setIsLoading(false);
+      if (data.message) {
+        setMessage(data.message);
       }
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
+      if (data.buses) {
+        setBuses(data.buses);
       }
     };
+
+    if (socket) {
+      socket.on('buses', handleBusesEvent);
+
+      if (open) {
+        if (!error) {
+          setIsLoading(true);
+          setMessage('');
+          setBuses([]);
+
+          const emitNearBus = () => {
+            socket.emit('nearbus', { location, busesOld: busesRef.current });
+          };
+
+          emitNearBus();
+          intervalId = setInterval(emitNearBus, 25000);
+        }
+      }
+
+      return () => {
+        socket.off('buses', handleBusesEvent);
+        if (intervalId) {
+          setBuses([])
+          clearInterval(intervalId);
+        }
+      };
+    }
   }, [open, error, location, socket]);
-  useEffect(()=>{
-    socket?.on('buses',(data)=>{
-      setIsLoading(false)
-      if(data.message){
-        setMessage(data.message)
-      }
-      if(data.buses){
-        setBuses(data.buses)
-      }
-    })
-  },[])
   return(
     <Dialog
       fullWidth

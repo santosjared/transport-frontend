@@ -1,23 +1,22 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
-import { useService } from "src/hooks/useService"
+import { apiService } from "src/store/services/apiService"
 
 export const fetchDataUser = createAsyncThunk('appBus/fetchBusUser',
 async (filtrs?: { [key: string]: any }) => {
-  const {Get} = useService()
   if(filtrs){
     const {filter, skip,limit}=filtrs
     if(filter){
-      const response = await Get(`/users/asignedUsers?filter=${filter}`)
+      const response = await apiService.Get(`/users/asignedUsers?filter=${filter}`)
       return response.data
     }
     if(skip&&limit){
-      const response = await Get(`/users/asignedUsers?skip=${skip}&limit=${limit}`)
+      const response = await apiService.Get(`/users/asignedUsers?skip=${skip}&limit=${limit}`)
       return response.data
     }
-    const response = await Get('/users/asignedUsers')
+    const response = await apiService.Get('/users/asignedUsers')
     return response.data
   }
-  const response = await Get('/users/asignedUsers')
+  const response = await apiService.Get('/users/asignedUsers')
   return response.data
 }
 )

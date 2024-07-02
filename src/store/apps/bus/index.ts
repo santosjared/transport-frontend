@@ -1,116 +1,99 @@
 import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { useService } from 'src/hooks/useService'
+import {apiService} from 'src/store/services/apiService'
 import { HttpStatus } from 'src/utils/HttpStatus'
 
 interface Redux {
   dispatch: Dispatch<any>
 }
-interface Props{
+interface Props {
   data: { [key: string]: any };
-  id:string,
-  filters:any
+  id: string,
+  filters: any
 }
+
 export const fetchData = createAsyncThunk('appBus/fetchBus',
-async (filtrs?: { [key: string]: any }) => {
-  const {Get} = useService()
-  if(filtrs){
-    const response = await Get('/bus',filtrs)
+  async (filters?: { [key: string]: any }) => {
+    if (filters) {
+      const response = await apiService.Get('/bus', filters)
+      return response.data
+    }
+    const response = await apiService.Get('/bus')
     return response.data
   }
-  const response = await Get('/bus')
-  return response.data
-}
 )
 
 export const addBus = createAsyncThunk('appBus/addBus',
-  async (data: { [key: string]: any }, {dispatch }: Redux) => {
-    const {Post}= useService()
-    const response = await Post('/bus', data)
-    if(response.status === HttpStatus.BAD_REQUEST){
+  async (data: { [key: string]: any }, { dispatch }: Redux) => {
+    const response = await apiService.Post('/bus', data)
+    if (response.status === HttpStatus.BAD_REQUEST) {
       const res = {
-        success:false,
-        data:response.data
+        success: false,
+        data: response.data
       }
       return res
     }
-    if(response.status === HttpStatus.CREATED){
+    if (response.status === HttpStatus.CREATED) {
       const res = {
-        success:true,
-        data:response.data
+        success: true,
+        data: response.data
       }
       dispatch(fetchData())
       return res
     }
-    if(response === HttpStatus.INTERNAL_SERVER_ERROR){
-
+    if (response.status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      // Manejar el error del servidor aquí
     }
     return response
   }
 )
 
 export const deleteBus = createAsyncThunk('appBus/deleteBus',
-  async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await Delete('/bus', id)
+  async (id: number | string, { dispatch }: Redux) => {
+    const response = await apiService.Delete('/bus', id)
     dispatch(fetchData())
     return response.data
   }
 )
+
 export const updateBus = createAsyncThunk('appBus/updateBus',
-  async ({data,id, filters}:Props, {dispatch }: Redux) => {
-    const {Update}= useService()
-    const response = await Update('/bus', data,id)
-    if(response.status === HttpStatus.BAD_REQUEST){
+  async ({ data, id, filters }: Props, { dispatch }: Redux) => {
+    const response = await apiService.Update('/bus', data, id)
+    if (response.status === HttpStatus.BAD_REQUEST) {
       const res = {
-        success:false,
-        data:response.data
+        success: false,
+        data: response.data
       }
       return res
     }
-    if(response.status === HttpStatus.OK){
+    if (response.status === HttpStatus.OK) {
       const res = {
-        success:true,
-        data:response.data
+        success: true,
+        data: response.data
       }
       dispatch(fetchData(filters))
       return res
     }
-    if(response === HttpStatus.INTERNAL_SERVER_ERROR){
-
+    if (response.status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      // Manejar el error del servidor aquí
     }
     return response
   }
 )
+
 export const appUsersSlice = createSlice({
   name: 'appBus',
   initialState: {
     data: [],
-    total:0,
-    // isLoading:false,
-    // isSuccess:false,
-    // isError:false
+    total: 0,
   },
   reducers: {},
   extraReducers: builder => {
     builder
-    // .addCase(fetchData.pending,(state)=>{
-    //     state.isLoading = true;
-    //     state.isSuccess = false;
-    //     state.isError = false;
-    // })
-    .addCase(fetchData.fulfilled, (state, action) => {
-        // state.isLoading = false;
-        // state.isSuccess = true;
-        // state.isError = false;
+      .addCase(fetchData.fulfilled, (state, action) => {
         state.data = action.payload.result;
         state.total = action.payload.total
-    })
-    // .addCase(fetchData.rejected, (state) => {
-    //     state.isLoading = false;
-    //     state.isSuccess = false;
-    //     state.isError = true;
-    //   })
+      })
   }
 })
 

@@ -2,6 +2,7 @@ import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { useService } from 'src/hooks/useService'
 import { HttpStatus } from 'src/utils/HttpStatus'
+import { apiService } from 'src/store/services/apiService'
 
 interface Redux {
   dispatch: Dispatch<any>
@@ -13,20 +14,18 @@ interface Props{
 }
 export const fetchData = createAsyncThunk('appHorario/fetchHorario',
 async (filtrs?: { [key: string]: any }) => {
-  const {Get} = useService()
   if(filtrs){
-    const response = await Get('/horario',filtrs)
+    const response = await apiService.Get('/horario',filtrs)
     return response.data
   }
-  const response = await Get('/horario')
+  const response = await apiService.Get('/horario')
   return response.data
 }
 )
 
 export const addHorario = createAsyncThunk('appHorario/addHorario',
     async (data: { [key: string]: any }, {dispatch }: Redux) => {
-      const {Post}= useService()
-      const response = await Post('/horario', data)
+      const response = await apiService.Post('/horario', data)
       if(response.status === HttpStatus.BAD_REQUEST){
         const res = {
           success:false,
@@ -51,16 +50,14 @@ export const addHorario = createAsyncThunk('appHorario/addHorario',
 
 export const deleteHorario = createAsyncThunk('appHorario/deleteHorario',
   async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await Delete('/horario', id)
+    const response = await apiService.Delete('/horario', id)
     dispatch(fetchData())
     return response.data
   }
 )
 export const updateHorario = createAsyncThunk('appHorario/updateHorario',
   async ({data,id, filtrs}:Props, {dispatch }: Redux) => {
-    const {Update}= useService()
-    const response = await Update('/horario', data,id)
+    const response = await apiService.Update('/horario', data,id)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,

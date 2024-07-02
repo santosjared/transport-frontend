@@ -1,14 +1,13 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { useService } from 'src/hooks/useService'
+import { apiService } from 'src/store/services/apiService'
 
 export const fetchData = createAsyncThunk('appMonitoreo/fetchMonitoreo', async (id?: string) => {
-    const {Get, GetId} = useService()
     if(id){
-        const response = await GetId('/linea',id)
+        const response = await apiService.GetId('/linea',id)
         return response.data
     }
-    const response = await Get('/linea')
+    const response = await apiService.Get('/linea')
     return response.data
 })
 
@@ -22,7 +21,7 @@ export const appUsersSlice = createSlice({
   extraReducers: builder => {
     builder
     .addCase(fetchData.fulfilled, (state, action) => {
-        state.data = action.payload; 
+        state.data = action.payload;
     })
   }
 })

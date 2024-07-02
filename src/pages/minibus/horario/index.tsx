@@ -95,14 +95,14 @@ const Horario = () => {
           }}
           PaperProps={{ style: { minWidth: '8rem' } }}
         >
-          <MenuItem onClick={() => { handleRowOptionsClose(); handleEdit(horari) }} sx={{ '& svg': { mr: 2 } }}>
+         { rules.some((rule:any) => rule.name === 'Editar-horario') &&<MenuItem onClick={() => { handleRowOptionsClose(); handleEdit(horari) }} sx={{ '& svg': { mr: 2 } }}>
             <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4' />
             Editar
-          </MenuItem>
-          <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
+          </MenuItem>}
+         {rules.some((rule:any) => rule.name === 'Eliminar-horario') && <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
             <Icon icon='ic:outline-delete' fontSize={20} color='#ff4040' />
             Eliminar
-          </MenuItem>
+          </MenuItem>}
         </Menu>
       </>
     )
@@ -186,6 +186,7 @@ const Horario = () => {
   const [openEdit, setOpenEdit] = useState(false)
   const [openfilters, setOpenFilters] = useState(false)
   const [filters, setFilters] = useState(defaultFilter)
+  const [rules, setRules] = useState<string[]>([])
 
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.horario)
@@ -193,6 +194,7 @@ const Horario = () => {
   useEffect(() => {
     dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }, [page,pageSize])
+
 
   const toggleDrawer = () => setDraw(!draw)
   const toggleListDays = () => setOpenListDays(!openListDays)
@@ -227,7 +229,16 @@ const Horario = () => {
     setFilters(defaultFilter)
     dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }
-
+  const {Get} = useService()
+  useEffect(() => {
+    const fetch = async () => {
+      const response = await Get('/auth')
+      if (response.data && response.data.access) {
+        setRules(response.data.access)
+      }
+    }
+    fetch()
+  }, [])
   return (
     <Grid container spacing={6} >
       <Grid item xs={12}>
@@ -237,9 +248,9 @@ const Horario = () => {
             <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter}>
               {openfilters ? 'Cerrar filtrado' : 'Filtrar por columnas'}
             </Button>
-            <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={toggleDrawer} variant='contained'>
+            {rules.some((rule:any) => rule.name === 'Crear-horario') &&<Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={toggleDrawer} variant='contained'>
               Nuevo horario
-            </Button>
+            </Button>}
           </Box>
           {openfilters ? <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
             <Card sx={{ p: 2 }}>
@@ -341,6 +352,12 @@ const Horario = () => {
             paginationMode="server"
             onPageChange={(newPage) => setPage(newPage)}
             sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+            localeText={{
+              MuiTablePagination: {
+                labelRowsPerPage: 'Filas por página:',
+              },
+            }
+          }
           />
         </Card>
       </Grid>

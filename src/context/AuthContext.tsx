@@ -1,21 +1,11 @@
-// ** React Imports
-import { createContext, useEffect, useState, ReactNode } from 'react'
-
-// ** Next Import
-import { useRouter } from 'next/router'
-
-// ** Axios
-import axios from 'axios'
-
-// ** Config
-import authConfig from 'src/configs/auth'
-
+import { createContext, useEffect, useState, ReactNode } from 'react';
+import { useRouter } from 'next/router';
+import axios from 'axios';
 import jwt from 'jsonwebtoken';
+import authConfig from 'src/configs/auth';
+import useEncryptedStorage from 'src/hooks/useCrypto';
+import { AuthValuesType, RegisterParams, LoginParams, ErrCallbackType, UserDataType } from './types';
 
-// ** Types
-import { AuthValuesType, RegisterParams, LoginParams, ErrCallbackType, UserDataType } from './types'
-
-// ** Defaults
 const defaultProvider: AuthValuesType = {
   user: null,
   loading: true,
@@ -24,99 +14,111 @@ const defaultProvider: AuthValuesType = {
   login: () => Promise.resolve(),
   logout: () => Promise.resolve(),
   register: () => Promise.resolve()
-}
+};
 
-const AuthContext = createContext(defaultProvider)
+const AuthContext = createContext(defaultProvider);
 
 type Props = {
-  children: ReactNode
-}
+  children: ReactNode;
+};
 
 const AuthProvider = ({ children }: Props) => {
-  // ** States
-  const [user, setUser] = useState<UserDataType | null>(defaultProvider.user)
-  const [loading, setLoading] = useState<boolean>(defaultProvider.loading)
-
-  // ** Hooks
-  const router = useRouter()
+  const [user, setUser] = useState<UserDataType | null>(defaultProvider.user);
+  const [loading, setLoading] = useState<boolean>(defaultProvider.loading);
+  const router = useRouter();
+  const { getDecryptedItem, setEncryptedItem } = useEncryptedStorage();
 
   useEffect(() => {
     const initAuth = async (): Promise<void> => {
-      const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)!
+      const storedToken = getDecryptedItem(authConfig.storageTokenKeyName);
       if (storedToken) {
-        setLoading(true)
+        setLoading(true);
         await axios
           .get(authConfig.meEndpoint, {
             headers: {
               Authorization: storedToken
             }
           })
-          .then(async response => {
-            setLoading(false)
-            setUser({ ...response.data })
+          .then(async (response) => {
+            setLoading(false);
+            setUser({ ...response.data });
           })
           .catch(() => {
-            localStorage.removeItem('userData')
-            localStorage.removeItem('refreshToken')
-            localStorage.removeItem('accessToken')
-            setUser(null)
-            setLoading(false)
+            localStorage.removeItem('userData');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('accessToken');
+            setUser(null);
+            setLoading(false);
             if (authConfig.onTokenExpiration === 'logout' && !router.pathname.includes('login')) {
-              router.replace('/login')
+              router.replace('/login');
             }
-          })
+          });
       } else {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    initAuth()
+    initAuth();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   const handleLogin = (params: LoginParams, errorCallback?: ErrCallbackType) => {
     axios
       .post(authConfig.loginEndpoint, params)
-      .then(async response => {
+      .then(async (response) => {
+        const token = response.data.token;
 
-        params.rememberMe
-          ? window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.token)
-          : null
-        const returnUrl = router.query.returnUrl
-        const decode:any = jwt.verify(response.data.token, 'foundationfreecoderes')
-        const userData = {id:decode.id,name:decode.name,lastName:decode.lastName,rol:decode.rol }
-        setUser(userData)
-        params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(userData)) : null
+        // Encriptar el token antes de almacenarlo en localStorage
+        setEncryptedItem(authConfig.storageTokenKeyName, token);
 
-        const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+        // Decodificar y manejar datos de usuario
+        const decode: any = await axios
+        .get(authConfig.meEndpoint, {
+          headers: {
+            Authorization: token
+          }
+        })
+        const userData = {
+          id: decode.data.id,
+          name: decode.data.name,
+          lastName: decode.data.lastName,
+          rol: decode.data.rol || 'client' // Si no hay rol en el token, se asigna 'client' por defecto
+        };
 
-        router.replace(redirectURL as string)
+        setUser(userData);
+
+        // Almacenar datos de usuario encriptados en localStorage
+        params.rememberMe ? setEncryptedItem('userData', JSON.stringify(userData)) : null;
+
+        const returnUrl = router.query.returnUrl;
+        const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/';
+
+        router.replace(redirectURL as string);
       })
-
-      .catch(err => {
-        if (errorCallback) errorCallback(err)
-      })
-  }
+      .catch((err) => {
+        if (errorCallback) errorCallback(err);
+      });
+  };
 
   const handleLogout = () => {
-    setUser(null)
-    window.localStorage.removeItem('userData')
-    window.localStorage.removeItem(authConfig.storageTokenKeyName)
-    router.push('/login')
-  }
+    setUser(null);
+    localStorage.removeItem('userData');
+    localStorage.removeItem(authConfig.storageTokenKeyName);
+    router.push('/login');
+  };
 
   const handleRegister = (params: RegisterParams, errorCallback?: ErrCallbackType) => {
     axios
       .post(authConfig.registerEndpoint, params)
-      .then(res => {
+      .then((res) => {
         if (res.data.error) {
-          if (errorCallback) errorCallback(res.data.error)
+          if (errorCallback) errorCallback(res.data.error);
         } else {
-          handleLogin({ email: params.email, password: params.password })
+          handleLogin({ email: params.email, password: params.password });
         }
       })
-      .catch((err: { [key: string]: string }) => (errorCallback ? errorCallback(err) : null))
-  }
+      .catch((err: { [key: string]: string }) => (errorCallback ? errorCallback(err) : null));
+  };
 
   const values = {
     user,
@@ -126,9 +128,9 @@ const AuthProvider = ({ children }: Props) => {
     login: handleLogin,
     logout: handleLogout,
     register: handleRegister
-  }
+  };
 
-  return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>
-}
+  return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
+};
 
-export { AuthContext, AuthProvider }
+export { AuthContext, AuthProvider };

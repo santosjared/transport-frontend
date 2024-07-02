@@ -121,7 +121,7 @@ const AddLinea = ({ toggle }: Props) => {
     toggle()
   }
   return (
-    <> {busData.length ===0 || storeHorario.isLoading || storeTarifa.isLoading || storeRuta.isLoading ? 'Cargando...' :
+    <>
     <form onSubmit={onSubmit}>
       <Stack spacing={8} sx={{ border: 1, padding: 5, borderRadius: 1 }}>
         <FormControl fullWidth>
@@ -241,7 +241,7 @@ const AddLinea = ({ toggle }: Props) => {
         </FormControl>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
-            Cancel
+            Cancelar
           </Button>
           <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<SaveIcon />}>
             Guardar
@@ -249,7 +249,7 @@ const AddLinea = ({ toggle }: Props) => {
         </Box>
       </Stack>
       </form>
-    }  </>
+     </>
   );
 }
 

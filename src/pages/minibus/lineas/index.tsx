@@ -102,14 +102,16 @@ const Lineas = () => {
           }}
           PaperProps={{ style: { minWidth: '8rem' } }}
         >
+          {rules.some((rule:any) => rule.name === 'Editar-linea')&&
           <MenuItem onClick={() => { handleRowOptionsClose(); handleEdit(linea) }} sx={{ '& svg': { mr: 2 } }}>
             <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4' />
             Editar
-          </MenuItem>
+          </MenuItem>}
+          {rules.some((rule:any) => rule.name === 'Eliminar-linea')&&
           <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
             <Icon icon='ic:outline-delete' fontSize={20} color='#ff4040' />
             Eliminar
-          </MenuItem>
+          </MenuItem>}
         </Menu>
       </>
     )
@@ -133,10 +135,10 @@ const Lineas = () => {
       headerName: 'Rutas y paradas',
       renderCell: ({ row }: TypeCell) => {
         return (
-          <>
+          <>{rules.some((rule:any) => rule.name === 'Listar_rutas-linea')?<>
             <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => viewRoad(row)} />
             <Typography noWrap variant="body2" onClick={() => viewRoad(row)} sx={{ cursor: 'pointer' }}> ver rutas</Typography>
-          </>
+          </>:<Typography variant="body2">No disponible</Typography>}</>
         )
       }
     },
@@ -146,10 +148,10 @@ const Lineas = () => {
       headerName: 'Horarios',
       renderCell: ({ row }: TypeCell) => {
         return (
-          <>
+          <>{rules.some((rule:any) => rule.name === 'Listar_horario-linea')?<>
             <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => handleHorario(row)} />
             <Typography noWrap variant="body2" onClick={() => handleHorario(row)} sx={{ cursor: 'pointer' }}> ver horario</Typography>
-          </>
+          </>:<Typography variant="body2">No disponible</Typography>}</>
         )
       }
     },
@@ -159,10 +161,10 @@ const Lineas = () => {
       headerName: 'Tarifas',
       renderCell: ({ row }: TypeCell) => {
         return (
-          <>
+          <>{rules.some((rule:any) => rule.name === 'Listar_tarifas-linea')?<>
             <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => handleTarifa(row)} />
             <Typography noWrap variant="body2" sx={{ cursor: 'pointer' }} onClick={() => handleTarifa(row)}> ver tarifas</Typography>
-          </>
+          </>:<Typography variant="body2">No disponible</Typography>}</>
         )
       }
     },
@@ -172,10 +174,10 @@ const Lineas = () => {
       headerName: 'Buses',
       renderCell: ({ row }: TypeCell) => {
         return (
-          <>
+          <>{rules.some((rule:any) => rule.name === 'Listar_buses-linea')?<>
             <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => handleBus(row)} />
             <Typography noWrap variant="body2" sx={{ cursor: 'pointer' }} onClick={() => handleBus(row)}> ver buses</Typography>
-          </>
+          </>:<Typography variant="body2">No Disponible</Typography>}</>
         )
       }
     },
@@ -185,10 +187,10 @@ const Lineas = () => {
       headerName: 'rutas buses',
       renderCell: ({ row }: TypeCell) => {
         return (
-          <>
+         <>{rules.some((rule:any) => rule.name === 'Listar_buses_rutas-linea')? <>
             <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => handleBusRoad(row)} />
             <Typography noWrap variant="body2" sx={{ cursor: 'pointer' }} onClick={() => handleBusRoad(row)}> asignar o desasignar</Typography>
-          </>
+          </>:<Typography variant="body2">No disponible</Typography>}</>
         )
       }
     },
@@ -223,6 +225,8 @@ const Lineas = () => {
   const [selectionRuta, setSelectionRuta] = useState<any[]>([])
   const [openBusRoad, setOpenBusRoad] = useState(false)
   const [openPrevia,setOpenPrevia] = useState(false)
+  const [rules,setRules] = useState<string[]>([])
+
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.linea)
 
@@ -279,6 +283,16 @@ const Lineas = () => {
     setLinea(data)
     toggleBusRuta()
   }
+  const {Get} = useService()
+  useEffect(() => {
+    const fetch = async () => {
+      const response = await Get('/auth')
+      if (response.data && response.data.access) {
+        setRules(response.data.access)
+      }
+    }
+    fetch()
+  }, [])
   if (openRoad) {
     return (
       <ViewMap data={selectionRuta} onClose={toggleRoad} toggleRutas={toggleRuta} />
@@ -317,9 +331,9 @@ const Lineas = () => {
             <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter}>
               {openfilters ? 'Cerrar filtrado' : 'Filtrar por columnas'}
             </Button>
-            <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={toggleDrawer} variant='contained'>
+            {rules.some((rule:any) => rule.name === 'Crear-Linea')&&<Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={toggleDrawer} variant='contained'>
               Nuevo linea
-            </Button>
+            </Button>}
           </Box>
           {openfilters ? <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
             <Card sx={{ p: 2 }}>
@@ -421,6 +435,12 @@ const Lineas = () => {
             paginationMode="server"
             onPageChange={(newPage) => setPage(newPage)}
             sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+            localeText={{
+              MuiTablePagination: {
+                labelRowsPerPage: 'Filas por página:',
+              },
+            }
+          }
           />
         </Card>
       </Grid>

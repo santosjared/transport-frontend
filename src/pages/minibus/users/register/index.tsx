@@ -18,9 +18,6 @@ import { AppDispatch } from "src/store";
 import { contrys } from "src/utils/contrys";
 import { isPhoneValidate } from "src/utils/validator";
 import { calculateYearsBetweenDates } from "src/utils/calculateYears";
-import { fetchData, findFilters, findOneRol } from "src/store/apps/rol";
-import axios from "axios";
-import { array } from "yup";
 import { HttpStatus } from "src/utils/HttpStatus";
 import Swal from "sweetalert2";
 
@@ -645,7 +642,7 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Button size='large' variant='outlined' color='secondary' onClick={handleOnclickCancel} startIcon={<CancelIcon />}>
-                        Cancel
+                        Cancelar
                     </Button>
                     <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }} startIcon={<SaveIcon />}>
                         Guardar

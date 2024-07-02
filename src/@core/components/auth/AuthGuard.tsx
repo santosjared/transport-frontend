@@ -1,48 +1,48 @@
 // ** React Imports
-import { ReactNode, ReactElement, useEffect } from 'react'
+import { ReactNode, ReactElement, useEffect } from 'react';
 
 // ** Next Import
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/router';
 
 // ** Hooks Import
-import { useAuth } from 'src/hooks/useAuth'
+import { useAuth } from 'src/hooks/useAuth';
+import useEncryptedStorage from 'src/hooks/useCrypto';
 
 interface AuthGuardProps {
-  children: ReactNode
-  fallback: ReactElement | null
+  children: ReactNode;
+  fallback: ReactElement | null;
 }
 
 const AuthGuard = (props: AuthGuardProps) => {
-  const { children, fallback } = props
-  const auth = useAuth()
-  const router = useRouter()
+  const { children, fallback } = props;
+  const auth = useAuth();
+  const router = useRouter();
+  const { getDecryptedItem } = useEncryptedStorage();
 
-  useEffect(
-    () => {
-      if (!router.isReady) {
-        return
-      }
+  useEffect(() => {
+    if (!router.isReady) {
+      return;
+    }
 
-      if (auth.user === null && !window.localStorage.getItem('userData')) {
-        if (router.asPath !== '/') {
-          router.replace({
-            pathname: '/login',
-            query: { returnUrl: router.asPath }
-          })
-        } else {
-          router.replace('/login')
-        }
+    const storedUserData = getDecryptedItem('userData');
+
+    if (auth.user === null && !storedUserData) {
+      if (router.asPath !== '/') {
+        router.replace({
+          pathname: '/login',
+          query: { returnUrl: router.asPath },
+        });
+      } else {
+        router.replace('/login');
       }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [router.route]
-  )
+    }
+  }, [router.isReady, router.asPath, auth.user, getDecryptedItem, router]);
 
   if (auth.loading || auth.user === null) {
-    return fallback
+    return fallback;
   }
 
-  return <>{children}</>
-}
+  return <>{children}</>;
+};
 
-export default AuthGuard
+export default AuthGuard;

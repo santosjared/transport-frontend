@@ -195,14 +195,14 @@ const Bus = () => {
             <Icon icon='healthicons:truck-driver' fontSize={20} color='#00a0f4' />
            {user?'Detalles': "Asignar Chofer"}
           </MenuItem>
-          <MenuItem onClick={()=>{handleRowOptionsClose(); handleEditOnclik(id)}} sx={{ '& svg': { mr: 2 } }}>
+         { rules.some((rule:any) => rule.name === 'Editar-microbus') &&<MenuItem onClick={()=>{handleRowOptionsClose(); handleEditOnclik(id)}} sx={{ '& svg': { mr: 2 } }}>
             <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4' />
             Editar
-          </MenuItem>
-          <MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
+          </MenuItem>}
+          {rules.some((rule:any) => rule.name === 'Eliminar-microbus') &&<MenuItem sx={{ '& svg': { mr: 2 } }} onClick={handleDelete}>
             <Icon icon='ic:outline-delete' fontSize={20} color='#ff4040' />
             Eliminar
-          </MenuItem>
+          </MenuItem>}
         </Menu>
       </>
     )
@@ -343,19 +343,21 @@ const Bus = () => {
   const [openEdit,setOpenEdit]=useState(false)
   const [userData, setUserdata] = useState<any>(null)
   const [openfilters, setOpenFilters] = useState(false)
-  const [rules,setRules] = useState<any>(null)
+  const [rules,setRules] = useState<string[]>([])
   const [filters,setFilters] = useState(defaultFilter)
 
   const [id,setId] = useState('')
 
   const {Get} = useService()
-  useEffect(()=>{
-    const fetch = async() =>{
-      const data = await Get('/auth')
-      console.log(data.data)
+  useEffect(() => {
+    const fetch = async () => {
+      const response = await Get('/auth')
+      if (response.data && response.data.access) {
+        setRules(response.data.access)
+      }
     }
     fetch()
-  },[])
+  }, [])
   const dispatch = useDispatch<AppDispatch>()
   const  store = useSelector((state: RootState) => state.bus)
   useEffect(() => {
@@ -404,9 +406,10 @@ const handleReset = () => {
             <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter}>
               {openfilters ? 'Cerrar filtrado' : 'Filtrar por columnas'}
             </Button>
-            <Button sx={{ mb: 2, mt:{xs:3,sm:0}  }} onClick={toggleDrawer} variant='contained'>
+
+            {rules.some((rule:any) => rule.name === 'Crear-microbus') &&<Button sx={{ mb: 2, mt:{xs:3,sm:0}  }} onClick={toggleDrawer} variant='contained'>
               Nuevo microbus
-            </Button>
+            </Button>}
           </Box>
           {openfilters ? <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
         <Card sx={{ p: 2 }}>
@@ -557,6 +560,12 @@ const handleReset = () => {
             paginationMode="server"
             onPageChange={(newPage) => setPage(newPage)}
             sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+            localeText={{
+              MuiTablePagination: {
+                labelRowsPerPage: 'Filas por página:',
+              },
+            }
+          }
           />
         </Card>
       </Grid>
