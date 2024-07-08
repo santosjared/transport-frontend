@@ -68,7 +68,17 @@ const AddTarifas = ({ toggle }: Props) => {
       rates: prevTarifaForms.rates.map((rate, i) => i === index ? { ...rate, [key]: value } : rate)
     }));
   }
-
+  function hasAnyDuplicates(array:any) {
+    const seen = new Set();
+    for (const item of array) {
+      const itemString = JSON.stringify(item);
+      if (seen.has(itemString)) {
+        return true; // Hay duplicados
+      }
+      seen.add(itemString);
+    }
+    return false; // No hay duplicados
+  }
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsLoading(true)

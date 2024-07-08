@@ -22,6 +22,7 @@ const RealtimeMap: React.FC<Props> = ({ center, id, road }) => {
     const [linea, setLinea] = useState<[]>([])
     useEffect(()=>{
         socket?.on('updateLocations', (data) => {
+          console.log(data)
             if(id){
                 const newdata = data.filter((newLinea: { id: string; }) => newLinea.id === id);
                 setLinea(newdata)
@@ -79,14 +80,14 @@ const RealtimeMap: React.FC<Props> = ({ center, id, road }) => {
                                 width: 1.75rem;
                                 height: 1.75rem;
                                 display: block;
-                                left: -0.9rem;
-                                top: -1.2rem;
+                                left: -0.7rem;
+                                top: -1rem;
                                 position: relative;
                                 border-radius: 2rem;
                                 border: 1px solid #FFFFFF;`;
                                 const icon = L.divIcon({
                                     className: "my-custom-pin",
-                                    iconAnchor: [-10, 10],
+                                    iconAnchor: [5, 0],
                                     popupAnchor: [10, -20],
                                     html: `<div style="${markerHtmlStyles}"><h3 style="position: relative;
                                     display: flex;

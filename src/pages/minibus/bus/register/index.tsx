@@ -149,6 +149,15 @@ const RegisterBus = ({ toggle }: Props) => {
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setIsLoading(true)
+        if(!markersBus.includes(formBus.otherMarker)){
+          markersBus.push(formBus.otherMarker)
+        }
+        if(!markersBus.includes(formBus.otherType)){
+          markersBus.push(formBus.otherType)
+        }
+        if(!markersBus.includes(formBus.otherState)){
+          markersBus.push(formBus.otherState)
+        }
         if (formBus.trademark === 'Otro') {
             formBus.trademark = formBus.otherMarker
         }

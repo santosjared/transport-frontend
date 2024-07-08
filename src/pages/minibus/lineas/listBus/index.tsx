@@ -1,5 +1,5 @@
 import { Box, Button, Card, CardContent, CardHeader, Dialog, DialogContent, Divider, Fade, FadeProps, FormControl, Grid, IconButton, List, ListItem, ListItemText, MenuItem, TextField, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridSelectionModel } from "@mui/x-data-grid";
 import { ChangeEvent, Fragment, ReactElement, Ref, forwardRef, useEffect, useState } from "react";
 import AddDrawMap from "src/components/addDrawMap";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -320,8 +320,17 @@ const ViewHorario = ({ toggle, id }: Props) => {
   const [filtersAsigned, setFiltersAsigned] = useState(defaultFilter)
   const [filtersDesasigned, setFiltersDesasigned] = useState(defaultFilter)
   const [total, setTotal] = useState<number>(0)
+  const [openfilters, setOpenFilters] = useState(false)
+  const [openfilters2, setOpenFilters2] = useState(false)
+  const [selectionModel, setSelectionModel] = useState<GridSelectionModel>([]);
+  const [selectionModel2, setSelectionModel2] = useState<GridSelectionModel>([]);
+
+
   const { GetId, Get } = useService()
   const dispatch = useDispatch<AppDispatch>()
+
+  const toggleFilter = () => setOpenFilters(!openfilters)
+  const toggleFilter2 = () => setOpenFilters2(!openfilters2)
   useEffect(() => {
     if (id) {
       const fetch = async () => {
@@ -338,7 +347,6 @@ const ViewHorario = ({ toggle, id }: Props) => {
 
 
   const handleDesasigned = async (busdata: any) => {
-    if(!busdata.road){
     try {
       const response = await dispatch(desasignedBus({ data: { buses: [busdata._id] }, id: linea.id }))
       if (response.payload.success) {
@@ -352,9 +360,6 @@ const ViewHorario = ({ toggle, id }: Props) => {
     } catch (error) { } finally {
 
     }
-  }else{
-    Swal.fire({title:'Error!', text:'Primero desasigne la ruta del microbus', icon:'warning'})
-  }
   }
   const handleAsigned = async (bus: any) => {
     try {
@@ -421,6 +426,43 @@ const ViewHorario = ({ toggle, id }: Props) => {
       [name]: value
     })
   }
+  const handleAsignedAll = async ()=>{
+    try {
+      const objetosFiltrados = buses.filter(objeto => selectionModel2.includes(objeto.id));
+      const ids = objetosFiltrados.map((bus)=>{
+        return bus._id
+      })
+      const response = await dispatch(asignedBus({ data: { buses: ids }, id: linea.id }))
+      if (response.payload.success) {
+        dispatch(fetchData())
+        // setDataBus(response.payload.data.buses)
+
+        const res = await Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
+        // setBuses(res.data.result)
+        setTotal(res.data.total)
+      }
+    } catch (error) { } finally {
+    }
+
+  }
+  const handleDesasignedAll = async ()=>{
+    try {
+      const objetosFiltrados = dataBus.filter(objeto => selectionModel.includes(objeto.id));
+      const ids = objetosFiltrados.map((bus)=>{
+        return bus._id
+      })
+      const response = await dispatch(desasignedBus({ data: { buses: ids }, id: linea.id }))
+      if (response.payload.success) {
+        dispatch(fetchData())
+        // setDataBus(response.payload.data.buses)
+
+        const res = await Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
+        // setBuses(res.data.result)
+        setTotal(res.data.total)
+      }
+    } catch (error) { } finally {
+    }
+  }
   return (
     <AddDrawMap toggle={toggle} title={`Asignar o desasignar buses a la linea ${linea.name}`}>
       <Grid container spacing={1} >
@@ -428,7 +470,15 @@ const ViewHorario = ({ toggle, id }: Props) => {
           <CardContent>
             <Card>
               <CardHeader title='Buses asignadas ' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
-              <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
+              <Box sx={{ p: 5, pb: 3, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+            <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter}>
+              {openfilters ? 'Cerrar filtrado' : 'Filtrar por columnas'}
+            </Button>
+            <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={handleDesasignedAll} disabled={selectionModel.length === 0?true:false} variant='contained'>
+              desasignar en bloque
+            </Button>
+          </Box>
+              {openfilters &&<Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
                 <Card sx={{ p: 2 }}>
                   <Grid container spacing={2}>
                     <Grid item xs={1.71}>
@@ -544,9 +594,10 @@ const ViewHorario = ({ toggle, id }: Props) => {
                     </Grid>
                   </Grid>
                 </Card>
-              </Box>
+              </Box>}
               <DataGrid
                 autoHeight
+                checkboxSelection
                 rows={dataBus}
                 columns={columns}
                 pageSize={pageSizeAsigned}
@@ -554,6 +605,8 @@ const ViewHorario = ({ toggle, id }: Props) => {
                 rowsPerPageOptions={[10, 25, 50]}
                 sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
                 onPageSizeChange={(newPageSize: number) => setPageSizeAsigned(newPageSize)}
+                selectionModel={selectionModel}
+  onSelectionModelChange={(newSelectionModel) => setSelectionModel(newSelectionModel)}
               />
             </Card>
           </CardContent>
@@ -562,7 +615,15 @@ const ViewHorario = ({ toggle, id }: Props) => {
           <CardContent>
             <Card>
               <CardHeader title='Buses no asignadas ' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
-              <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
+              <Box sx={{ p: 5, pb: 3, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+            <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter2}>
+              {openfilters2 ? 'Cerrar filtrado' : 'Filtrar por columnas'}
+            </Button>
+            <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={handleAsignedAll} disabled={selectionModel2.length === 0?true:false} variant='contained'>
+              asignar en bloque
+            </Button>
+          </Box>
+              {openfilters2 &&<Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
                 <Card sx={{ p: 2 }}>
                   <Grid container spacing={2}>
                     <Grid item xs={1.71}>
@@ -678,12 +739,13 @@ const ViewHorario = ({ toggle, id }: Props) => {
                     </Grid>
                   </Grid>
                 </Card>
-              </Box>
+              </Box>}
               <DataGrid
                 autoHeight
                 rows={buses}
                 columns={columns2}
                 pagination
+                checkboxSelection
                 pageSize={pageSizeDesasigned}
                 disableSelectionOnClick
                 onPageSizeChange={(newPageSize) => setPageSizeDesasigned(newPageSize)}
@@ -692,6 +754,8 @@ const ViewHorario = ({ toggle, id }: Props) => {
                 paginationMode="server"
                 onPageChange={(newPage) => setPageDesasigned(newPage)}
                 sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
+                selectionModel={selectionModel2}
+                onSelectionModelChange={(newSelectionModel2) => setSelectionModel2(newSelectionModel2)}
               />
             </Card>
           </CardContent>

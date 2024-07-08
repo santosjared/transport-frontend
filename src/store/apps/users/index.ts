@@ -24,6 +24,7 @@ async (filtrs?: { [key: string]: any }) => {
 }
 )
 
+
 export const addUser = createAsyncThunk('appUsers/addUsers',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
     const response = await apiService.Post('/users', data)
@@ -64,11 +65,11 @@ export const updateUser = createAsyncThunk(
         const update = await apiService.Update('/users', userData,idUser)
         if(update.status === HttpStatus.OK){
           dispatch(fetchData())
-          return update.data
+          return update
         }
-        return update.data
+        return update
     }
-    return createLicence.data
+    return createLicence
   }
   if(licenceData && idLicence){
       const response = await apiService.Update('/licencia', licenceData, idLicence)
@@ -76,18 +77,18 @@ export const updateUser = createAsyncThunk(
         const update = await apiService.Update('/users', userData,idUser)
         if(update.status === HttpStatus.OK){
           dispatch(fetchData())
-          return update.data
+          return update
         }
-        return update.data
+        return update
       }
-      return response.data
+      return response
     }
     const response = await apiService.Update('/users', userData,idUser)
     if(response.status=== HttpStatus.OK){
         dispatch(fetchData())
-        return response.data
+        return response
       }
-      return response.data
+      return response
     }
 );
 

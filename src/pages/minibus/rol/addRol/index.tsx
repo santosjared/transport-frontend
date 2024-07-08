@@ -719,7 +719,7 @@ const AddRol = ({ open, toggle }: Props) => {
                     }
                   />
                 </TableCell>
-                <TableCell >
+                <TableCell colSpan={4}>
                   <FormControlLabel
                     label={'ver buses'}
                     control={
@@ -728,19 +728,6 @@ const AddRol = ({ open, toggle }: Props) => {
                         id={`Listar_buses-linea`}
                         checked={checkOption.includes('Listar_buses-linea')|| false}
                         onChange={() => checkPermission('Listar_buses-linea')}
-                      />
-                    }
-                  />
-                </TableCell>
-                <TableCell colSpan={3}>
-                  <FormControlLabel
-                    label={'Ver buses con rutas de la linea'}
-                    control={
-                      <Checkbox
-                        size='small'
-                        id={`Listar_buses_rutas-linea`}
-                        checked={checkOption.includes('Listar_buses_rutas-linea')|| false}
-                        onChange={() => checkPermission('Listar_buses_rutas-linea')}
                       />
                     }
                   />

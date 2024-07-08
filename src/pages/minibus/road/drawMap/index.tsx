@@ -2,7 +2,7 @@ import { FeatureGroup } from 'react-leaflet';
 import { EditControl } from 'react-leaflet-draw';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { FeatureCollection } from 'geojson';
 import * as L from 'leaflet';
 import axios from 'axios';
@@ -19,49 +19,65 @@ interface Props {
 
 const DrawMap = ({ geojson, setGeojson, setHandleChanges, isProcessingQueue, setIsProcessingQueue, names, setNames }: Props) => {
   const ref = useRef<L.FeatureGroup>(null);
-  const [requestQueue, setRequestQueue] = useState<any[]>([]);
+
   useEffect(() => {
-    if (!isProcessingQueue) {
-      if (ref.current?.getLayers().length === 0 && geojson) {
-        L.geoJSON(geojson).eachLayer((layer) => {
-          if (layer instanceof L.Polyline || layer instanceof L.Marker) {
-            ref.current?.addLayer(layer);
-          }
-        });
-      }
+    if (ref.current?.getLayers().length === 0 && geojson) {
+      L.geoJSON(geojson).eachLayer((layer) => {
+        if (layer instanceof L.Polyline || layer instanceof L.Marker) {
+          ref.current?.addLayer(layer);
+        }
+      });
     }
   }, [geojson]);
+
+  const getStreetName = async (lat: number, lng: number): Promise<string | null> => {
+    try {
+      const response = await axios.get('https://nominatim.openstreetmap.org/reverse', {
+        params: {
+          format: 'jsonv2',
+          lat: lat,
+          lon: lng,
+        },
+      });
+      return response.data.address.road || null;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  };
+
+  const updateFeatureWithStreetNames = async (feature: any) => {
+    if (feature.geometry.type === 'LineString') {
+      const coordinates = feature.geometry.coordinates as [number, number][];
+      const streetNames = await Promise.all(
+        coordinates.map(async ([lng, lat]) => {
+          const streetName = await getStreetName(lat, lng);
+          return streetName;
+        })
+      );
+
+      feature.properties.street = streetNames;
+    }
+    return feature;
+  };
 
   const handleCreatedLine = async () => {
     const geo = ref.current?.toGeoJSON();
     if (geo?.type === 'FeatureCollection') {
-      const updatedFeatures = await Promise.all(
-        geo.features.map(async (feature) => {
-          if (feature.geometry.type === 'LineString') {
-            const coordinates = feature.geometry.coordinates as [number, number][];
-            const streetNames = await Promise.all(
-              coordinates.map(async (coord) => {
-                const [lng, lat] = coord;
-                const streetName = await getStreetName(lat, lng);
-                return streetName;
-              })
-            );
+      const updatedFeatures = geo.features.map((feature) => {
+        updateFeatureWithStreetNames(feature);
+        return feature;
+      });
 
-            return {
-              ...feature,
-              properties: { street: streetNames },
-            };
-          }
-          return feature;
-        })
-      );
       const updatedGeo = {
         ...geo,
         features: updatedFeatures,
       };
+
       if (setHandleChanges) {
         setHandleChanges(true);
       }
+
       setGeojson(updatedGeo);
     }
   };
@@ -79,61 +95,13 @@ const DrawMap = ({ geojson, setGeojson, setHandleChanges, isProcessingQueue, set
         ...geo,
         features: updatedFeatures,
       };
+
       if (setHandleChanges) {
         setHandleChanges(true);
       }
 
       setGeojson(updatedGeo);
     }
-  }
-
-  const processQueue = () => {
-    setRequestQueue((prevQueue) => {
-      if (prevQueue.length === 0) {
-        setIsProcessingQueue(false);
-        return prevQueue;
-      }
-
-      const { lat, lng, callback } = prevQueue[0];
-      axios.get(`https://nominatim.openstreetmap.org/reverse`, {
-        params: {
-          format: 'jsonv2',
-          lat: lat,
-          lon: lng,
-        }
-      })
-        .then((response) => {
-          const street = response.data.address.road || null;
-          callback(street);
-        })
-        .catch((err) => {
-          callback(null);
-        })
-        .finally(() => {
-          setTimeout(() => {
-            processQueue();
-          }, 1000);
-        });
-
-      return prevQueue.slice(1);
-    });
-  };
-
-  const addToQueue = (lat: number, lng: number, callback: (street: string) => void) => {
-    setRequestQueue((prevQueue) => {
-      const newQueue = [...prevQueue, { lat, lng, callback }];
-      if (!isProcessingQueue) {
-        setIsProcessingQueue(true);
-        processQueue();
-      }
-      return newQueue;
-    });
-  };
-
-  const getStreetName = (lat: number, lng: number): Promise<string> => {
-    return new Promise((resolve) => {
-      addToQueue(lat, lng, resolve);
-    });
   };
 
   const handleCreate = (event: any) => {
@@ -141,16 +109,14 @@ const DrawMap = ({ geojson, setGeojson, setHandleChanges, isProcessingQueue, set
     if (layer instanceof L.Polyline) {
       const latlngs = layer.getLatLngs();
 
-      // Comprobación de la estructura de los puntos
       const processLatLngs = (points: L.LatLng[]) => {
-        points.forEach((latlng: L.LatLng) => {
-          addToQueue(latlng.lat, latlng.lng, (street) => {
-            if (street) {
-              names.push(street)
-              const uniqueStreetNames = [...new Set(names)];
-              setNames(uniqueStreetNames)
-            }
-          });
+        points.forEach(async (latlng: L.LatLng) => {
+          const street = await getStreetName(latlng.lat, latlng.lng);
+          if (street) {
+            names.push(street);
+            const uniqueStreetNames = [...new Set(names)];
+            setNames(uniqueStreetNames);
+          }
         });
       };
 
@@ -163,7 +129,7 @@ const DrawMap = ({ geojson, setGeojson, setHandleChanges, isProcessingQueue, set
       }
       handleCreatedLine();
     } else {
-      handleCreateMarker()
+      handleCreateMarker();
     }
     ref.current?.addLayer(layer);
   };

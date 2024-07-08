@@ -100,9 +100,13 @@ const RegisterHorario = ({ toggle }: Props) => {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
+
     horarioForms.days = Days
     if(otherDay){
       horarioForms.days.push(otherDay)
+    }
+    if(!days.includes(otherDay) && otherDay.length !==0){
+      days.push(otherDay)
     }
     setIsLoading(true)
     try {

@@ -50,7 +50,7 @@ const TimelineFilled = ({buses}:Props) => {
             skin='light'
             size='small'
             label={bus.status}
-            color={bus.status === 'Acercandose'? 'success' : bus.status === 'cerca de ti'?'info':'error'}
+            color={bus.status === 'Acercandose'? 'success' : bus.status === 'verificando estado...'?'info':'error'}
             sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
           /></Box>
             </Box>

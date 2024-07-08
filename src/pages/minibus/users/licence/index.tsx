@@ -40,6 +40,7 @@ const ViewLicence = ({ open, toggle, data }: Props) => {
       image()
     }
   }, [data])
+  console.log(data)
   return (
     <Dialog
       fullWidth

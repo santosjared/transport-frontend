@@ -10,8 +10,6 @@ interface props {
 }
 const RenderClient = ({ row }:props) => {
   const [isImg, setIsImg] = useState<any>(false);
-
-  console.log(row)
   useEffect(() => {
     const checkImage = async () => {
       const profileUrl = `${getConfig().backendURI}${row.profile}`;

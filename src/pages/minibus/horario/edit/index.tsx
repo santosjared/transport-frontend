@@ -124,6 +124,9 @@ const EditHorario = ({ toggle, store, page,pageSize }: Props) => {
     if(otherDay && otherDay != inicialOtherDay){
       horarioForms.days.push(otherDay)
     }
+    if(!days.includes(otherDay) && otherDay.length !==0){
+      days.push(otherDay)
+    }
     try {
       const response = await dispatch(updateHorario({ data: horarioForms, id: store.id, filtrs:{skip: page * pageSize, limit: pageSize} }))
       if (response.payload.success) {

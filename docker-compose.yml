@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  nestjs:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - '3001:3000'
+    environment:
+      MONGO_URI: mongodb://mongo:27017/mi_basededatos
+    depends_on:
+      - mongo
+
+  nextjs:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - '4001:4001'
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+
+  mongo:
+    image: mongo:5
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

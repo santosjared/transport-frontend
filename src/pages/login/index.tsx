@@ -43,8 +43,6 @@ import BlankLayout from 'src/@core/layouts/BlankLayout'
 
 // ** Demo Imports
 import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
-import Monitoreo from '../minibus/monitoreo'
-import { Card, CardContent, Grid } from '@mui/material'
 
 // ** Styled Components
 const LoginIllustrationWrapper = styled(Box)<BoxProps>(({ theme }) => ({
@@ -141,105 +139,204 @@ const LoginPage = () => {
     auth.login({ email, password, rememberMe }, () => {
       setError('email', {
         type: 'manual',
-        message: 'contraseña o email no válido'
+        message: 'Email or Password is invalid'
       })
     })
   }
-  return (
-    <Grid container spacing={2}>
-      <Grid item xs={12} sm={8}>
-        <CardContent>
-          <Monitoreo />
-        </CardContent>
 
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <CardContent>
-          <Card>
-            <CardContent>
-              <Box sx={{ mb: 6 }}>
-                <TypographyStyled variant='h5'>{`Binvenido al sistema de ${themeConfig.templateName}! 👋🏻`}</TypographyStyled>
-                <Typography variant='body2'>Inicia sesión en tu cuenta y comienza la aventura.</Typography>
-              </Box>
-              <Alert icon={false} sx={{ py: 3, mb: 6, ...bgColors.primaryLight, '& .MuiAlert-message': { p: 0 } }}>
-                <Typography variant='caption' sx={{ mb: 2, display: 'block', color: 'primary.main' }}>
-                  Adminnistrador: <strong>adminbus@gmail.com</strong> / contraseña: <strong>adminbus</strong>
-                </Typography>
-              </Alert>
-              <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-                <FormControl fullWidth sx={{ mb: 4 }}>
-                  <Controller
-                    name='email'
-                    control={control}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange, onBlur } }) => (
-                      <TextField
-                        autoFocus
-                        label='Email'
-                        value={value}
-                        onBlur={onBlur}
-                        onChange={onChange}
-                        error={Boolean(errors.email)}
-                        placeholder='admin@materialize.com'
-                      />
-                    )}
-                  />
-                  {errors.email && <FormHelperText sx={{ color: 'error.main' }}>{errors.email.message}</FormHelperText>}
-                </FormControl>
-                <FormControl fullWidth>
-                  <InputLabel htmlFor='auth-login-v2-password' error={Boolean(errors.password)}>
-                    contraseña
-                  </InputLabel>
-                  <Controller
-                    name='password'
-                    control={control}
-                    rules={{ required: true }}
-                    render={({ field: { value, onChange, onBlur } }) => (
-                      <OutlinedInput
-                        value={value}
-                        onBlur={onBlur}
-                        label='contraseña'
-                        onChange={onChange}
-                        id='auth-login-v2-password'
-                        error={Boolean(errors.password)}
-                        type={showPassword ? 'text' : 'password'}
-                        endAdornment={
-                          <InputAdornment position='end'>
-                            <IconButton
-                              edge='end'
-                              onMouseDown={e => e.preventDefault()}
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              <Icon icon={showPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'} fontSize={20} />
-                            </IconButton>
-                          </InputAdornment>
-                        }
-                      />
-                    )}
-                  />
-                  {errors.password && (
-                    <FormHelperText sx={{ color: 'error.main' }} id=''>
-                      {errors.password.message}
-                    </FormHelperText>
+  const imageSource = skin === 'bordered' ? 'auth-v2-login-illustration-bordered' : 'auth-v2-login-illustration'
+
+  return (
+    <Box className='content-right'>
+      {!hidden ? (
+        <Box sx={{ flex: 1, display: 'flex', position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+          <LoginIllustrationWrapper>
+            <LoginIllustration
+              alt='login-illustration'
+              src={`/images/pages/${imageSource}-${theme.palette.mode}.png`}
+            />
+          </LoginIllustrationWrapper>
+          <FooterIllustrationsV2 />
+        </Box>
+      ) : null}
+      <RightWrapper sx={skin === 'bordered' && !hidden ? { borderLeft: `1px solid ${theme.palette.divider}` } : {}}>
+        <Box
+          sx={{
+            p: 7,
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'background.paper'
+          }}
+        >
+          <BoxWrapper>
+            <Box
+              sx={{
+                top: 30,
+                left: 40,
+                display: 'flex',
+                position: 'absolute',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <svg width={47} fill='none' height={26} viewBox='0 0 268 150' xmlns='http://www.w3.org/2000/svg'>
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fill={theme.palette.primary.main}
+                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 195.571 0)'
+                />
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fillOpacity='0.4'
+                  fill='url(#paint0_linear_7821_79167)'
+                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 196.084 0)'
+                />
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fill={theme.palette.primary.main}
+                  transform='matrix(0.865206 0.501417 -0.498585 0.866841 173.147 0)'
+                />
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fill={theme.palette.primary.main}
+                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 94.1973 0)'
+                />
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fillOpacity='0.4'
+                  fill='url(#paint1_linear_7821_79167)'
+                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 94.1973 0)'
+                />
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fill={theme.palette.primary.main}
+                  transform='matrix(0.865206 0.501417 -0.498585 0.866841 71.7728 0)'
+                />
+                <defs>
+                  <linearGradient
+                    y1='0'
+                    x1='25.1443'
+                    x2='25.1443'
+                    y2='143.953'
+                    id='paint0_linear_7821_79167'
+                    gradientUnits='userSpaceOnUse'
+                  >
+                    <stop />
+                    <stop offset='1' stopOpacity='0' />
+                  </linearGradient>
+                  <linearGradient
+                    y1='0'
+                    x1='25.1443'
+                    x2='25.1443'
+                    y2='143.953'
+                    id='paint1_linear_7821_79167'
+                    gradientUnits='userSpaceOnUse'
+                  >
+                    <stop />
+                    <stop offset='1' stopOpacity='0' />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <Typography variant='h6' sx={{ ml: 2, lineHeight: 1, fontWeight: 700, fontSize: '1.5rem !important' }}>
+                {themeConfig.templateName}
+              </Typography>
+            </Box>
+            <Box sx={{ mb: 6 }}>
+              <TypographyStyled variant='h5'>{`Bienvenida a sistema de ${themeConfig.templateName}! 👋🏻`}</TypographyStyled>
+              <Typography variant='body2'>Inicie sesión en su cuenta y comience la aventura.</Typography>
+            </Box>
+            <Alert icon={false} sx={{ py: 3, mb: 6, ...bgColors.primaryLight, '& .MuiAlert-message': { p: 0 } }}>
+              <Typography variant='caption' sx={{ mb: 2, display: 'block', color: 'primary.main' }}>
+                Admininistrador: <strong>adminbus@gmail.com</strong> / contraseña: <strong>adminbus</strong>
+              </Typography>
+            </Alert>
+            <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+              <FormControl fullWidth sx={{ mb: 4 }}>
+                <Controller
+                  name='email'
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field: { value, onChange, onBlur } }) => (
+                    <TextField
+                      autoFocus
+                      label='Email'
+                      value={value}
+                      onBlur={onBlur}
+                      onChange={onChange}
+                      error={Boolean(errors.email)}
+                      placeholder='admin@materialize.com'
+                    />
                   )}
-                </FormControl>
-                <Box
-                  sx={{ mb: 4, display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}
-                >
-                  <FormControlLabel
-                    label='Remember Me'
-                    control={<Checkbox checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />}
-                  />
-                </Box>
-                <Button fullWidth size='large' type='submit' variant='contained' sx={{ mb: 7 }}>
-                  Iniciar sesion
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </CardContent>
-      </Grid>
-    </Grid>
+                />
+                {errors.email && <FormHelperText sx={{ color: 'error.main' }}>{errors.email.message}</FormHelperText>}
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel htmlFor='auth-login-v2-password' error={Boolean(errors.password)}>
+                  contraseña
+                </InputLabel>
+                <Controller
+                  name='password'
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field: { value, onChange, onBlur } }) => (
+                    <OutlinedInput
+                      value={value}
+                      onBlur={onBlur}
+                      label='Password'
+                      onChange={onChange}
+                      id='auth-login-v2-password'
+                      error={Boolean(errors.password)}
+                      type={showPassword ? 'text' : 'password'}
+                      endAdornment={
+                        <InputAdornment position='end'>
+                          <IconButton
+                            edge='end'
+                            onMouseDown={e => e.preventDefault()}
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            <Icon icon={showPassword ? 'mdi:eye-outline' : 'mdi:eye-off-outline'} fontSize={20} />
+                          </IconButton>
+                        </InputAdornment>
+                      }
+                    />
+                  )}
+                />
+                {errors.password && (
+                  <FormHelperText sx={{ color: 'error.main' }} id=''>
+                    {errors.password.message}
+                  </FormHelperText>
+                )}
+              </FormControl>
+              <Box
+                sx={{ mb: 4, display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}
+              >
+                <FormControlLabel
+                  label='Recuérdame'
+                  control={<Checkbox checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />}
+                />
+              </Box>
+              <Button fullWidth size='large' type='submit' variant='contained' sx={{ mb: 7 }}>
+                Iniciar sesion
+              </Button>
+            </form>
+          </BoxWrapper>
+        </Box>
+      </RightWrapper>
+    </Box>
   )
 }
 

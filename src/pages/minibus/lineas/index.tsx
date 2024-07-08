@@ -181,19 +181,19 @@ const Lineas = () => {
         )
       }
     },
-    {
-      flex: 0.2,
-      field: 'asgined',
-      headerName: 'rutas buses',
-      renderCell: ({ row }: TypeCell) => {
-        return (
-         <>{rules.some((rule:any) => rule.name === 'Listar_buses_rutas-linea')? <>
-            <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => handleBusRoad(row)} />
-            <Typography noWrap variant="body2" sx={{ cursor: 'pointer' }} onClick={() => handleBusRoad(row)}> asignar o desasignar</Typography>
-          </>:<Typography variant="body2">No disponible</Typography>}</>
-        )
-      }
-    },
+    // {
+    //   flex: 0.2,
+    //   field: 'asgined',
+    //   headerName: 'rutas buses',
+    //   renderCell: ({ row }: TypeCell) => {
+    //     return (
+    //      <>{rules.some((rule:any) => rule.name === 'Listar_buses_rutas-linea')? <>
+    //         <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => handleBusRoad(row)} />
+    //         <Typography noWrap variant="body2" sx={{ cursor: 'pointer' }} onClick={() => handleBusRoad(row)}> asignar o desasignar</Typography>
+    //       </>:<Typography variant="body2">No disponible</Typography>}</>
+    //     )
+    //   }
+    // },
     {
       flex: 0.2,
       minWidth: 80,

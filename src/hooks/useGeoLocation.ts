@@ -6,7 +6,7 @@ interface Coords {
 }
 
 const useGeolocation = () => {
-  const [location, setLocation] = useState<Coords>({latitude:0,longitude:0});
+  const [location, setLocation] = useState<Coords>({latitude:-19.556974,longitude:-65.763460});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

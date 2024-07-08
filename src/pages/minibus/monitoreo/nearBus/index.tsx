@@ -46,7 +46,6 @@ const NearBus = ({open,toggle, linea}:Props) =>{
       socket.on('buses', handleBusesEvent);
 
       if (open) {
-        if (!error) {
           setIsLoading(true);
           setMessage('');
           setBuses([]);
@@ -56,8 +55,7 @@ const NearBus = ({open,toggle, linea}:Props) =>{
           };
 
           emitNearBus();
-          intervalId = setInterval(emitNearBus, 25000);
-        }
+          intervalId = setInterval(emitNearBus, 10000);
       }
 
       return () => {
