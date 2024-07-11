@@ -4,7 +4,7 @@ import { ChangeEvent, Fragment, ReactElement, Ref, forwardRef, useEffect, useSta
 import AddDrawMap from "src/components/addDrawMap";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import { useService } from "src/hooks/useService";
+// import { useService } from "src/hooks/useService";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "src/store";
 import { asignedBus, asignedHorario, desasignedBus, desasignedHorario, fetchData } from "src/store/apps/linea";
@@ -14,6 +14,7 @@ import { isImage } from "src/utils/verificateImg";
 import getConfig from 'src/configs/environment'
 import CustomRenderCell from "../../bus/profile";
 import Swal from "sweetalert2";
+import { apiService } from "src/store/services/apiService";
 
 interface Props {
   toggle: () => void;
@@ -326,7 +327,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
   const [selectionModel2, setSelectionModel2] = useState<GridSelectionModel>([]);
 
 
-  const { GetId, Get } = useService()
+  // const { GetId, Get } = useService()
   const dispatch = useDispatch<AppDispatch>()
 
   const toggleFilter = () => setOpenFilters(!openfilters)
@@ -334,8 +335,8 @@ const ViewHorario = ({ toggle, id }: Props) => {
   useEffect(() => {
     if (id) {
       const fetch = async () => {
-        const lineaDB = await GetId('/linea/lineaOne', id)
-        const response = await Get('/linea/allBusNotAsigned', { filter: '', skip: pageDesasigned * pageSizeDesasigned, limit: pageSizeDesasigned })
+        const lineaDB = await apiService.GetId('/linea/lineaOne', id)
+        const response = await apiService.Get('/linea/allBusNotAsigned', { filter: '', skip: pageDesasigned * pageSizeDesasigned, limit: pageSizeDesasigned })
         setBuses(response.data.result)
         setTotal(response.data.total)
         setLinea(lineaDB.data)
@@ -353,7 +354,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
         dispatch(fetchData())
         // setDataBus(response.payload.data.buses)
 
-        const res = await Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
+        const res = await apiService.Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
         // setBuses(res.data.result)
         setTotal(res.data.total)
       }
@@ -368,7 +369,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
         dispatch(fetchData())
         // setDataBus(response.payload.data.buses)
 
-        const res = await Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
+        const res = await apiService.Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
         // setBuses(res.data.result)
         setTotal(res.data.total)
       }
@@ -400,20 +401,20 @@ const ViewHorario = ({ toggle, id }: Props) => {
   }
   const handleResetFiltersAsigned = async () => {
     setFiltersAsigned(defaultFilter)
-    const lineaDB = await GetId('/linea/lineaOne', id)
+    const lineaDB = await apiService.GetId('/linea/lineaOne', id)
     setDataBus(lineaDB.data.buses)
     // dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }
 
 
   const handleFiltersDesasigned = async () => {
-    const res = await Get('/linea/allBusNotAsigned', { filter: filtersDesasigned })
+    const res = await apiService.Get('/linea/allBusNotAsigned', { filter: filtersDesasigned })
     setBuses(res.data.result)
     setTotal(res.data.total)
     // dispatch(fetchData({ filter: filters, skip: page * pageSize, limit: pageSize }))
   }
   const handleResetFiltersDesasigned = async () => {
-    const res = await Get('/linea/allBusNotAsigned', { filter: '', skip: pageDesasigned * pageSizeDesasigned, limit: pageSizeDesasigned })
+    const res = await apiService.Get('/linea/allBusNotAsigned', { filter: '', skip: pageDesasigned * pageSizeDesasigned, limit: pageSizeDesasigned })
     setBuses(res.data.result)
     setTotal(res.data.total)
     setFiltersDesasigned(defaultFilter)
@@ -437,7 +438,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
         dispatch(fetchData())
         // setDataBus(response.payload.data.buses)
 
-        const res = await Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
+        const res = await apiService.Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
         // setBuses(res.data.result)
         setTotal(res.data.total)
       }
@@ -456,7 +457,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
         dispatch(fetchData())
         // setDataBus(response.payload.data.buses)
 
-        const res = await Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
+        const res = await apiService.Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
         // setBuses(res.data.result)
         setTotal(res.data.total)
       }

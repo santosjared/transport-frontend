@@ -2,9 +2,10 @@ import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitl
 import { useEffect, useState } from "react"
 import { useDispatch } from "react-redux"
 import Icon from "src/@core/components/icon"
-import { useService } from "src/hooks/useService"
+// import { useService } from "src/hooks/useService"
 import { AppDispatch } from "src/store"
 import { addRol } from "src/store/apps/rol"
+import { apiService } from "src/store/services/apiService"
 import Swal from "sweetalert2"
 
 interface Props {
@@ -21,10 +22,10 @@ const AddRol = ({ open, toggle }: Props) => {
   const [errorName, setErrorName] = useState<string>('')
 
   const dispatch = useDispatch<AppDispatch>()
-  const { Get } = useService()
+  // const { Get } = useService()
   useEffect(() => {
     const fetchData = async () => {
-        const accesos = await Get('/componentes')
+        const accesos = await apiService.Get('/componentes')
       setAccesos(accesos.data);
     };
     fetchData();

@@ -9,13 +9,11 @@ import { format } from "date-fns"
 import CustomChip from 'src/@core/components/mui/chip'
 import Swal from "sweetalert2"
 import Dialogconfirme from "src/components/dialog/dialogconfirme"
-import { useService } from "src/hooks/useService"
 import { HttpStatus } from "src/utils/HttpStatus"
 import { useDispatch } from "react-redux"
 import { AppDispatch } from "src/store"
 import { fetchData } from "src/store/apps/bus"
-import DialogAlert from "src/views/apps/dialog/alert2"
-import SnackbarConsecutive from "src/views/apps/dialog/alert1"
+import { apiService } from "src/store/services/apiService"
 
 interface Props {
   open: boolean,
@@ -42,7 +40,6 @@ const Details = ({ open, toggle, data , busId, page, pageSize}: Props) => {
   const [isConfirmed, setIsConfirmed] = useState(false)
 
   const dispatch = useDispatch<AppDispatch>()
-  const {Update} = useService()
   useEffect(() => {
     if (data) {
       const image = async () => {
@@ -61,7 +58,7 @@ const Details = ({ open, toggle, data , busId, page, pageSize}: Props) => {
 
   useEffect(()=>{
     if(isConfirmed){
-      Update('/bus/designed',{},busId).then((response)=>{
+      apiService.Update('/bus/designed',{},busId).then((response)=>{
         if(response.status === HttpStatus.OK){
           toggle()
           dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))

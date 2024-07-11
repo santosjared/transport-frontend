@@ -10,11 +10,12 @@ import { useDispatch, useSelector } from 'react-redux'
 import MenuIcon from '@mui/icons-material/Menu';
 import ListTarifa from './tarifas'
 import ListHorario from './horario'
-import { useService } from 'src/hooks/useService'
+// import { useService } from 'src/hooks/useService'
 import ListStatusConnect from './statusconnect'
 import AnalyticsSalesCountry from './report'
 import ListRutas from './rutas'
 import NearBus from './nearBus'
+import { apiService } from 'src/store/services/apiService'
 
 interface openOptins {
   all:string;
@@ -82,16 +83,16 @@ const Monitoreo = () => {
   const toggleNearBus = () =>setOpenNearBus(!openNearBus)
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.linea)
-  const { GetId } = useService()
+  // const { GetId } = useService()
 
   useEffect(() => {
     dispatch(fetchData())
   }, [dispatch])
 
-  const {Get} = useService()
+  // const {Get} = useService()
   useEffect(()=>{
     const fetch = async() =>{
-      const response = await Get('/auth')
+      const response = await apiService.Get('/auth')
       if(response.data && response.data.access){
         const rule = response.data.access.find((element:any) => element.name === 'Listar-conexiones')
         setRutles(rule?rule.name:rule)
@@ -113,7 +114,7 @@ const Monitoreo = () => {
     if(key === options.roadr){
       toggleRuta()
     }
-    await GetId('/linea', value.id)
+    await apiService.GetId('/linea', value.id)
     toggle()
   }
 

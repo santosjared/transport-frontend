@@ -5,12 +5,13 @@ import Icon from "src/@core/components/icon";
 import AddDrawMap from "src/components/addDrawMap";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import { useService } from "src/hooks/useService";
+// import { useService } from "src/hooks/useService";
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "src/store";
 import { asignedRoad, desasignedRoad, fetchData } from "src/store/apps/linea";
 import Swal from "sweetalert2";
+import { apiService } from "src/store/services/apiService";
 
 interface Props {
   toggle: () => void;
@@ -156,15 +157,15 @@ const Rutas = ({ togglePrevia, toggle, id, SetSelectionRuta }: Props) => {
   const [roads, setRoads] = useState<any[]>([])
   const [dataRoad, setDataRoad] = useState<[]>([])
   const [linea, setLinea] = useState<any>({id:''})
-  const { GetId } = useService()
+  // const { GetId } = useService()
 
   const dispatch = useDispatch<AppDispatch>()
   useEffect(() => {
     if (id) {
       const fetch = async () => {
-        const lineaDB = await GetId('/linea/lineaOne', id)
+        const lineaDB = await apiService.GetId('/linea/lineaOne', id)
         if(lineaDB.data){
-          const response = await GetId('/linea/roads', lineaDB.data.id)
+          const response = await apiService.GetId('/linea/roads', lineaDB.data.id)
           const newdata = response.data.map((value: any, index: number) => ({
             ...value,
             nro: index + 1,
@@ -191,14 +192,14 @@ const Rutas = ({ togglePrevia, toggle, id, SetSelectionRuta }: Props) => {
   }
   const handleDesasigned = async (roaddata:any) => {
     try {
-      const busroad = await GetId('/bus/busroad', roaddata._id)
+      const busroad = await apiService.GetId('/bus/busroad', roaddata._id)
       if(!busroad.data){
         const response = await dispatch(desasignedRoad({ data: { road: [roaddata._id] }, id: linea.id }))
         if (response.payload.success) {
           dispatch(fetchData())
           setDataRoad(response.payload.data.road)
 
-          const res = await GetId('/linea/roads', linea.id)
+          const res = await apiService.GetId('/linea/roads', linea.id)
           setRoads(res.data)
         }
       }
@@ -217,7 +218,7 @@ const Rutas = ({ togglePrevia, toggle, id, SetSelectionRuta }: Props) => {
         dispatch(fetchData())
         setDataRoad(response.payload.data.road)
 
-        const res = await GetId('/linea/roads', linea.id)
+        const res = await apiService.GetId('/linea/roads', linea.id)
         setRoads(res.data)
       }
     } catch (error) { } finally {

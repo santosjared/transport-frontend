@@ -1,23 +1,46 @@
-# Usa una imagen base oficial de Node.js
-FROM node:18-alpine
+# Development Stage
+FROM node:18-alpine AS development
 
-# Establece el directorio de trabajo
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copia el archivo package.json y package-lock.json
 COPY package*.json ./
 
-# Instala las dependencias
-RUN npm install
+RUN npm install --force --legacy-peer-deps
 
-# Copia el resto de los archivos de la aplicación
 COPY . .
 
-# Construye la aplicación Next.js
+EXPOSE 3000
+
+
+CMD ["npm", "run", "dev"]
+
+# Builder Stage
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install --force --legacy-peer-deps
+
+COPY . .
+
 RUN npm run build
 
-# Expone el puerto en el que se ejecutará la aplicación
-EXPOSE 4001
+# Production Stage
 
-# Comando para ejecutar la aplicación
-CMD ["npm", "run", "start"]
+FROM node:18-alpine AS production
+
+WORKDIR /app
+
+# Copy the built artifacts from the builder stage
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+# Set the environment variables (if needed)
+ENV NODE_ENV=production
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]

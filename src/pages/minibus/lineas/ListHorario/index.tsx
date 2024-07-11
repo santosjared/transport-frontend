@@ -5,12 +5,13 @@ import Icon from "src/@core/components/icon";
 import AddDrawMap from "src/components/addDrawMap";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import { useService } from "src/hooks/useService";
+// import { useService } from "src/hooks/useService";
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "src/store";
 import { asignedHorario, desasignedHorario, fetchData } from "src/store/apps/linea";
 import ListDays from "../../horario/days";
+import { apiService } from "src/store/services/apiService";
 
 interface Props {
   toggle: () => void;
@@ -155,16 +156,16 @@ const ViewHorario = ({ toggle, id }: Props) => {
   const [linea, setLinea] = useState<any>({id:''})
   const [openDays, setOpenDays] = useState(false)
   const [data,setdata] = useState<any>()
-  const { GetId } = useService()
+  // const { GetId } = useService()
 
   const dispatch = useDispatch<AppDispatch>()
   const toggleDays = () =>setOpenDays(!openDays)
   useEffect(() => {
     if (id) {
       const fetch = async () => {
-        const lineaDB = await GetId('/linea/lineaOne', id)
+        const lineaDB = await apiService.GetId('/linea/lineaOne', id)
         if(lineaDB.data){
-          const response = await GetId('/linea/horarios', lineaDB.data.id)
+          const response = await apiService.GetId('/linea/horarios', lineaDB.data.id)
           const newdata = response.data.map((value: any, index: number) => ({
             ...value,
             nro: index + 1,
@@ -192,7 +193,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
         dispatch(fetchData())
         setDatahorario(response.payload.data.horario)
 
-        const res = await GetId('/linea/horarios', linea.id)
+        const res = await apiService.GetId('/linea/horarios', linea.id)
         sethorarios(res.data)
       }
     } catch (error) { } finally {
@@ -206,7 +207,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
         dispatch(fetchData())
         setDatahorario(response.payload.data.horario)
 
-        const res = await GetId('/linea/horarios', linea.id)
+        const res = await apiService.GetId('/linea/horarios', linea.id)
         sethorarios(res.data)
       }
     } catch (error) { } finally {

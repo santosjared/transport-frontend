@@ -24,7 +24,7 @@ import ListItemAvatar from '@mui/material/ListItemAvatar'
 import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction'
 import Icon from 'src/@core/components/icon'
 import { Divider, FormControl } from '@mui/material'
-import { useService } from 'src/hooks/useService'
+// import { useService } from 'src/hooks/useService'
 import { useQuery } from 'react-query'
 import getConfig from 'src/configs/environment'
 import { useDispatch } from 'react-redux'
@@ -34,6 +34,7 @@ import { fetchDataUser } from 'src/store/apps/bus/fectchUsers'
 import { HttpStatus } from 'src/utils/HttpStatus'
 import Swal from 'sweetalert2'
 import { fetchData } from 'src/store/apps/rol'
+import { apiService } from 'src/store/services/apiService'
 
 
 interface Props{
@@ -51,13 +52,13 @@ const Transition = forwardRef(function Transition(
 const UsersRol = ({open, toggle,data}:Props)=>{
   const dispatch = useDispatch<AppDispatch>()
   const [value, setValue] = useState<string>('')
-    const {Update}=useService()
+    // const {Update}=useService()
     const handleFilter = useCallback((val: string) => {
       dispatch(fetchDataUser({filter:val}))
       setValue(val)
     }, [])
     const handledesasignedUser = (userId:number | string)=>{
-      Update('/users/desasignedrol', {idrol:data.id}, userId).then((respose)=>{
+      apiService.Update('/users/desasignedrol', {idrol:data.id}, userId).then((respose)=>{
         if(respose.status==HttpStatus.OK){
           dispatch(fetchData())
           toggle()

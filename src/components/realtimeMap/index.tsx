@@ -5,7 +5,7 @@ import 'leaflet-defaulticon-compatibility';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
 import { useSocket } from 'src/hooks/useSocket';
 import getConfig from 'src/configs/environment';
-import type { FeatureCollection } from 'geojson';
+// import type { FeatureCollection } from 'geojson';
 import { getThreeDigits } from 'src/@core/utils/get-initials'
 
 interface Props {
@@ -22,7 +22,7 @@ const RealtimeMap: React.FC<Props> = ({ center, id, road }) => {
     const [linea, setLinea] = useState<[]>([])
     useEffect(()=>{
         socket?.on('updateLocations', (data) => {
-          console.log(data)
+          // console.log(data)
             if(id){
                 const newdata = data.filter((newLinea: { id: string; }) => newLinea.id === id);
                 setLinea(newdata)

@@ -34,7 +34,7 @@ import { AppDispatch, RootState } from 'src/store'
 import { useSelector } from 'react-redux'
 import { addRol, deleteRol, fetchData } from 'src/store/apps/rol'
 import getConfig from 'src/configs/environment'
-import { useService } from 'src/hooks/useService'
+// import { useService } from 'src/hooks/useService'
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Menu, MenuItem } from '@mui/material'
 import UsersNotRol from './users'
@@ -43,6 +43,7 @@ import AddRol from './addRol'
 import EditRol from './editRol'
 import { deleteLinea } from 'src/store/apps/linea'
 import Swal from 'sweetalert2'
+import { apiService } from 'src/store/services/apiService'
 
 const RolesCards = () => {
   // ** States
@@ -69,10 +70,10 @@ const RolesCards = () => {
     dispatch(fetchData())
   }, [dispatch])
 
-  const {Get} = useService()
+  // const {Get} = useService()
   useEffect(() => {
     const fetch = async () => {
-      const response = await Get('/auth')
+      const response = await apiService.Get('/auth')
       if (response.data && response.data.access) {
         setRules(response.data.access)
       }

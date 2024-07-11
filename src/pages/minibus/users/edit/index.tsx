@@ -19,9 +19,10 @@ import { isPhoneValidate } from "src/utils/validator";
 import { calculateYearsBetweenDates } from "src/utils/calculateYears";
 import { HttpStatus } from "src/utils/HttpStatus";
 import Swal from "sweetalert2";
-import { useService } from "src/hooks/useService";
+// import { useService } from "src/hooks/useService";
 import { isImage } from "src/utils/verificateImg";
 import getConfig from 'src/configs/environment'
+import { apiService } from "src/store/services/apiService";
 
 interface FormErrors {
   name?: string;
@@ -134,12 +135,12 @@ const EditUser = ({ toggle, id, store }: Props) => {
   const [licenceId, setLicenceId] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  const { GetId } = useService()
+  // const { GetId } = useService()
   const dispatch = useDispatch<AppDispatch>()
   useEffect(() => {
     if (id) {
       const fetch = async () => {
-        const response = await GetId('/users', id)
+        const response = await apiService.GetId('/users', id)
 
         const UserData = {
           profile: response.data.profile,
@@ -171,7 +172,7 @@ const EditUser = ({ toggle, id, store }: Props) => {
         })
         if (response.data.licenceId) {
           setOnAddLicence(true)
-          const licence = await GetId('/licencia', response.data.licenceId.toString())
+          const licence = await apiService.GetId('/licencia', response.data.licenceId.toString())
           const LicenceData = {
             category: licence.data.category,
             dateEmition: licence.data.dateEmition,

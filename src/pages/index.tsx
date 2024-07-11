@@ -25,6 +25,8 @@ const Home = () => {
   const router = useRouter()
 
   const paths = usePaths()
+
+  // console.log(paths)
   useEffect(() => {
     if (!router.isReady) {
       return

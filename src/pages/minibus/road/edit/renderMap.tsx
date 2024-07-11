@@ -17,32 +17,36 @@ interface Props{
     setGeojson: (geojson: FeatureCollection) => void;
 }
 const RenderMap = ({geojson,setGeojson,center,setCenter,setZoom,zoom,setHandleChanges,names,setNames,isProcessingQueue,setIsProcessingQueue}:Props)=>{
-  const DrawMap = useMemo(()=>dynamic(()=>import('../drawMap')),[geojson])
-  const Map = useMemo(() => dynamic(
-    () => import('../../../../components/map'),
-    {
-      loading: () => <p>Cargando la Mapa</p>,
-      ssr: false
-    }
-  ), [location])
-    return(
-          <Map
-          center={center}
-          setPosition={setCenter}
-          setZoom={setZoom}
-          zoom = {zoom}
-          setHandleChanges={setHandleChanges}
-          >
-            <DrawMap
-            names={names}
-            setNames={setNames}
-            isProcessingQueue={isProcessingQueue}
-            setIsProcessingQueue={setIsProcessingQueue}
-            geojson={geojson}
-            setGeojson={setGeojson}
-            setHandleChanges={setHandleChanges}
-            />
-          </Map>
+//   const DrawMap = useMemo(()=>dynamic(()=>import('../drawMap'),
+//   {
+//     loading: () => <p>Cargando la Mapa</p>,
+//     ssr: false
+//   }
+// ),[geojson])
+//   const Map = useMemo(() => dynamic(
+//     () => import('../../../../components/map'),
+//     {
+//       loading: () => <p>Cargando la Mapa</p>,
+//       ssr: false
+//     }
+//   ), [location])
+    return(<></>
+          // <Map
+          // center={center}
+          // setPosition={setCenter}
+          // setZoom={setZoom}
+          // zoom = {zoom}
+          // setHandleChanges={setHandleChanges}
+          // >
+          //   <DrawMap
+          //   names={names}
+          //   setNames={setNames}
+          //   isProcessingQueue={isProcessingQueue}
+          //   geojson={geojson}
+          //   setGeojson={setGeojson}
+          //   setHandleChanges={setHandleChanges}
+          //   />
+          // </Map>
     )
 }
 export default RenderMap

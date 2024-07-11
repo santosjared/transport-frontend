@@ -4,7 +4,7 @@ import { DataGrid } from "@mui/x-data-grid"
 import { useQuery } from "react-query"
 import AddDraw from "src/components/addDraw"
 import TableHeader from "src/components/tableHeader"
-import { useService } from "src/hooks/useService"
+// import { useService } from "src/hooks/useService"
 import RegisterHorario from "./register"
 import CustomChip from 'src/@core/components/mui/chip'
 import { useDispatch, useSelector } from "react-redux"
@@ -16,6 +16,7 @@ import ListDays from './days'
 import EditHorario from './edit'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import { apiService } from 'src/store/services/apiService'
 
 interface horarioData {
   id: string
@@ -229,10 +230,10 @@ const Horario = () => {
     setFilters(defaultFilter)
     dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }
-  const {Get} = useService()
+  // const {Get} = useService()
   useEffect(() => {
     const fetch = async () => {
-      const response = await Get('/auth')
+      const response = await apiService.Get('/auth')
       if (response.data && response.data.access) {
         setRules(response.data.access)
       }

@@ -11,7 +11,7 @@ import { useDispatch } from 'react-redux';
 import { AppDispatch } from 'src/store';
 import { Autocomplete, Card, CardMedia, Grid, IconButton, InputLabel, MenuItem, Paper, Select, SelectChangeEvent, Typography, makeStyles } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { useService } from 'src/hooks/useService';
+// import { useService } from 'src/hooks/useService';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { markersBus } from 'src/utils/markerBus';
 import { typesBus } from 'src/utils/typeBus';

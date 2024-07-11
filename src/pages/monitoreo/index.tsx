@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Icon from "src/@core/components/icon";
 import BlankLayout from "src/@core/layouts/BlankLayout"
 import useGeolocation from "src/hooks/useGeoLocation";
-import { useService } from "src/hooks/useService";
+// import { useService } from "src/hooks/useService";
 import { AppDispatch, RootState } from "src/store";
 import MenuIcon from '@mui/icons-material/Menu';
 import { fetchData } from "src/store/apps/bus";
@@ -17,6 +17,7 @@ import ListTarifa from "../minibus/monitoreo/tarifas";
 import NearBus from "../minibus/monitoreo/nearBus";
 import getConfig from 'src/configs/environment';
 import axios from "axios";
+import { apiService } from "src/store/services/apiService";
 
 interface openOptins {
   all:string;
@@ -86,7 +87,7 @@ const Monitoreo = () => {
   const toggleNearBus = () =>setOpenNearBus(!openNearBus)
   const dispatch = useDispatch<AppDispatch>()
   // const store = useSelector((state: RootState) => state.linea)
-  const { GetId } = useService()
+  // const { GetId } = useService()
   useEffect(() => {
     // dispatch(fetchData())
     const fetch = async()=>{
@@ -97,10 +98,10 @@ const Monitoreo = () => {
   },
   [dispatch])
 
-  const {Get} = useService()
+  // const {Get} = useService()
   useEffect(()=>{
     const fetch = async() =>{
-      const response = await Get('/auth')
+      const response = await apiService.Get('/auth')
       if(response.data && response.data.access){
         const rule = response.data.access.find((element:any) => element.name === 'Listar-conexiones')
         setRutles(rule?rule.name:rule)
@@ -122,7 +123,7 @@ const Monitoreo = () => {
     if(key === options.roadr){
       toggleRuta()
     }
-    await GetId('/linea', value.id)
+    await apiService.GetId('/linea', value.id)
     toggle()
   }
 

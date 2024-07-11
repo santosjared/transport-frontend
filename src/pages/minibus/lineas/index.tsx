@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, MouseEvent, ChangeEvent } from "react
 import { useQuery } from "react-query"
 import AddDraw from "src/components/addDraw"
 import TableHeader from "src/components/tableHeader"
-import { useService } from "src/hooks/useService"
+// import { useService } from "src/hooks/useService"
 import AddLinea from "./register"
 import { useDispatch } from "react-redux"
 import { AppDispatch, RootState } from "src/store"
@@ -21,7 +21,8 @@ import Swal from "sweetalert2"
 import EditLinea from "./edit"
 import FilterListIcon from '@mui/icons-material/FilterList';
 import Rutas from "./rutas"
-import BusRoad from "./busroad"
+import { apiService } from "src/store/services/apiService"
+// import BusRoad from "./busroad"
 
 interface LineaData {
   id: string;
@@ -283,10 +284,10 @@ const Lineas = () => {
     setLinea(data)
     toggleBusRuta()
   }
-  const {Get} = useService()
+  // const {Get} = useService()
   useEffect(() => {
     const fetch = async () => {
-      const response = await Get('/auth')
+      const response = await apiService.Get('/auth')
       if (response.data && response.data.access) {
         setRules(response.data.access)
       }
@@ -314,9 +315,9 @@ const Lineas = () => {
   if (openBus) {
     return (<ViewBus toggle={toggleBus} id={idLinea} />)
   }
-  if(openBusRoad){
-    return(<BusRoad togglePrevia={togglePrevia} toggle={toggleBusRuta} data={lineaData} SetSelectionRuta={setSelectionRuta}/>)
-  }
+  // if(openBusRoad){
+  //   return(<BusRoad togglePrevia={togglePrevia} toggle={toggleBusRuta} data={lineaData} SetSelectionRuta={setSelectionRuta}/>)
+  // }
   if (openPrevia) {
     return (
       <ViewMap data={selectionRuta} onClose={togglePrevia} toggleRutas={toggleBusRuta} />

@@ -1,15 +1,13 @@
 // ** Type import
 import { useEffect, useState } from 'react'
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
-import { useService } from 'src/hooks/useService'
+import { apiService } from 'src/store/services/apiService'
 
 const navigation = (): VerticalNavItemsType => {
   const [rules,setRules] = useState<string[]>([])
-
-  const {Get} = useService()
   useEffect(() => {
     const fetch = async () => {
-      const response = await Get('/auth')
+      const response = await apiService.Get('/auth')
       if (response.data && response.data.access) {
         setRules(response.data.access)
       }

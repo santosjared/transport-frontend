@@ -5,12 +5,13 @@ import Icon from "src/@core/components/icon";
 import AddDrawMap from "src/components/addDrawMap";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import { useService } from "src/hooks/useService";
+// import { useService } from "src/hooks/useService";
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "src/store";
 import { asignedHorario, asignedTarifa, desasignedTarifa, fetchData } from "src/store/apps/linea";
 import ListTarifa from "../../tarifas/list";
+import { apiService } from "src/store/services/apiService";
 
 interface Props {
   toggle: () => void;
@@ -152,16 +153,16 @@ const ViewTarifa = ({ toggle, id }: Props) => {
   const [linea, setLinea] = useState<any>({id:''})
   const [openTrifa, setOpenTarifa] = useState(false)
   const [data,setdata] = useState<any>()
-  const { GetId } = useService()
+  // const { GetId } = useService()
 
   const dispatch = useDispatch<AppDispatch>()
   const toggleTarifa = () =>setOpenTarifa(!openTrifa)
   useEffect(() => {
     if (id) {
       const fetch = async () => {
-        const lineaDB = await GetId('/linea/lineaOne', id)
+        const lineaDB = await apiService.GetId('/linea/lineaOne', id)
         if(lineaDB.data){
-          const response = await GetId('/linea/tarifa', lineaDB.data.id)
+          const response = await apiService.GetId('/linea/tarifa', lineaDB.data.id)
           const newdata = response.data.map((value: any, index: number) => ({
             ...value,
             nro: index + 1,
@@ -189,7 +190,7 @@ const ViewTarifa = ({ toggle, id }: Props) => {
         dispatch(fetchData())
         setDataTarifa(response.payload.data.rate)
 
-        const res = await GetId('/linea/tarifa', linea.id)
+        const res = await apiService.GetId('/linea/tarifa', linea.id)
         setTarifas(res.data)
       }
     } catch (error) { } finally {
@@ -203,7 +204,7 @@ const ViewTarifa = ({ toggle, id }: Props) => {
         dispatch(fetchData())
         setDataTarifa(response.payload.data.rate)
 
-        const res = await GetId('/linea/tarifa', linea.id)
+        const res = await apiService.GetId('/linea/tarifa', linea.id)
         setTarifas(res.data)
       }
     } catch (error) { } finally {

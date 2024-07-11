@@ -13,11 +13,10 @@ interface Props {
   setGeojson: (geojson: FeatureCollection) => void;
   isProcessingQueue: boolean;
   names: string[];
-  setIsProcessingQueue: (state: boolean) => void;
   setNames: (names: string[]) => void;
 }
 
-const DrawMap = ({ geojson, setGeojson, setHandleChanges, isProcessingQueue, setIsProcessingQueue, names, setNames }: Props) => {
+const DrawMap = ({ geojson, setGeojson, setHandleChanges, isProcessingQueue, names, setNames }: Props) => {
   const ref = useRef<L.FeatureGroup>(null);
 
   useEffect(() => {

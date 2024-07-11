@@ -1,21 +1,22 @@
 import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axiosInstance from '../../instancesAxios'
-import { useService } from 'src/hooks/useService'
+import { apiService } from 'src/store/services/apiService'
+// import { useService } from 'src/hooks/useService'
 
 interface Redux {
   dispatch: Dispatch<any>
 }
 export const fetchData = createAsyncThunk('appDevice/fetchDevice', async () => {
-    const {Get} = useService()
-    const response = await Get('/divice')
+    // const {Get} = useService()
+    const response = await apiService.Get('/divice')
     return response.data
 })
 
 export const addDevice = createAsyncThunk('appDevice/addDevice',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
-    const {Post}= useService()
-    const response = await Post('/divice', data) 
+    // const {Post}= useService()
+    const response = await apiService.Post('/divice', data)
     dispatch(fetchData())
     return response.data
   }
@@ -23,16 +24,16 @@ export const addDevice = createAsyncThunk('appDevice/addDevice',
 
 export const deleteDevice = createAsyncThunk('appDevice/deleteDevice',
   async (id: number | string, {dispatch }: Redux) => {
-    const {Delete} = useService()
-    const response = await Delete('/divice', id)
+    // const {Delete} = useService()
+    const response = await apiService.Delete('/divice', id)
     dispatch(fetchData())
     return response.data
   }
 )
 export const assignUser = createAsyncThunk('appassignUser/assignUser',
     async (data: { [key: string]: any }, {dispatch}:Redux)=>{
-        const {Update} = useService()
-        const response = Update('/divice/user', data, data.id)
+        // const {Update} = useService()
+        const response = apiService.Update('/divice/user', data, data.id)
         dispatch(fetchData())
         return response
     }
@@ -54,10 +55,10 @@ export const appUsersSlice = createSlice({
         state.isError = false;
     })
     .addCase(fetchData.fulfilled, (state, action) => {
-        state.isLoading = false; 
-        state.isSuccess = true;  
-        state.isError = false;   
-        state.data = action.payload; 
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.data = action.payload;
     })
     .addCase(fetchData.rejected, (state) => {
         state.isLoading = false;

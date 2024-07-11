@@ -7,7 +7,7 @@ import Stack from '@mui/material/Stack';
 import { Box, Button, Checkbox, FormControl, FormHelperText } from '@mui/material';
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { useService } from 'src/hooks/useService';
+// import { useService } from 'src/hooks/useService';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { useDispatch } from 'react-redux';
@@ -22,6 +22,7 @@ import { isImage } from 'src/utils/verificateImg';
 import getConfig from 'src/configs/environment'
 import Swal from 'sweetalert2';
 import RenderImg from '../cuntomphoto';
+import { apiService } from 'src/store/services/apiService';
 
 interface Props {
   toggle: () => void
@@ -49,7 +50,7 @@ const AddLinea = ({ toggle }: Props) => {
 
   const [isLoading,setIsLoading] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
-  const {Get } = useService()
+  // const {Get } = useService()
 
   const storeHorario = useSelector((state:RootState)=>state.horario)
   const storeTarifa = useSelector((state:RootState)=>state.tarifa)
@@ -57,7 +58,7 @@ const AddLinea = ({ toggle }: Props) => {
 
   useEffect(() => {
     const fetch = async () => {
-      const response = await Get('/linea/allBusNotAsigned')
+      const response = await apiService.Get('/linea/allBusNotAsigned')
       setBusdata(response.data.result)
     }
     fetch();

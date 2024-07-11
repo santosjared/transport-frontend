@@ -24,7 +24,7 @@ import ListItemAvatar from '@mui/material/ListItemAvatar'
 import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction'
 import Icon from 'src/@core/components/icon'
 import { Divider, FormControl } from '@mui/material'
-import { useService } from 'src/hooks/useService'
+// import { useService } from 'src/hooks/useService'
 import { useQuery } from 'react-query'
 import getConfig from 'src/configs/environment'
 import { useDispatch } from 'react-redux'
@@ -34,6 +34,7 @@ import { fetchData } from 'src/store/apps/bus'
 import { fetchDataUser } from 'src/store/apps/bus/fectchUsers'
 import { HttpStatus } from 'src/utils/HttpStatus'
 import Swal from 'sweetalert2'
+import { apiService } from 'src/store/services/apiService'
 
 
 interface Props{
@@ -54,7 +55,7 @@ const DialogUsers = ({open, toggle,id, page,pageSize}:Props)=>{
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state:RootState)=>state.userAndBus)
   const [value, setValue] = useState<string>('')
-    const {Update}=useService()
+    // const {Update}=useService()
     const handleFilter = useCallback((val: string) => {
       dispatch(fetchDataUser({filter:val}))
       setValue(val)
@@ -68,7 +69,7 @@ const DialogUsers = ({open, toggle,id, page,pageSize}:Props)=>{
         id:id,
         userId:userId
       }
-      Update('/bus/user', data, id).then((respose)=>{
+      apiService.Update('/bus/user', data, id).then((respose)=>{
         if(respose.status==HttpStatus.OK){
           dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
           toggle()

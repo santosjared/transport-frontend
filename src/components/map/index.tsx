@@ -1,7 +1,7 @@
 import "leaflet/dist/leaflet.css"
 import "leaflet-defaulticon-compatibility"
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css"
-import { MapContainer, TileLayer, GeoJSON, useMapEvent, useMapEvents, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, useMapEvent} from "react-leaflet";
 import { ReactNode, memo, useEffect, useRef, useState } from "react";
 import type { FeatureCollection } from 'geojson';
 import { LatLngBounds, LatLng, Point } from "leaflet";
@@ -25,7 +25,7 @@ const Map = memo(({ geoJSON, center, children, setPosition, setZoom , zoom,setHa
       const zoom = mapRef.current!.getZoom();
       if (setZoom) {
         if(setHandleChanges){
-          setHandleChanges(true) 
+          setHandleChanges(true)
         }
         setZoom(zoom);
       }

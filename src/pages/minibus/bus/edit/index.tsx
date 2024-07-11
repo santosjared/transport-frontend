@@ -11,7 +11,7 @@ import { useDispatch } from 'react-redux';
 import { AppDispatch } from 'src/store';
 import { Autocomplete, Card, CardMedia, Grid, IconButton, InputLabel, MenuItem, Paper, Select, SelectChangeEvent, Typography, makeStyles } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { useService } from 'src/hooks/useService';
+// import { useService } from 'src/hooks/useService';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { markersBus } from 'src/utils/markerBus';
 import { typesBus } from 'src/utils/typeBus';
@@ -22,6 +22,7 @@ import { addBus, updateBus } from 'src/store/apps/bus';
 import Swal from 'sweetalert2';
 import { isImage } from 'src/utils/verificateImg';
 import getConfig from 'src/configs/environment';
+import { apiService } from 'src/store/services/apiService';
 
 
 const status = ['Activo', 'En mantenimiento', 'Inactivo', 'Otro']
@@ -96,11 +97,11 @@ const EditBus = ({ toggle ,id, store, page, pageSize}: Props) => {
     const [ruatFile, setRuatFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(false)
 
-    const {GetId} = useService()
+    // const {GetId} = useService()
     useEffect(()=>{
         if(id){
             const fetch = async()=>{
-                const response = await GetId('/bus',id)
+                const response = await apiService.GetId('/bus',id)
 
                 const busData = {
                     trademark: response.data.trademark,

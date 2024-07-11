@@ -1,10 +1,12 @@
 // services/apiService.ts
 import { instance } from 'src/configs/instances';
+import { getDecryptedItem } from 'src/utils/crypto';
+import authConfig from 'src/configs/auth';
 import { HttpStatus } from 'src/utils/HttpStatus';
 
 const getToken = () => {
   // Aquí deberías usar tu lógica para obtener el token de almacenamiento local
-  return localStorage.getItem('authToken');
+  return getDecryptedItem(authConfig.storageTokenKeyName);
 };
 
 export const getHeaders = (data: { [key: string]: any }) => {

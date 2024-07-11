@@ -14,7 +14,8 @@ import ReactApexcharts from 'src/@core/components/react-apexcharts'
 // ** Util Import
 import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
 import { useEffect, useState } from 'react'
-import { useService } from 'src/hooks/useService'
+import { apiService } from 'src/store/services/apiService'
+// import { useService } from 'src/hooks/useService'
 
 
 const AnalyticsSalesCountry = ({linadta}:{linadta:any}) => {
@@ -24,7 +25,7 @@ const AnalyticsSalesCountry = ({linadta}:{linadta:any}) => {
   const [names,setNames] = useState<string[]>([])
   const [total,setTotal] = useState<number>(0)
 
-  const {Get} = useService()
+  // const {Get} = useService()
 
   const series = [
     {
@@ -34,7 +35,7 @@ const AnalyticsSalesCountry = ({linadta}:{linadta:any}) => {
   ]
   useEffect(()=>{
     const fetch = async()=>{
-      const response = await Get('/linea/requests')
+      const response = await apiService.Get('/linea/requests')
       if(response && response.data){
         const requests = response.data.result.map((data:any)=>{
           return data.request

@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 
 // ** Hooks Import
 import { useAuth } from 'src/hooks/useAuth';
-import useEncryptedStorage from 'src/hooks/useCrypto';
+import { getDecryptedItem } from 'src/utils/crypto';
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -17,7 +17,7 @@ const AuthGuard = (props: AuthGuardProps) => {
   const { children, fallback } = props;
   const auth = useAuth();
   const router = useRouter();
-  const { getDecryptedItem } = useEncryptedStorage();
+  // const { getDecryptedItem } = useEncryptedStorage();
 
   useEffect(() => {
     if (!router.isReady) {

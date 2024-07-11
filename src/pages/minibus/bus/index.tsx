@@ -22,7 +22,8 @@ import Icon from "src/@core/components/icon"
 import Details from './details'
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CustomRenderCell from './profile'
-import { useService } from 'src/hooks/useService'
+import { apiService } from 'src/store/services/apiService'
+// import { useService } from 'src/hooks/useService'
 
 interface UsersType {
   name: string;
@@ -348,10 +349,10 @@ const Bus = () => {
 
   const [id,setId] = useState('')
 
-  const {Get} = useService()
+  // const {Get} = useService()
   useEffect(() => {
     const fetch = async () => {
-      const response = await Get('/auth')
+      const response = await apiService.Get('/auth')
       if (response.data && response.data.access) {
         setRules(response.data.access)
       }

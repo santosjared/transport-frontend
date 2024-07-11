@@ -1,6 +1,6 @@
 import { Dispatch } from 'redux'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { useService } from 'src/hooks/useService'
+// import { useService } from 'src/hooks/useService'
 import { HttpStatus } from 'src/utils/HttpStatus'
 import { apiService } from 'src/store/services/apiService'
 

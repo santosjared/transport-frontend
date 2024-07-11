@@ -3,8 +3,9 @@ import { useRouter } from 'next/router';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import authConfig from 'src/configs/auth';
-import useEncryptedStorage from 'src/hooks/useCrypto';
+// import useEncryptedStorage from 'src/hooks/useCrypto';
 import { AuthValuesType, RegisterParams, LoginParams, ErrCallbackType, UserDataType } from './types';
+import { getDecryptedItem, setEncryptedItem } from 'src/utils/crypto';
 
 const defaultProvider: AuthValuesType = {
   user: null,
@@ -26,7 +27,7 @@ const AuthProvider = ({ children }: Props) => {
   const [user, setUser] = useState<UserDataType | null>(defaultProvider.user);
   const [loading, setLoading] = useState<boolean>(defaultProvider.loading);
   const router = useRouter();
-  const { getDecryptedItem, setEncryptedItem } = useEncryptedStorage();
+  // const { getDecryptedItem, setEncryptedItem } = useEncryptedStorage();
 
   useEffect(() => {
     const initAuth = async (): Promise<void> => {

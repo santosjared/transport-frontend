@@ -1,3 +1,4 @@
+'use client'
 import { Box, BoxProps, Button, Card, CardContent, Checkbox, Divider, FormControl, Grid, IconButton, LinearProgress, TextField, Typography } from '@mui/material';
 import type { FeatureCollection } from 'geojson';
 import { FormEvent, Fragment, useEffect, useState } from 'react';

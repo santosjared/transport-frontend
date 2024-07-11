@@ -2,9 +2,10 @@ import { Box, Dialog, DialogContent, Fade, FadeProps, FormControl, IconButton, L
 import { ReactElement, Ref, forwardRef, useEffect, useState } from "react"
 import { useDispatch } from "react-redux"
 import Icon from "src/@core/components/icon"
-import { useService } from "src/hooks/useService"
+// import { useService } from "src/hooks/useService"
 import { AppDispatch } from "src/store"
 import { asignedRoad } from "src/store/apps/linea"
+import { apiService } from "src/store/services/apiService"
 import Swal from "sweetalert2"
 
 interface Props {
@@ -20,12 +21,12 @@ const Transition = forwardRef(function Transition(
   })
 const ListRoad = ({id,open,toggle}:Props)=>{
     const [data,setData] = useState<any[]>([])
-    const {Get} = useService()
+    // const {Get} = useService()
     const dispatch = useDispatch<AppDispatch>()
-    
+
     useEffect(()=>{
         const fetch = async() =>{
-            const response = await Get('/road')
+            const response = await apiService.Get('/road')
             setData(response.data.result)
         }
         fetch()
@@ -66,7 +67,7 @@ const ListRoad = ({id,open,toggle}:Props)=>{
             </Typography>
           </Box>
           <FormControl fullWidth sx={{mb:6}}>
-            <TextField 
+            <TextField
             label='Buscar Lineas'
             />
           </FormControl>

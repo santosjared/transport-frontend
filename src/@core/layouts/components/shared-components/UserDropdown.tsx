@@ -9,7 +9,6 @@ import Box from '@mui/material/Box'
 import Menu from '@mui/material/Menu'
 import Badge from '@mui/material/Badge'
 import Avatar from '@mui/material/Avatar'
-import Divider from '@mui/material/Divider'
 import MenuItem from '@mui/material/MenuItem'
 import { styled } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
@@ -22,7 +21,7 @@ import { useAuth } from 'src/hooks/useAuth'
 
 // ** Type Imports
 import { Settings } from 'src/@core/context/settingsContext'
-import { useService } from 'src/hooks/useService'
+import { apiService } from 'src/store/services/apiService'
 
 interface Props {
   settings: Settings
@@ -44,17 +43,16 @@ const UserDropdown = (props: Props) => {
   // ** States
   const [anchorEl, setAnchorEl] = useState<Element | null>(null)
   const [info,setInfo] = useState<any>()
-  const {Get} = useService()
+  // const {Get} = useService()
   useEffect(() => {
     const fetch = async () => {
-      const response = await Get('/auth')
+      const response = await apiService.Get('/auth')
       if (response.data) {
         setInfo(response.data)
       }
     }
     fetch()
   }, [])
-  console.log(info)
   // ** Hooks
   const router = useRouter()
   const { logout } = useAuth()
