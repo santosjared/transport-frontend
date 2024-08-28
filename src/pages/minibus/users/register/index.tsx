@@ -2,7 +2,7 @@ import { Autocomplete, Avatar, Box, Button, Card, CardMedia, Divider, FormContro
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
-import { ChangeEvent, FormEvent, useState } from "react"
+import { ChangeEvent, FormEvent, useEffect, useState } from "react"
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -15,11 +15,11 @@ import { addLicenceDriver } from "src/store/apps/licence-driver";
 import AddIcon from '@mui/icons-material/Add';
 import KeyboardControlKeyIcon from '@mui/icons-material/KeyboardControlKey';
 import { AppDispatch } from "src/store";
-import { contrys } from "src/utils/contrys";
 import { isPhoneValidate } from "src/utils/validator";
 import { calculateYearsBetweenDates } from "src/utils/calculateYears";
 import { HttpStatus } from "src/utils/HttpStatus";
 import Swal from "sweetalert2";
+import { apiService } from "src/store/services/apiService";
 
 interface FormErrors {
   name?: string;
@@ -40,15 +40,10 @@ interface Props {
   pageSize: number
 }
 
-const genders = [
-  'Masculino',
-  'Femenina',
-  'Otro'
-]
 interface liceneTypes {
   category: string
-  dateEmition: Date | null
-  dateExpire: Date | null
+  dateEmition: any
+  dateExpire: any
   licenceFront: File | null
   licenceBack: File | null
 }
@@ -61,7 +56,7 @@ interface userTypes {
   ci: string,
   phone: string,
   address: string,
-  contry: string,
+  contry: any,
   password: string,
   licenceId: string | null,
   otherGender: string
@@ -70,20 +65,20 @@ const defaultUserData = {
   profile: null,
   name: '',
   lastName: '',
-  gender: genders[0],
+  gender: '',
   email: '',
   ci: '',
   phone: '',
   address: '',
-  contry: contrys[0],
+  contry: [],
   password: '',
   licenceId: null,
   otherGender: ''
 }
 const defaultLicenceData = {
   category: '',
-  dateEmition: null,
-  dateExpire: null,
+  dateEmition: '',
+  dateExpire: '',
   licenceFront: null,
   licenceBack: null
 }
@@ -115,7 +110,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 const AddUser = ({ toggle, page, pageSize }: Props) => {
 
-  const [formUser, setformUser] = useState<userTypes>(defaultUserData)
+  const [formUser, setFormUser] = useState<userTypes>(defaultUserData)
   const [formLicence, setFormLicence] = useState<liceneTypes>(defaultLicenceData)
   const [formErrors, setFormErrors] = useState<FormErrors>(defaultErrors)
   const [self, setSelf] = useState('/images/avatars/2.png')
@@ -129,9 +124,37 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
   const [licenceFront, setLicenceFront] = useState<File | null>(null)
   const [licenceBack, setLicenceBack] = useState<File | null>(null)
   const [onAddLicence, setOnAddLicence] = useState(false)
-  const [isLoading,setIsLoading] =useState(false)
+  const [isLoading,setIsLoading] = useState(false)
+  const [gender,setGender] = useState<any[]>([])
+  const [contry,setContry] = useState<any[]>([])
 
   const dispatch = useDispatch<AppDispatch>()
+
+  useEffect(() => {
+    const fetchGender = async () => {
+      const response = await apiService.Get('/gender');
+      setGender(response.data);
+      setFormUser(prevFormUser => ({
+        ...prevFormUser,
+        gender: response.data[0].name
+      }));
+    };
+    fetchGender();
+  }, [toggle]);
+
+  useEffect(() => {
+    const fetchContry = async () => {
+      const response = await apiService.Get('/contry');
+      setContry(response.data);
+      setFormUser(prevFormUser => ({
+        ...prevFormUser,
+        contry: response.data[0]
+      }));
+    };
+    fetchContry();
+  }, [toggle]);
+
+
   const handleImageFront = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file?.type.startsWith('image/')) {
@@ -159,7 +182,7 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
   const handleChangePhone = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     if (isPhoneValidate(value)) {
-      setformUser({
+      setFormUser({
         ...formUser,
         [name]: value
       })
@@ -168,7 +191,7 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
   }
   const handleChangeFields = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setformUser({
+    setFormUser({
       ...formUser,
       [name]: value
     })
@@ -190,23 +213,24 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
   }
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-
-    if(!genders.includes(formUser.otherGender)){
-      genders.push(formUser.otherGender)
-    }
     if (!handleErrors()) {
 
+      if (formUser.otherGender) {
+        formUser.gender = formUser.otherGender
+      }
+      if(formUser.contry.length !=0){
+        formUser.contry = formUser.contry._id
+      }
+      formUser.profile = profile
       if (onAddLicence) {
         formLicence.licenceBack = licenceBack;
         formLicence.licenceFront = licenceFront;
         formUser.profile = profile
-        if (formUser.otherGender) {
-          formUser.gender = formUser.otherGender
-        }
         dispatch(addLicenceDriver(formLicence)).then((response) => {
           if (response.payload) {
             formUser.licenceId = response.payload._id.toString()
-            dispatch(addUser(formUser)).then((response) => {
+            dispatch(addUser({data:formUser,filtrs:{skip: page * pageSize, limit: pageSize}})).then((response) => {
+
               if (response.payload?.status === HttpStatus.BAD_REQUEST) {
                 formErrors.address = response.payload.data.address
                 formErrors.ci = response.payload.data.ci
@@ -218,7 +242,7 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
                 setFormErrors(formErrors)
               } else {
                 if (response.payload) {
-                  setformUser(defaultUserData)
+                  setFormUser(defaultUserData)
                   setFormLicence(defaultLicenceData)
                   setProfile(null)
                   setSelf('/images/avatars/2.png')
@@ -239,11 +263,7 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
           }
         })
       } else {
-        formUser.profile = profile
-        if (formUser.otherGender) {
-          formUser.gender = formUser.otherGender
-        }
-        dispatch(addUser(formUser)).then((response) => {
+        dispatch(addUser({data:formUser,filtrs:{skip: page * pageSize, limit: pageSize}})).then((response) => {
           if (response.payload?.status === HttpStatus.BAD_REQUEST) {
             formErrors.address = response.payload.data.address
             formErrors.ci = response.payload.data.ci
@@ -256,7 +276,7 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
           } else {
             if (response.payload) {
               setIsLoading(false)
-              setformUser(defaultUserData)
+              setFormUser(defaultUserData)
               setProfile(null)
               setSelf('/images/avatars/2.png')
               toggle()
@@ -272,6 +292,7 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
     }
     setIsLoading(false)
   }
+
   const handleErrors =():boolean=>{
     let status = false
     const Errors: FormErrors = {};
@@ -394,7 +415,7 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
     setFront('/images/default/licence.png')
     setLicenceFront(null)
     setFormErrors(defaultErrors)
-    setformUser(defaultUserData)
+    setFormUser(defaultUserData)
     setFormLicence(defaultLicenceData)
     if (onAddLicence) {
       setOnAddLicence(!onAddLicence)
@@ -403,7 +424,7 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
   }
   const handleGenderOnchange = (e: SelectChangeEvent) => {
     const { name, value } = e.target
-    setformUser({
+    setFormUser({
       ...formUser,
       [name]: value
     })
@@ -492,10 +513,10 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
                 onChange={handleGenderOnchange}
                 autoComplete='off'
               >
-                {genders.map((gender) => (<MenuItem
-                  value={gender}
-                  key={gender}
-                >{gender}</MenuItem>))}
+                {gender.map((value) => (<MenuItem
+                  value={value.name}
+                  key={value.id}
+                >{value.name}</MenuItem>))}
               </Select>
             </FormControl>
           </Grid>
@@ -556,11 +577,12 @@ const AddUser = ({ toggle, page, pageSize }: Props) => {
           <Grid item xs={6}>
             <FormControl fullWidth >
               <Autocomplete
-                options={contrys}
-                getOptionLabel={(option) => option}
-                onChange={(event, value) => setformUser({
+                options={contry}
+                getOptionLabel={(option) => option.name || ''}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                onChange={(event, value) => setFormUser({
                   ...formUser,
-                  contry: value as string
+                  contry: value
                 })}
                 value={formUser.contry}
                 renderInput={(params) => (

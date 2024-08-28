@@ -1,19 +1,16 @@
-import React, { useCallback, useState, MouseEvent, useEffect, ChangeEvent } from 'react'
-import { Avatar, Box, Button, Card, CardHeader, FormControl, Grid, IconButton, InputLabel, Select, TextField, Typography, createTheme } from '@mui/material'
+import React, { useState, MouseEvent, useEffect, ChangeEvent } from 'react'
+import { Box, Button, Card, CardHeader, FormControl, Grid, IconButton, TextField, Typography} from '@mui/material'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
-import { styled } from '@mui/material/styles'
 import { DataGrid } from "@mui/x-data-grid"
-import Link from 'next/link'
 import { useDispatch } from 'react-redux'
 import Icon from 'src/@core/components/icon'
 import AddDraw from 'src/components/addDraw'
 import AddChofer from './register'
-import TableHeader from 'src/components/tableHeader'
 import getConfig from 'src/configs/environment'
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { RootState, AppDispatch } from 'src/store'
-import { fetchData, deleteUser, findOneUser } from 'src/store/apps/users'
+import { fetchData, deleteUser } from 'src/store/apps/users'
 import { useSelector } from 'react-redux'
 import CustomAvatar from 'src/@core/components/mui/avatar'
 import { getInitials } from 'src/@core/utils/get-initials'
@@ -22,10 +19,15 @@ import Swal from 'sweetalert2'
 import EditUser from './edit'
 import ViewLicence from './licence'
 import { apiService } from 'src/store/services/apiService'
-// import { useService } from 'src/hooks/useService'
 
 interface TypeRol {
   name: string
+}
+interface TypeGender{
+  name:string
+}
+interface TypeContry{
+  name:string
 }
 interface UsersType {
   id: string;
@@ -34,8 +36,8 @@ interface UsersType {
   ci: string;
   address: string;
   phone: string;
-  gender: string;
-  contry: string;
+  gender: TypeGender;
+  contry: TypeContry;
   email: string
   profile: string;
   licenceId: any;
@@ -62,16 +64,8 @@ interface UserRoleType {
 const userRoleObj: UserRoleType = {
   admin: { icon: 'mdi:laptop', color: 'error.main' },
   driver: { icon: 'healthicons:truck-driver-negative', color: 'warning.main' },
-  other: { icon: 'mdi:account-outline', color: 'primary.main' }
+  other: { icon: 'mdi:account-outline', color: 'info.main' }
 }
-const theme = createTheme(
-  {
-    palette: {
-      primary: { main: '#1976d2' },
-    },
-  },
-  // Spanish translations
-);
 const renderClient = (row: UsersType) => {
   const [isImg, setIsImg] = useState<any>(false)
   useEffect(() => {
@@ -158,7 +152,7 @@ const Users = () => {
             <Icon icon='ph:user-bold' fontSize={20} color='#00a0f4' />
             Detalles
           </MenuItem>}
-          {rules.some((rule:any) => rule.name === 'Editar-usuarios')&&<MenuItem sx={{ '& svg': { mr: 2 } }} onClick={() => { handleRowOptionsClose(); handleEditOnclik(id) }}>
+          {rules.some((rule:any) => rule.name === 'Editar-usuarios')&&<MenuItem sx={{ '& svg': { mr: 2 } }} onClick={() => { handleRowOptionsClose(); handleEditOnclik(user) }}>
             <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4' />
             Editar
           </MenuItem>}
@@ -234,7 +228,7 @@ const Users = () => {
       headerName: 'Género',
       renderCell: ({ row }: CellType) => {
         return (
-          <Typography noWrap variant='body2'>{row.gender}</Typography>
+          <Typography noWrap variant='body2'>{row.gender?.name}</Typography>
         )
       }
     },
@@ -246,7 +240,7 @@ const Users = () => {
       headerName: 'Nacionalidad',
       renderCell: ({ row }: CellType) => {
         return (
-          <Typography noWrap variant='body2'>{row.contry}</Typography>
+          <Typography noWrap variant='body2'>{row.contry?.name}</Typography>
         )
       }
     },
@@ -257,7 +251,7 @@ const Users = () => {
       headerName: 'Rol',
       renderCell: ({ row }: CellType) => {
         return (
-          <Typography variant='body2'>
+          <Box>
             {!row.rol ? 'Niguno' :
               <Box sx={{
                 display: 'flex',
@@ -270,7 +264,7 @@ const Users = () => {
                 </Typography>
               </Box>
             }
-          </Typography>
+          </Box>
         )
       }
     },
@@ -289,7 +283,6 @@ const Users = () => {
   const [page, setPage] = useState<number>(0)
   const [drawOpen, setDrawOpen] = useState<boolean>(false)
   const [openEdit, setOpenEdit] = useState(false)
-  const [id, setId] = useState('')
   const [openLicence, setOpenLicence] = useState(false)
   const [userData, setUserdata] = useState<any>(null)
   const [openfilters, setOpenFilters] = useState(false)
@@ -302,7 +295,6 @@ const Users = () => {
     dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }, [pageSize, page])
 
-  // const { Get } = useService()
   useEffect(() => {
     const fetch = async () => {
       const response = await apiService.Get('/auth')
@@ -316,8 +308,8 @@ const Users = () => {
   const toggleEdit = () => setOpenEdit(!openEdit)
   const toggleLicence = () => setOpenLicence(!openLicence)
   const toggleFilter = () => setOpenFilters(!openfilters)
-  const handleEditOnclik = (id: string) => {
-    setId(id)
+  const handleEditOnclik = (data: any) => {
+    setUserdata(data)
     toggleEdit()
   }
   const handleViewLicence = (data: UsersType) => {
@@ -474,7 +466,6 @@ const Users = () => {
           <DataGrid
             autoHeight
             rows={store.data}
-            loading={store.isLoading}
             columns={columns}
             pagination
             pageSize={pageSize}
@@ -499,7 +490,7 @@ const Users = () => {
       </AddDraw>
 
       <AddDraw open={openEdit} toggle={toggleEdit} title='Editar usuario'>
-        <EditUser toggle={toggleEdit} id={id} store={openEdit} />
+        <EditUser toggle={toggleEdit} data={userData} page={page} pageSize={pageSize}/>
       </AddDraw>
       <ViewLicence open={openLicence} toggle={toggleLicence} data={userData} />
     </Grid>

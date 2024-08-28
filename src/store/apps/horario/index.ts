@@ -12,6 +12,11 @@ interface Props{
   id:string
   filtrs:any
 }
+interface Prop{
+  data: { [key: string]: any };
+  filtrs:any
+}
+
 export const fetchData = createAsyncThunk('appHorario/fetchHorario',
 async (filtrs?: { [key: string]: any }) => {
   if(filtrs){
@@ -24,7 +29,7 @@ async (filtrs?: { [key: string]: any }) => {
 )
 
 export const addHorario = createAsyncThunk('appHorario/addHorario',
-    async (data: { [key: string]: any }, {dispatch }: Redux) => {
+    async ({data,filtrs}:Prop, {dispatch }: Redux) => {
       const response = await apiService.Post('/horario', data)
       if(response.status === HttpStatus.BAD_REQUEST){
         const res = {
@@ -38,7 +43,7 @@ export const addHorario = createAsyncThunk('appHorario/addHorario',
           success:true,
           data:response.data
         }
-        dispatch(fetchData())
+        dispatch(fetchData(filtrs))
         return res
       }
       if(response === HttpStatus.INTERNAL_SERVER_ERROR){
@@ -49,9 +54,10 @@ export const addHorario = createAsyncThunk('appHorario/addHorario',
 )
 
 export const deleteHorario = createAsyncThunk('appHorario/deleteHorario',
-  async (id: number | string, {dispatch }: Redux) => {
-    const response = await apiService.Delete('/horario', id)
-    dispatch(fetchData())
+  async (props:{filters:any,id:string},{dispatch }: Redux) => {
+    console.log(props)
+    const response = await apiService.Delete('/horario', props.id)
+    dispatch(fetchData(props.filters))
     return response.data
   }
 )

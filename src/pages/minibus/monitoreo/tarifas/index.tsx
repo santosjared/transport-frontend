@@ -49,7 +49,7 @@ const ListTarifa = ({ open, toggle, data }: Props) => {
                 backgroundColor:theme=>`${theme.palette.primary.main}`,
                 color:'#ffffff'}} variant="overline">{tarifas.name}</Typography>
                 <CardContent sx={{paddingTop:2}}>
-                  {tarifas.rates.map((tarifas: any) => (
+                  {tarifas.rates?.map((tarifas: any) => (
                     <Typography key={tarifas.tipo}variant="subtitle2">{`${tarifas.tipo}: ${tarifas.tarifa}`}</Typography>
                   ))}
 

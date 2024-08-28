@@ -9,27 +9,19 @@ import Button from "@mui/material/Button"
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from 'src/store';
-import { Autocomplete, Card, CardMedia, Grid, IconButton, InputLabel, MenuItem, Paper, Select, SelectChangeEvent, Typography, makeStyles } from '@mui/material';
+import { Card, CardMedia, Grid,InputLabel, MenuItem,Select, SelectChangeEvent, Typography, makeStyles } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-// import { useService } from 'src/hooks/useService';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { markersBus } from 'src/utils/markerBus';
-import { typesBus } from 'src/utils/typeBus';
 import { useDropzone } from 'react-dropzone'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import Icon from 'src/@core/components/icon';
-import { addBus, updateBus } from 'src/store/apps/bus';
+import {updateBus } from 'src/store/apps/bus';
 import Swal from 'sweetalert2';
 import { isImage } from 'src/utils/verificateImg';
 import getConfig from 'src/configs/environment';
 import { apiService } from 'src/store/services/apiService';
 
-
-const status = ['Activo', 'En mantenimiento', 'Inactivo', 'Otro']
 interface Props {
     toggle: () => void
-    id:string
-    store:any
+    data:any
     page:number
     pageSize:number
 }
@@ -47,12 +39,12 @@ interface BusData {
     otherState: string;
 }
 const defaultData = {
-    trademark: markersBus[0],
+    trademark: '',
     model: 1990,
-    type: typesBus[0],
+    type: '',
     plaque: '',
     cantidad: 16,
-    status: status[0],
+    status: '',
     photo: null,
     ruat: null,
     otherMarker: '',
@@ -89,57 +81,65 @@ const VisuallyHiddenInput = styled('input')({
     width: 1,
 });
 
-const EditBus = ({ toggle ,id, store, page, pageSize}: Props) => {
+const EditBus = ({ toggle ,data, page, pageSize}: Props) => {
     const [formBus, setFormBus] = useState<BusData>(defaultData)
     const [formErrors, setFormErrors] = useState(defaultErrors)
     const [photo, setPhoto] = useState<string>('/images/default/licence.png')
     const [file, setFile] = useState<File | null>(null)
     const [ruatFile, setRuatFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(false)
+    const [busMarker,setBusMarker] = useState<any[]>([])
+    const [busType,setBusType] = useState<any[]>([])
+    const [busStatus,setBusStatus] = useState<any[]>([])
 
-    // const {GetId} = useService()
+    useEffect(() => {
+      const fetch = async () => {
+        const response = await apiService.Get('/busmarker');
+        setBusMarker(response.data);
+      };
+      fetch();
+    }, [toggle]);
+
+    useEffect(() => {
+      const fetch = async () => {
+        const response = await apiService.Get('/bustype');
+        setBusType(response.data);
+      };
+      fetch();
+    }, [toggle]);
+
+    useEffect(() => {
+      const fetch = async () => {
+        const response = await apiService.Get('/busstatus');
+        setBusStatus(response.data);
+      };
+      fetch();
+    }, [toggle]);
     useEffect(()=>{
-        if(id){
+        if(data){
             const fetch = async()=>{
-                const response = await apiService.GetId('/bus',id)
-
                 const busData = {
-                    trademark: response.data.trademark,
-                    model: response.data.model,
-                    type: response.data.type,
-                    plaque: response.data.plaque,
-                    cantidad: response.data.cantidad,
-                    status: response.data.status,
-                    photo: response.data.photo,
-                    ruat: response.data.ruat,
-                    otherMarker: response.data.trademark,
-                    otherType: response.data.type,
-                    otherState: response.data.status
+                    trademark: data.trademark?.name,
+                    model: data.model,
+                    type: data.type?.name,
+                    plaque: data.plaque,
+                    cantidad: data.cantidad,
+                    status: data.status?.name,
+                    photo: data.photo,
+                    ruat: data.ruat,
+                    otherMarker: data.trademark,
+                    otherType: data.type,
+                    otherState: ''
                 }
-                const img = await isImage(`${getConfig().backendURI}${response.data.photo}`)
+                const img = await isImage(`${getConfig().backendURI}${data.photo}`)
                 if(img){
-                    setPhoto(`${getConfig().backendURI}${response.data.photo}`)
+                    setPhoto(`${getConfig().backendURI}${data.photo}`)
                 }
-                markersBus.map((value,index)=>{
-                    if(value==response.data.trademark){
-                        busData.trademark=markersBus[index]
-                    }
-                })
-                typesBus.map((value,index)=>{
-                    if(value==response.data.typeBus){
-                        busData.type=typesBus[index]
-                    }
-                })
-                status.map((value,index)=>{
-                    if(value===response.data.status){
-                        busData.status = status[index]
-                    }
-                })
                 setFormBus(busData)
             }
             fetch()
         }
-    },[id,store])
+    },[data,toggle])
 
     const dispatch = useDispatch<AppDispatch>()
     const { getRootProps, getInputProps, isDragAccept } = useDropzone({
@@ -202,19 +202,23 @@ const EditBus = ({ toggle ,id, store, page, pageSize}: Props) => {
         e.preventDefault();
         setIsLoading(true)
         if (formBus.trademark === 'Otro') {
-            formBus.trademark = formBus.otherMarker
-        }
-        if (formBus.type === 'Otro') {
-            formBus.type = formBus.otherType
-        }
-        if (formBus.status === 'Otro'){
-            formBus.status = formBus.otherState
-        }
+          formBus.trademark = formBus.otherMarker
+      }
+      if (formBus.type === 'Otro') {
+          formBus.type = formBus.otherType
+      }
+      if (formBus.status === 'Otro'){
+          formBus.status = formBus.otherState
+      }
+      if(file){
         formBus.photo = file
+      }
+      if(ruatFile){
         formBus.ruat = ruatFile
+      }
         setFormBus(formBus)
         try {
-            const response = await dispatch(updateBus({data:formBus,id:id,filters:{skip: page * pageSize, limit: pageSize}}))
+            const response = await dispatch(updateBus({data:formBus,id:data.id,filters:{skip: page * pageSize, limit: pageSize}}))
             if (response.payload.success) {
                 Swal.fire({ title: '¡Éxito!', text: 'Datos actualizados exitosamente', icon: "success" });
                 handleReset()
@@ -270,14 +274,14 @@ const EditBus = ({ toggle ,id, store, page, pageSize}: Props) => {
                         onChange={handleChangeSelects}
                         autoComplete='off'
                     >
-                        {markersBus.map((mark) => (<MenuItem
-                            value={mark}
-                            key={mark}
-                        >{mark}</MenuItem>))}
+                        {busMarker.map((mark) => (<MenuItem
+                            value={mark.name}
+                            key={mark.id}
+                        >{mark.name}</MenuItem>))}
                     </Select>
                     {formErrors.trademark && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.trademark}</FormHelperText>}
                 </FormControl>
-                {formBus.trademark == 'Otro' ?
+                {formBus.trademark == 'Otro' &&
                     <FormControl fullWidth sx={{ mb: 6 }}>
                         <TextField
                             name='otherMarker'
@@ -289,7 +293,7 @@ const EditBus = ({ toggle ,id, store, page, pageSize}: Props) => {
                             autoComplete='off'
                             onChange={handleChangeFields}
                         />
-                    </FormControl> : ''}
+                    </FormControl>}
                 <FormControl fullWidth sx={{ mb: 6 }}>
                     <InputLabel id="demo-simple-select-label">Tipo de Vehículo</InputLabel>
                     <Select
@@ -302,14 +306,14 @@ const EditBus = ({ toggle ,id, store, page, pageSize}: Props) => {
                         onChange={handleChangeSelects}
                         autoComplete='off'
                     >
-                        {typesBus.map((mark) => (<MenuItem
-                            value={mark}
-                            key={mark}
-                        >{mark}</MenuItem>))}
+                        {busType.map((type) => (<MenuItem
+                            value={type.name}
+                            key={type.id}
+                        >{type.name}</MenuItem>))}
                     </Select>
                     {formErrors.type && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.type}</FormHelperText>}
                 </FormControl>
-                {formBus.type === 'Otro' ?
+                {formBus.type === 'Otro' &&
                     <FormControl fullWidth sx={{ mb: 6 }}>
                         <TextField
                             value={formBus.otherType}
@@ -321,7 +325,7 @@ const EditBus = ({ toggle ,id, store, page, pageSize}: Props) => {
                             autoComplete='off'
                             onChange={handleChangeFields}
                         />
-                    </FormControl> : ''}
+                    </FormControl>}
                 <FormControl fullWidth sx={{ mb: 6 }}>
                     <TextField
                         name='model'
@@ -372,10 +376,10 @@ const EditBus = ({ toggle ,id, store, page, pageSize}: Props) => {
                         onChange={handleChangeSelects}
                         autoComplete='off'
                     >
-                        {status.map((mark) => (<MenuItem
-                            value={mark}
-                            key={mark}
-                        >{mark}</MenuItem>))}
+                        {busStatus.map((status) => (<MenuItem
+                            value={status.name}
+                            key={status.id}
+                        >{status.name}</MenuItem>))}
                     </Select>
                 </FormControl>
                 {formBus.status === 'Otro' ? <FormControl fullWidth sx={{ mb: 6 }}>

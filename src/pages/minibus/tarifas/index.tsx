@@ -1,10 +1,7 @@
 import { Box, Button, Card, CardHeader, FormControl, Grid, IconButton, Menu, MenuItem, Select, TextField, Typography } from "@mui/material"
 import { DataGrid } from "@mui/x-data-grid"
-import { useCallback, useEffect, useState, MouseEvent, ChangeEvent } from "react"
-import { useMutation, useQuery, useQueryClient } from "react-query"
+import { useEffect, useState, MouseEvent, ChangeEvent } from "react"
 import AddDraw from "src/components/addDraw"
-import TableHeader from "src/components/tableHeader"
-// import { useService } from "src/hooks/useService"
 import AddTarifas from "./register"
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { format } from 'date-fns';
@@ -31,10 +28,11 @@ interface TypeCell {
 
 const defaultFilter = {
   name: '',
-  createdAt: ''
+  createdAt: '',
+  tarifa:''
 }
 const Tarifas = () => {
-  const RowOptions = ({ id, data }: { id: number | string; data: any }) => {
+  const RowOptions = ({ id, data }: { id: string; data: any }) => {
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 
@@ -57,7 +55,7 @@ const Tarifas = () => {
         confirmButtonText: 'Eliminar',
       }).then(async (result) => { return await result.isConfirmed });
       if (confirme) {
-        dispatch(deleteTarifa(id)).then((result) => {
+        dispatch(deleteTarifa({ filters: { filter: '', skip: page * pageSize, limit: pageSize }, id: id })).then((result) => {
           if (result.payload) {
             Swal.fire({
               title: '¡Éxito!',
@@ -167,7 +165,6 @@ const Tarifas = () => {
   useEffect(() => {
     dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }, [page,pageSize])
-  // const {Get} = useService()
   useEffect(() => {
     const fetch = async () => {
       const response = await apiService.Get('/auth')
@@ -177,6 +174,7 @@ const Tarifas = () => {
     }
     fetch()
   }, [])
+
   const toggleDrawer = () => setOpenAdd(!OpenAdd)
   const toggleList = () => setOpenList(!openList)
   const toggleEdit = () => setOpenEdit(!openEdit)
@@ -220,11 +218,11 @@ const Tarifas = () => {
             </Button>}
           </Box>
           {openfilters && <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3}}>
-            <Card sx={{ p: 2, width:{  xs:'auto',sm:'50%', lg:'50%'}}}>
+            <Card sx={{ p: 2}}>
               <Grid container spacing={2}>
-                <Grid item xs={6}>
+                <Grid item xs={4}>
                   <FormControl fullWidth sx={{ mb: 1 }}>
-                    <TextField label='nombre de tarifas'
+                    <TextField label='Nombre de tarifas'
                       variant='standard'
                       name="name"
                       fullWidth
@@ -237,7 +235,7 @@ const Tarifas = () => {
                     />
                   </FormControl>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid item xs={4}>
                   <FormControl fullWidth sx={{ mb: 1 }}>
                     <TextField label='Fecha de creación'
                       variant='standard'
@@ -247,6 +245,21 @@ const Tarifas = () => {
                       value={filters.createdAt}
                       onChange={handleChangeFields}
                       autoComplete='off'
+                      InputProps={{
+                        startAdornment: <FilterListIcon />,
+                      }}
+                    />
+                  </FormControl>
+                </Grid>
+                <Grid item xs={4}>
+                  <FormControl fullWidth sx={{ mb: 1 }}>
+                    <TextField label='Tarifas'
+                      variant='standard'
+                      name="tarifa"
+                      fullWidth
+                      autoComplete='off'
+                      value={filters.tarifa}
+                      onChange={handleChangeFields}
                       InputProps={{
                         startAdornment: <FilterListIcon />,
                       }}
@@ -285,7 +298,7 @@ const Tarifas = () => {
         </Card>
       </Grid>
       <AddDraw open={OpenAdd} toggle={toggleDrawer} title='Registro de Tarifas'>
-        <AddTarifas toggle={toggleDrawer} />
+        <AddTarifas toggle={toggleDrawer} page={page} pageSize={pageSize}/>
       </AddDraw>
       <AddDraw open={openEdit} toggle={toggleEdit} title="Editatr Tarifas">
         <EditTarifas toggle={toggleEdit} data={editData} page={page} pageSize={pageSize}/>

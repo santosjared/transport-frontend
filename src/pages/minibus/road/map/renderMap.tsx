@@ -22,7 +22,7 @@ const RenderMap = ({geojson,setGeojson,center,setCenter,setZoom,location, names,
     ssr: false
   }),[])
   const Map = useMemo(() => dynamic(
-    () => import('../../../../components/map'),
+    () => import('src/components/map'),
     {
       loading: () => <p>Cargando la Mapa</p>,
       ssr: false

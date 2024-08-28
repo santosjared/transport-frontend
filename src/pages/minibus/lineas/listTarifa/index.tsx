@@ -1,21 +1,19 @@
-import { Box, Card, CardContent, CardHeader, Dialog, DialogContent, Divider, Fade, FadeProps, FormControl, Grid, IconButton, List, ListItem, ListItemText, TextField, Typography } from "@mui/material";
+import { Box, Card, CardContent, CardHeader, Grid, IconButton, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { Fragment, ReactElement, Ref, forwardRef, useEffect, useState } from "react";
-import Icon from "src/@core/components/icon";
+import { Fragment, useEffect, useState } from "react";
 import AddDrawMap from "src/components/addDrawMap";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-// import { useService } from "src/hooks/useService";
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "src/store";
-import { asignedHorario, asignedTarifa, desasignedTarifa, fetchData } from "src/store/apps/linea";
+import { asignedTarifa, desasignedTarifa, fetchData } from "src/store/apps/linea";
 import ListTarifa from "../../tarifas/list";
 import { apiService } from "src/store/services/apiService";
 
 interface Props {
   toggle: () => void;
-  id: string;
+  tarifaDta: any;
 }
 
 interface TarifaData {
@@ -26,7 +24,7 @@ interface TypeCell {
   row: TarifaData
 }
 
-const ViewTarifa = ({ toggle, id }: Props) => {
+const ViewTarifa = ({ toggle, tarifaDta }: Props) => {
 
   const columns = [
     {
@@ -63,8 +61,8 @@ const ViewTarifa = ({ toggle, id }: Props) => {
       renderCell: ({ row }: TypeCell) => {
         return (
           <Fragment>
-            <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={()=>{previa(row)}} />
-            <Typography noWrap variant="body2" sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={()=>{previa(row)}}>
+            <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => { previa(row) }} />
+            <Typography noWrap variant="body2" sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => { previa(row) }}>
               ver tarifa
             </Typography>
           </Fragment>
@@ -78,7 +76,7 @@ const ViewTarifa = ({ toggle, id }: Props) => {
       width: 40,
       renderCell: ({ row }: TypeCell) => {
         return (
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }} onClick={()=>handleDesasigned(row)}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }} onClick={() => handleDesasigned(row)}>
             <IconButton sx={{ backgroundColor: theme => theme.palette.primary.main, color: '#fff' }}>
               <ArrowForwardIosIcon />
             </IconButton>
@@ -96,7 +94,7 @@ const ViewTarifa = ({ toggle, id }: Props) => {
       width: 40,
       renderCell: ({ row }: TypeCell) => {
         return (
-          <IconButton sx={{ backgroundColor: theme => theme.palette.primary.main, color: '#fff' }} onClick={()=>handleAsigned(row)}>
+          <IconButton sx={{ backgroundColor: theme => theme.palette.primary.main, color: '#fff' }} onClick={() => handleAsigned(row)}>
             <ArrowBackIosNewIcon />
           </IconButton>
         )
@@ -136,8 +134,8 @@ const ViewTarifa = ({ toggle, id }: Props) => {
       renderCell: ({ row }: TypeCell) => {
         return (
           <Fragment>
-            <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={()=>{previa(row)}} />
-            <Typography noWrap variant="body2" sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={()=>{previa(row)}}>
+            <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => { previa(row) }} />
+            <Typography noWrap variant="body2" sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => { previa(row) }}>
               ver tarifa
             </Typography>
           </Fragment>
@@ -150,40 +148,27 @@ const ViewTarifa = ({ toggle, id }: Props) => {
   const [pageSize2, setPageSize2] = useState<number>(10)
   const [tarifas, setTarifas] = useState<any[]>([])
   const [dataTarifa, setDataTarifa] = useState<[]>([])
-  const [linea, setLinea] = useState<any>({id:''})
+  const [linea, setLinea] = useState<any>({ id: '' })
   const [openTrifa, setOpenTarifa] = useState(false)
-  const [data,setdata] = useState<any>()
-  // const { GetId } = useService()
-
+  const [data, setdata] = useState<any>()
   const dispatch = useDispatch<AppDispatch>()
-  const toggleTarifa = () =>setOpenTarifa(!openTrifa)
+  const toggleTarifa = () => setOpenTarifa(!openTrifa)
   useEffect(() => {
-    if (id) {
+    if (tarifaDta) {
       const fetch = async () => {
-        const lineaDB = await apiService.GetId('/linea/lineaOne', id)
-        if(lineaDB.data){
-          const response = await apiService.GetId('/linea/tarifa', lineaDB.data.id)
-          const newdata = response.data.map((value: any, index: number) => ({
-            ...value,
-            nro: index + 1,
-          }));
-          setTarifas(newdata)
-        }
-        const newTarifa = lineaDB.data.rate.map((value: any, index: number) => ({
-          ...value,
-          nro: index + 1,
-        }));
-        setLinea(lineaDB.data)
-        setDataTarifa(newTarifa)
+        const response = await apiService.GetId('/linea/tarifa', tarifaDta.id)
+        setTarifas(response.data)
+        setLinea(tarifaDta)
+        setDataTarifa(tarifaDta.rate)
       }
       fetch();
     }
-  }, [id, toggle])
-  const previa = (data:any) => {
+  }, [tarifaDta])
+  const previa = (data: any) => {
     setdata(data)
     toggleTarifa()
   }
-  const handleDesasigned = async (tarifadata:any) => {
+  const handleDesasigned = async (tarifadata: any) => {
     try {
       const response = await dispatch(desasignedTarifa({ data: { rate: [tarifadata._id] }, id: linea.id }))
       if (response.payload.success) {
@@ -197,9 +182,9 @@ const ViewTarifa = ({ toggle, id }: Props) => {
 
     }
   }
-  const handleAsigned = async (tarifas:any) => {
+  const handleAsigned = async (tarifas: any) => {
     try {
-      const response = await dispatch(asignedTarifa({ data: { rate:[tarifas._id]  }, id: linea.id }))
+      const response = await dispatch(asignedTarifa({ data: { rate: [tarifas._id] }, id: linea.id }))
       if (response.payload.success) {
         dispatch(fetchData())
         setDataTarifa(response.payload.data.rate)

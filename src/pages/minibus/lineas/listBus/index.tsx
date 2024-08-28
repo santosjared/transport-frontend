@@ -13,12 +13,11 @@ import CustomChip from 'src/@core/components/mui/chip'
 import { isImage } from "src/utils/verificateImg";
 import getConfig from 'src/configs/environment'
 import CustomRenderCell from "../../bus/profile";
-import Swal from "sweetalert2";
 import { apiService } from "src/store/services/apiService";
 
 interface Props {
   toggle: () => void;
-  id: string;
+  data: any;
 }
 
 interface UsersType {
@@ -33,18 +32,28 @@ interface UsersType {
   profile: string;
   rol: [];
 }
+interface BusMaker {
+  name:string
+}
+interface BusType{
+  name:string
+}
+
+interface BusStatus{
+  name:string
+}
 type Bus = {
   id: string,
-  trademark: string,
+  trademark: BusMaker,
   model: number,
-  type: string,
+  type: BusType,
   plaque: string,
   cantidad: number,
   gps: string,
   photo: string,
-  status: string,
-  ruat: string
-  userId: UsersType
+  status: BusStatus,
+  ruat:string
+  userId:UsersType
 }
 interface TypeCell {
   row: Bus
@@ -80,7 +89,7 @@ const renderImg = (row: Bus) => {
     return ''
   }
 }
-const ViewHorario = ({ toggle, id }: Props) => {
+const ViewBuses = ({ toggle, data }: Props) => {
 
   const columns = [
     {
@@ -94,7 +103,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
             {renderImg(row)}
             <Box sx={{ display: 'flex', paddingTop: 2, paddingLeft: 1 }}>
               <Typography noWrap variant='body2'>
-                {row.trademark}
+                {row.trademark?.name}
               </Typography>
             </Box>
           </Box>
@@ -124,7 +133,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
       renderCell: ({ row }: TypeCell) => {
         return (
           <Typography noWrap variant='body2'>
-            {row.type}
+            {row.type?.name}
           </Typography>
         )
       }
@@ -174,8 +183,8 @@ const ViewHorario = ({ toggle, id }: Props) => {
           <CustomChip
             skin='light'
             size='small'
-            label={row.status}
-            color={row.status === 'Activo' ? 'success' : row.status === 'En mantenimiento' ? 'warning' : row.status === 'Inactivo' ? 'secondary' : 'info'}
+            label={row.status?.name}
+            color={row.status?.name === 'Activo' ? 'success' : row.status?.name === 'En mantenimiento' ? 'warning' : row.status?.name === 'Inactivo' ? 'secondary' : 'info'}
             sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
           />
         )
@@ -224,7 +233,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
             {renderImg(row)}
             <Box sx={{ display: 'flex', paddingTop: 2, paddingLeft: 1 }}>
               <Typography noWrap variant='body2'>
-                {row.trademark}
+                {row.trademark?.name}
               </Typography>
             </Box>
           </Box>
@@ -254,7 +263,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
       renderCell: ({ row }: TypeCell) => {
         return (
           <Typography noWrap variant='body2'>
-            {row.type}
+            {row.type?.name}
           </Typography>
         )
       }
@@ -304,8 +313,8 @@ const ViewHorario = ({ toggle, id }: Props) => {
           <CustomChip
             skin='light'
             size='small'
-            label={row.status}
-            color={row.status === 'Activo' ? 'success' : row.status === 'En mantenimiento' ? 'warning' : row.status === 'Inactivo' ? 'secondary' : 'info'}
+            label={row.status?.name}
+            color={row.status?.name === 'Activo' ? 'success' : row.status?.name === 'En mantenimiento' ? 'warning' : row.status?.name === 'Inactivo' ? 'secondary' : 'info'}
             sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
           />
         )
@@ -326,25 +335,22 @@ const ViewHorario = ({ toggle, id }: Props) => {
   const [selectionModel, setSelectionModel] = useState<GridSelectionModel>([]);
   const [selectionModel2, setSelectionModel2] = useState<GridSelectionModel>([]);
 
-
-  // const { GetId, Get } = useService()
   const dispatch = useDispatch<AppDispatch>()
 
   const toggleFilter = () => setOpenFilters(!openfilters)
   const toggleFilter2 = () => setOpenFilters2(!openfilters2)
   useEffect(() => {
-    if (id) {
+    if (data) {
       const fetch = async () => {
-        const lineaDB = await apiService.GetId('/linea/lineaOne', id)
         const response = await apiService.Get('/linea/allBusNotAsigned', { filter: '', skip: pageDesasigned * pageSizeDesasigned, limit: pageSizeDesasigned })
         setBuses(response.data.result)
         setTotal(response.data.total)
-        setLinea(lineaDB.data)
-        setDataBus(lineaDB.data.buses)
+        setLinea(data)
+        setDataBus(data.buses)
       }
       fetch();
     }
-  }, [id, toggle, pageDesasigned,pageSizeDesasigned])
+  }, [data, pageDesasigned, pageSizeDesasigned])
 
 
   const handleDesasigned = async (busdata: any) => {
@@ -352,10 +358,10 @@ const ViewHorario = ({ toggle, id }: Props) => {
       const response = await dispatch(desasignedBus({ data: { buses: [busdata._id] }, id: linea.id }))
       if (response.payload.success) {
         dispatch(fetchData())
-        // setDataBus(response.payload.data.buses)
+        setDataBus(response.payload.data.buses)
 
         const res = await apiService.Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
-        // setBuses(res.data.result)
+        setBuses(res.data.result)
         setTotal(res.data.total)
       }
     } catch (error) { } finally {
@@ -367,10 +373,10 @@ const ViewHorario = ({ toggle, id }: Props) => {
       const response = await dispatch(asignedBus({ data: { buses: [bus._id] }, id: linea.id }))
       if (response.payload.success) {
         dispatch(fetchData())
-        // setDataBus(response.payload.data.buses)
+        setDataBus(response.payload.data.buses)
 
         const res = await apiService.Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
-        // setBuses(res.data.result)
+        setBuses(res.data.result)
         setTotal(res.data.total)
       }
     } catch (error) { } finally {
@@ -386,12 +392,12 @@ const ViewHorario = ({ toggle, id }: Props) => {
   const handleFiltersAsigned = () => {
     const filteredBuses = dataBus.filter((bus: any) => {
       return (
-        (filtersAsigned.trademark === '' || bus.trademark.includes(filtersAsigned.trademark)) &&
-        (filtersAsigned.model === '' || bus.model.includes(filtersAsigned.model)) &&
-        (filtersAsigned.type === '' || bus.type.includes(filtersAsigned.type)) &&
+        (filtersAsigned.trademark === '' || bus.trademark?.name.includes(filtersAsigned.trademark)) &&
+        (filtersAsigned.model.toString() === '' || bus.model.toString().includes(filtersAsigned.model.toString())) &&
+        (filtersAsigned.type === '' || bus.type?.name.includes(filtersAsigned.type)) &&
         (filtersAsigned.plaque === '' || bus.plaque.includes(filtersAsigned.plaque)) &&
-        (filtersAsigned.cantidad === '' || bus.cantidad.includes(filtersAsigned.cantidad)) &&
-        (filtersAsigned.status === '' || bus.status.includes(filtersAsigned.status)) &&
+        (filtersAsigned.cantidad.toString() === '' || bus.cantidad.toString().includes(filtersAsigned.cantidad.toString())) &&
+        (filtersAsigned.status === '' || bus.status?.status.includes(filtersAsigned.status)) &&
         (filtersAsigned.userId === '' || bus.userId?.name.includes(filtersAsigned.userId))
 
       );
@@ -401,7 +407,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
   }
   const handleResetFiltersAsigned = async () => {
     setFiltersAsigned(defaultFilter)
-    const lineaDB = await apiService.GetId('/linea/lineaOne', id)
+    const lineaDB = await apiService.GetId('/linea/lineaOne', data.id)
     setDataBus(lineaDB.data.buses)
     // dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }
@@ -427,38 +433,38 @@ const ViewHorario = ({ toggle, id }: Props) => {
       [name]: value
     })
   }
-  const handleAsignedAll = async ()=>{
+  const handleAsignedAll = async () => {
     try {
       const objetosFiltrados = buses.filter(objeto => selectionModel2.includes(objeto.id));
-      const ids = objetosFiltrados.map((bus)=>{
+      const ids = objetosFiltrados.map((bus) => {
         return bus._id
       })
       const response = await dispatch(asignedBus({ data: { buses: ids }, id: linea.id }))
       if (response.payload.success) {
         dispatch(fetchData())
-        // setDataBus(response.payload.data.buses)
+        setDataBus(response.payload.data.buses)
 
         const res = await apiService.Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
-        // setBuses(res.data.result)
+        setBuses(res.data.result)
         setTotal(res.data.total)
       }
     } catch (error) { } finally {
     }
 
   }
-  const handleDesasignedAll = async ()=>{
+  const handleDesasignedAll = async () => {
     try {
       const objetosFiltrados = dataBus.filter(objeto => selectionModel.includes(objeto.id));
-      const ids = objetosFiltrados.map((bus)=>{
+      const ids = objetosFiltrados.map((bus) => {
         return bus._id
       })
       const response = await dispatch(desasignedBus({ data: { buses: ids }, id: linea.id }))
       if (response.payload.success) {
         dispatch(fetchData())
-        // setDataBus(response.payload.data.buses)
+        setDataBus(response.payload.data.buses)
 
         const res = await apiService.Get('/linea/allBusNotAsigned', { filter: '', skip: 0, limit: 10 })
-        // setBuses(res.data.result)
+        setBuses(res.data.result)
         setTotal(res.data.total)
       }
     } catch (error) { } finally {
@@ -472,14 +478,14 @@ const ViewHorario = ({ toggle, id }: Props) => {
             <Card>
               <CardHeader title='Buses asignadas ' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
               <Box sx={{ p: 5, pb: 3, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-            <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter}>
-              {openfilters ? 'Cerrar filtrado' : 'Filtrar por columnas'}
-            </Button>
-            <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={handleDesasignedAll} disabled={selectionModel.length === 0?true:false} variant='contained'>
-              desasignar en bloque
-            </Button>
-          </Box>
-              {openfilters &&<Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
+                <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter}>
+                  {openfilters ? 'Cerrar filtrado' : 'Filtrar por columnas'}
+                </Button>
+                <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={handleDesasignedAll} disabled={selectionModel.length === 0 ? true : false} variant='contained'>
+                  desasignar en bloque
+                </Button>
+              </Box>
+              {openfilters && <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
                 <Card sx={{ p: 2 }}>
                   <Grid container spacing={2}>
                     <Grid item xs={1.71}>
@@ -607,7 +613,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
                 sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
                 onPageSizeChange={(newPageSize: number) => setPageSizeAsigned(newPageSize)}
                 selectionModel={selectionModel}
-  onSelectionModelChange={(newSelectionModel) => setSelectionModel(newSelectionModel)}
+                onSelectionModelChange={(newSelectionModel) => setSelectionModel(newSelectionModel)}
               />
             </Card>
           </CardContent>
@@ -617,14 +623,14 @@ const ViewHorario = ({ toggle, id }: Props) => {
             <Card>
               <CardHeader title='Buses no asignadas ' sx={{ pb: 0, '& .MuiCardHeader-title': { letterSpacing: '.15px' } }} />
               <Box sx={{ p: 5, pb: 3, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-            <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter2}>
-              {openfilters2 ? 'Cerrar filtrado' : 'Filtrar por columnas'}
-            </Button>
-            <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={handleAsignedAll} disabled={selectionModel2.length === 0?true:false} variant='contained'>
-              asignar en bloque
-            </Button>
-          </Box>
-              {openfilters2 &&<Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
+                <Button variant="contained" sx={{ height: 43 }} onClick={toggleFilter2}>
+                  {openfilters2 ? 'Cerrar filtrado' : 'Filtrar por columnas'}
+                </Button>
+                <Button sx={{ mb: 2, mt: { xs: 3, sm: 0 } }} onClick={handleAsignedAll} disabled={selectionModel2.length === 0 ? true : false} variant='contained'>
+                  asignar en bloque
+                </Button>
+              </Box>
+              {openfilters2 && <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
                 <Card sx={{ p: 2 }}>
                   <Grid container spacing={2}>
                     <Grid item xs={1.71}>
@@ -766,4 +772,4 @@ const ViewHorario = ({ toggle, id }: Props) => {
   )
 };
 
-export default ViewHorario;
+export default ViewBuses;

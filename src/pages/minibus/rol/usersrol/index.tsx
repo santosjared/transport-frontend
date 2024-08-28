@@ -1,41 +1,28 @@
-import { Ref, useState, forwardRef, ReactElement, MouseEvent, Fragment, useEffect, useCallback } from 'react'
+import { Ref, useState, forwardRef, ReactElement, Fragment, useCallback, useEffect } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
 import List from '@mui/material/List'
-import Menu from '@mui/material/Menu'
 import Avatar from '@mui/material/Avatar'
 import Dialog from '@mui/material/Dialog';
-import Button from '@mui/material/Button'
-import { Theme } from '@mui/material/styles'
 import ListItem from '@mui/material/ListItem'
-import MenuItem from '@mui/material/MenuItem'
 import TextField from '@mui/material/TextField'
 import IconButton from '@mui/material/IconButton'
 import InputLabel from '@mui/material/InputLabel'
 import Typography from '@mui/material/Typography'
 import Fade, { FadeProps } from '@mui/material/Fade'
 import ListItemText from '@mui/material/ListItemText'
-import Autocomplete from '@mui/material/Autocomplete'
-import useMediaQuery from '@mui/material/useMediaQuery'
 import DialogContent from '@mui/material/DialogContent'
 import ListItemAvatar from '@mui/material/ListItemAvatar'
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction'
 import Icon from 'src/@core/components/icon'
 import { Divider, FormControl } from '@mui/material'
-// import { useService } from 'src/hooks/useService'
-import { useQuery } from 'react-query'
 import getConfig from 'src/configs/environment'
 import { useDispatch } from 'react-redux'
-import { AppDispatch, RootState } from 'src/store'
-import { useSelector } from 'react-redux'
-import { fetchDataUser } from 'src/store/apps/bus/fectchUsers'
+import { AppDispatch} from 'src/store'
 import { HttpStatus } from 'src/utils/HttpStatus'
 import Swal from 'sweetalert2'
 import { fetchData } from 'src/store/apps/rol'
 import { apiService } from 'src/store/services/apiService'
-
 
 interface Props{
     toggle:()=>void
@@ -50,13 +37,30 @@ const Transition = forwardRef(function Transition(
     return <Fade ref={ref} {...props} />
   })
 const UsersRol = ({open, toggle,data}:Props)=>{
+
+  const [storeData, setStoreData] = useState<any>(null)
   const dispatch = useDispatch<AppDispatch>()
-  const [value, setValue] = useState<string>('')
-    // const {Update}=useService()
-    const handleFilter = useCallback((val: string) => {
-      dispatch(fetchDataUser({filter:val}))
-      setValue(val)
-    }, [])
+
+  useEffect(()=>{
+    if(data){
+      setStoreData(data.Users)
+    }
+  },[data])
+    const handleFilter = (val: string) => {
+      const filteredData = data?.Users
+      ?.filter((value: any) =>
+        value.name.toLowerCase().includes(val.toLowerCase())
+      )
+      if(filteredData.length !==0){
+        return setStoreData(filteredData)
+      }
+        const filtereCi = data?.Users
+      ?.filter((value: any) =>
+        value.ci.toLowerCase().includes(val.toLowerCase())
+      )
+      return setStoreData(filtereCi)
+    }
+    // console.log(data)
     const handledesasignedUser = (userId:number | string)=>{
       apiService.Update('/users/desasignedrol', {idrol:data.id}, userId).then((respose)=>{
         if(respose.status==HttpStatus.OK){
@@ -85,7 +89,7 @@ const UsersRol = ({open, toggle,data}:Props)=>{
           >
             <Icon icon='mdi:close' />
           </IconButton>
-          {data?<Fragment>
+          {storeData?<Fragment>
           <Box sx={{ mb: 4, textAlign: 'center' }}>
             <Typography variant='h5' sx={{ mb: 3, lineHeight: '2rem' }}>
               Lista de usuarios
@@ -109,9 +113,9 @@ const UsersRol = ({open, toggle,data}:Props)=>{
             onChange={e=>handleFilter(e.target.value)}
             />
           </FormControl>
-          <Typography variant='h6'>{`${data.Users.length} Usuarios de ${data.Users.length}`}</Typography>
+          <Typography variant='h6'>{`${storeData.length} Usuarios de ${storeData.length}`}</Typography>
           <List dense sx={{ py: 4 }}>
-            {data.Users.map((user:any) => {
+            {storeData.map((user:any) => {
               return (
                 <Fragment key={user.id}><ListItem
                   key={user.id}

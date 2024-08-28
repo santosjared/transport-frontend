@@ -14,8 +14,6 @@ import AddDraw from 'src/components/addDraw'
 import RegisterBus from './register'
 import DialogUsers from './Dialog'
 import { isImage } from 'src/utils/verificateImg'
-import CustomAvatar from 'src/@core/components/mui/avatar'
-import { getInitials } from 'src/@core/utils/get-initials'
 import Swal from 'sweetalert2'
 import EditBus from './edit'
 import Icon from "src/@core/components/icon"
@@ -23,7 +21,6 @@ import Details from './details'
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CustomRenderCell from './profile'
 import { apiService } from 'src/store/services/apiService'
-// import { useService } from 'src/hooks/useService'
 
 interface UsersType {
   name: string;
@@ -37,16 +34,26 @@ interface UsersType {
   profile: string;
   rol: [];
 }
+interface BusMaker {
+  name:string
+}
+interface BusType{
+  name:string
+}
+
+interface BusStatus{
+  name:string
+}
 type Bus = {
   id: string,
-  trademark: string,
+  trademark: BusMaker,
   model: number,
-  type: string,
+  type: BusType,
   plaque: string,
   cantidad: number,
   gps: string,
   photo: string,
-  status: string,
+  status: BusStatus,
   ruat:string
   userId:UsersType
 }
@@ -75,29 +82,6 @@ const StyledLink = styled(Link)(({ theme }) => ({
     color: theme.palette.primary.main
   }
 }))
-const  renderClient = async (row: UsersType) => {
-  const [isImg,setIsImg] = useState<any>(false)
-  useEffect(()=>{
-    const image = async()=>{
-      const img = await isImage(`${getConfig().backendURI}${row.profile}`)
-      setIsImg(img)
-    }
-    image()
-  },[row.profile])
-  if (isImg) {
-    return <CustomAvatar src={`${getConfig().backendURI}${row.profile}`} sx={{ mr: 3, width: 34, height: 34 }} />
-  } else {
-    return (
-      <CustomAvatar
-        skin='light'
-        color='primary'
-        sx={{ mr: 3, width: 34, height: 34, fontSize: '1rem' }}
-      >
-        {getInitials(row.name && row.lastName ? `${row.name} ${row.lastName}` : row.name ? row.name : 'Desconocido')}
-      </CustomAvatar>
-    )
-  }
-}
 const renderImg = (row: Bus) => {
 
   const [isImg, setIsImg] = useState<any>(false)
@@ -120,7 +104,7 @@ const renderImg = (row: Bus) => {
 
 }
 const Bus = () => {
-  const RowOptions = ({ id ,user}: { id: string, user?:any }) => {
+  const RowOptions = ({ id ,user,row}: { id: string, user?:any, row?:any }) => {
     const dispatch = useDispatch<AppDispatch>()
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
     const rowOptionsOpen = Boolean(anchorEl)
@@ -196,7 +180,7 @@ const Bus = () => {
             <Icon icon='healthicons:truck-driver' fontSize={20} color='#00a0f4' />
            {user?'Detalles': "Asignar Chofer"}
           </MenuItem>
-         { rules.some((rule:any) => rule.name === 'Editar-microbus') &&<MenuItem onClick={()=>{handleRowOptionsClose(); handleEditOnclik(id)}} sx={{ '& svg': { mr: 2 } }}>
+         { rules.some((rule:any) => rule.name === 'Editar-microbus') &&<MenuItem onClick={()=>{handleRowOptionsClose(); handleEditOnclik(row)}} sx={{ '& svg': { mr: 2 } }}>
             <Icon icon='mdi:pencil-outline' fontSize={20} color='#00a0f4' />
             Editar
           </MenuItem>}
@@ -220,7 +204,7 @@ const Bus = () => {
             {renderImg(row)}
             <Box sx={{ display: 'flex', paddingTop: 2, paddingLeft: 1 }}>
               <Typography noWrap variant='body2'>
-                {row.trademark}
+                {row.trademark?.name}
               </Typography>
             </Box>
           </Box>
@@ -250,7 +234,7 @@ const Bus = () => {
       renderCell: ({ row }: TypeCell) => {
         return (
           <Typography noWrap variant='body2'>
-            {row.type}
+            {row.type?.name}
           </Typography>
         )
       }
@@ -317,8 +301,8 @@ const Bus = () => {
           <CustomChip
             skin='light'
             size='small'
-            label={row.status}
-            color={row.status === 'Activo'? 'success' : row.status === 'En mantenimiento'?'warning':row.status === 'Inactivo'?'secondary':'info'}
+            label={row.status?.name}
+            color={row.status?.name === 'Activo'? 'success' : row.status?.name === 'En mantenimiento'?'warning':row.status?.name === 'Inactivo'?'secondary':'info'}
             sx={{ textTransform: 'capitalize', '& .MuiChip-label': { lineHeight: '18px' } }}
           />
         )
@@ -331,7 +315,7 @@ const Bus = () => {
       sortable: false,
       headerName: 'Acciones',
       renderCell: ({ row }: TypeCell) => {
-        return (<RowOptions id={row.id} user={row.userId}/>)
+        return (<RowOptions id={row.id} user={row.userId} row={row}/>)
       }
     }
   ]
@@ -345,11 +329,9 @@ const Bus = () => {
   const [userData, setUserdata] = useState<any>(null)
   const [openfilters, setOpenFilters] = useState(false)
   const [rules,setRules] = useState<string[]>([])
+  const [busData,setBusData] = useState<any>(null)
   const [filters,setFilters] = useState(defaultFilter)
 
-  const [id,setId] = useState('')
-
-  // const {Get} = useService()
   useEffect(() => {
     const fetch = async () => {
       const response = await apiService.Get('/auth')
@@ -369,14 +351,17 @@ const Bus = () => {
   const toggleEdit = ()=>setOpenEdit(!openEdit)
   const toggleDetails = () =>setopenDetails(!openDetails)
   const toggleFilter = () =>setOpenFilters(!openfilters)
-  const handleEditOnclik=(id:string)=>{
-    setId(id)
+
+  const handleEditOnclik=(data:any)=>{
+    setBusData(data)
     toggleEdit()
   }
+
   const handleViewDetails = (data:UsersType) =>{
     setUserdata(data)
     toggleDetails()
   }
+
   const handleChangeFields = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFilters({
@@ -571,10 +556,10 @@ const handleReset = () => {
         </Card>
       </Grid>
       <AddDraw open={draw} toggle={toggleDrawer} title='Registro de Microbus'>
-        <RegisterBus toggle={toggleDrawer}/>
+        <RegisterBus toggle={toggleDrawer} page={page} pageSize={pageSize}/>
       </AddDraw>
       <AddDraw open={openEdit} toggle={toggleEdit} title='Editar Microbus'>
-      <EditBus toggle={toggleEdit} id={id} store={openEdit} page={page} pageSize={pageSize}/>
+      <EditBus toggle={toggleEdit} data={busData} page={page} pageSize={pageSize}/>
       </AddDraw>
       <DialogUsers open={openUsers} toggle={DrawUser} id={idBus} page={page} pageSize={pageSize}/>
       <Details open={openDetails} toggle={toggleDetails} data={userData} busId={idBus} page={page} pageSize={pageSize}/>

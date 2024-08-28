@@ -5,9 +5,8 @@ import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import { Box, Button, Checkbox, FormControl, FormHelperText } from '@mui/material';
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
-// import { useService } from 'src/hooks/useService';
+import { FormEvent, useEffect, useState } from 'react';
+
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { useDispatch } from 'react-redux';
@@ -17,9 +16,7 @@ import { fetchData as fetchBusDta } from 'src/store/apps/bus';
 import { fetchData as fetchTarifaDta} from 'src/store/apps/tarifa';
 import { fetchData as fetchHorarioDta} from 'src/store/apps/horario';
 import { fetchData as fetchRutaDta } from 'src/store/apps/road';
-import { addLinea, updateLinea } from 'src/store/apps/linea';
-import { isImage } from 'src/utils/verificateImg';
-import getConfig from 'src/configs/environment'
+import { updateLinea } from 'src/store/apps/linea';
 import Swal from 'sweetalert2';
 import RenderImg from '../cuntomphoto';
 import { apiService } from 'src/store/services/apiService';
@@ -53,7 +50,6 @@ const EditLinea = ({ toggle, dataEdit, page,pageSize, open }: Props) => {
   const [busData,setBusdata] = useState<any[]>([])
   const [isLoading,setIsLoading] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
-  // const {Get } = useService()
 
   const storeHorario = useSelector((state:RootState)=>state.horario)
   const storeTarifa = useSelector((state:RootState)=>state.tarifa)
@@ -240,7 +236,7 @@ const EditLinea = ({ toggle, dataEdit, page,pageSize, open }: Props) => {
             disableCloseOnSelect
             value={onSelectBus}
             onChange={(e, value) => setOnSelectBus(value)}
-            getOptionLabel={(option: any) => `${option.trademark} - ${option.plaque}`}
+            getOptionLabel={(option: any) => `${option.trademark?.name} - ${option.plaque}`}
             isOptionEqualToValue={(option, value) => option.plaque === value.plaque}
             renderOption={(props, option: any, { selected }) => (
               <li key={option.id}{...props}>
@@ -251,7 +247,7 @@ const EditLinea = ({ toggle, dataEdit, page,pageSize, open }: Props) => {
                   checked={selected}
                 />
                 {<RenderImg url={option}/>}
-                {option.trademark} - {option.plaque}
+                {option.trademark?.name} - {option.plaque}
               </li>
             )}
             renderInput={(params) => (

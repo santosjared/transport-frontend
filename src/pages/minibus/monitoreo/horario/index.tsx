@@ -34,7 +34,7 @@ const ListHorario = ({ open, toggle, data }: Props) => {
     <Dialog
       fullWidth
       open={open}
-      maxWidth='sm'
+      maxWidth='md'
       scroll='body'
       onClose={toggle}
       TransitionComponent={Transition}
@@ -58,28 +58,40 @@ const ListHorario = ({ open, toggle, data }: Props) => {
                 color:'#ffffff'}} variant="overline">{horarios.name}</Typography>
                 <CardContent sx={{paddingTop:2}}>
                 <Grid container spacing={2}>
-                  <Grid item xs={4}>
+                  <Grid item xs={2}>
                     <Typography variant="body1">Día</Typography>
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid item xs={2}>
                     <Typography variant="body1">Horarios de operación</Typography>
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid item xs={2}>
                     <Typography variant="body1">frecuencia &#40;{horarios.time}&#41;</Typography>
+                  </Grid>
+                  <Grid item xs={2}>
+                    <Typography variant="body1">Lugar Partida</Typography>
+                  </Grid>
+                  <Grid item xs={2}>
+                    <Typography variant="body1">Lugar Llegada</Typography>
                   </Grid>
                   <Grid item xs={12}><Divider/></Grid>
 
-                  {horarios.days.map((dia: any) => (
-                    <Fragment key={dia}>
-                      <Grid item xs={4}>
-                      <Typography key={dia}variant="subtitle2">{dia}</Typography>
+                  {horarios.days?.map((dia: any) => (
+                    <Fragment key={dia.id}>
+                      <Grid item xs={2}>
+                      <Typography variant="subtitle2">{dia.name}</Typography>
                       </Grid>
-                      <Grid item xs={4}>
-                      <Typography key={dia}variant="subtitle2">{isMorning(horarios.firstOut)?`${horarios.firstOut} AM`: `${horarios.firstOut} `} -
+                      <Grid item xs={2}>
+                      <Typography variant="subtitle2">{isMorning(horarios.firstOut)?`${horarios.firstOut} AM`: `  ${horarios.firstOut} `} -
                          {isMorning(horarios.lastOut)?` ${horarios.lastOut} AM`: ` ${horarios.lastOut} `}</Typography>
                       </Grid>
-                      <Grid item xs={4}>
-                      <Typography key={dia}variant="subtitle2">{horarios.frequency}</Typography>
+                      <Grid item xs={2}>
+                      <Typography variant="subtitle2">{horarios.frequency}</Typography>
+                      </Grid>
+                      <Grid item xs={2}>
+                      <Typography variant="subtitle2">{horarios.place}</Typography>
+                      </Grid>
+                      <Grid item xs={2}>
+                      <Typography variant="subtitle2">{horarios.arrive}</Typography>
                       </Grid>
                       <Grid item xs={12}>
                       <Divider/>

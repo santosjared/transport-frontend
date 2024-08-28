@@ -5,8 +5,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import { Box, Button, Checkbox, FormControl, FormHelperText } from '@mui/material';
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { FormEvent, useEffect, useState } from 'react';
 // import { useService } from 'src/hooks/useService';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
@@ -18,14 +17,14 @@ import { fetchData as fetchTarifaDta} from 'src/store/apps/tarifa';
 import { fetchData as fetchHorarioDta} from 'src/store/apps/horario';
 import { fetchData as fetchRutaDta } from 'src/store/apps/road';
 import { addLinea } from 'src/store/apps/linea';
-import { isImage } from 'src/utils/verificateImg';
-import getConfig from 'src/configs/environment'
 import Swal from 'sweetalert2';
 import RenderImg from '../cuntomphoto';
 import { apiService } from 'src/store/services/apiService';
 
 interface Props {
   toggle: () => void
+  page:number
+  pageSize:number
 }
 
 const defaultErrors = {
@@ -38,7 +37,7 @@ const defaultErrors = {
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
-const AddLinea = ({ toggle }: Props) => {
+const AddLinea = ({ toggle, page, pageSize }: Props) => {
 
   const [onSelectRuote, setOnSelectRoute] = useState<any>([])
   const [name, setName] = useState<string >('')
@@ -50,7 +49,6 @@ const AddLinea = ({ toggle }: Props) => {
 
   const [isLoading,setIsLoading] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
-  // const {Get } = useService()
 
   const storeHorario = useSelector((state:RootState)=>state.horario)
   const storeTarifa = useSelector((state:RootState)=>state.tarifa)
@@ -85,7 +83,7 @@ const AddLinea = ({ toggle }: Props) => {
         buses: IdBuses
       }
       try {
-        const response = await dispatch(addLinea(data))
+        const response = await dispatch(addLinea({data:data, filtrs:{skip: page * pageSize, limit: pageSize}}))
         if (response.payload.success) {
           Swal.fire({ title: '¡Éxito!', text: 'Datos guardados exitosamente', icon: "success" });
           handleReset()
@@ -221,7 +219,7 @@ const AddLinea = ({ toggle }: Props) => {
             disableCloseOnSelect
             value={onSelectBus}
             onChange={(e, value) => {setOnSelectBus(value); setFormErrors({...formErrors, buses:''})}}
-            getOptionLabel={(option: any) => `${option.trademark} - ${option.plaque}`}
+            getOptionLabel={(option: any) => `${option.trademark?.name} - ${option.plaque}`}
             renderOption={(props, option: any, { selected }) => (
               <li {...props}>
                 <Checkbox
@@ -231,7 +229,7 @@ const AddLinea = ({ toggle }: Props) => {
                   checked={selected}
                 />
                 {<RenderImg url={option}/>}
-                {option.trademark} - {option.plaque}
+                {option.trademark?.name} - {option.plaque}
               </li>
             )}
             renderInput={(params) => (

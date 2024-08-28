@@ -1,7 +1,6 @@
-import { Box, Card, CardContent, CardHeader, Dialog, DialogContent, Divider, Fade, FadeProps, FormControl, Grid, IconButton, List, ListItem, ListItemText, TextField, Typography } from "@mui/material";
+import { Box, Card, CardContent, CardHeader, Grid, IconButton,Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { Fragment, ReactElement, Ref, forwardRef, useEffect, useState } from "react";
-import Icon from "src/@core/components/icon";
+import { Fragment,useEffect, useState } from "react";
 import AddDrawMap from "src/components/addDrawMap";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
@@ -15,7 +14,7 @@ import { apiService } from "src/store/services/apiService";
 
 interface Props {
   toggle: () => void;
-  id: string;
+  data: any;
 }
 
 interface RoadData {
@@ -29,22 +28,9 @@ interface TypeCell {
   row: RoadData
 }
 
-const ViewHorario = ({ toggle, id }: Props) => {
+const ViewHorario = ({ toggle, data }: Props) => {
 
   const columns = [
-    {
-      flex: 0.2,
-      field: 'Nro',
-      width: 20,
-      headerName: 'Nro',
-      renderCell: ({ row }: TypeCell) => {
-        return (
-          <Typography noWrap variant="body2">
-            {row.nro}
-          </Typography>
-        )
-      }
-    },
     {
       flex: 0.2,
       field: 'name',
@@ -107,19 +93,6 @@ const ViewHorario = ({ toggle, id }: Props) => {
     },
     {
       flex: 0.2,
-      field: 'Nro',
-      width: 20,
-      headerName: 'Nro',
-      renderCell: ({ row }: TypeCell) => {
-        return (
-          <Typography noWrap variant="body2">
-            {row.nro}
-          </Typography>
-        )
-      }
-    },
-    {
-      flex: 0.2,
       field: 'name',
       headerName: 'Nombre del horario',
       width: 250,
@@ -155,33 +128,21 @@ const ViewHorario = ({ toggle, id }: Props) => {
   const [datahorario, setDatahorario] = useState<[]>([])
   const [linea, setLinea] = useState<any>({id:''})
   const [openDays, setOpenDays] = useState(false)
-  const [data,setdata] = useState<any>()
-  // const { GetId } = useService()
+  const [horDta,setdata] = useState<any>()
 
   const dispatch = useDispatch<AppDispatch>()
   const toggleDays = () =>setOpenDays(!openDays)
   useEffect(() => {
-    if (id) {
+    if (data) {
       const fetch = async () => {
-        const lineaDB = await apiService.GetId('/linea/lineaOne', id)
-        if(lineaDB.data){
-          const response = await apiService.GetId('/linea/horarios', lineaDB.data.id)
-          const newdata = response.data.map((value: any, index: number) => ({
-            ...value,
-            nro: index + 1,
-          }));
-          sethorarios(newdata)
-        }
-        const newHorario = lineaDB.data.horario.map((value: any, index: number) => ({
-          ...value,
-          nro: index + 1,
-        }));
-        setLinea(lineaDB.data)
-        setDatahorario(newHorario)
+        setDatahorario(data.horario)
+        setLinea(data)
+        const response = await apiService.GetId('/linea/horarios', data.id)
+        sethorarios(response.data)
       }
       fetch();
     }
-  }, [id, toggle])
+  }, [data])
   const previa = (data:any) => {
     setdata(data)
     toggleDays()
@@ -197,7 +158,6 @@ const ViewHorario = ({ toggle, id }: Props) => {
         sethorarios(res.data)
       }
     } catch (error) { } finally {
-
     }
   }
   const handleAsigned = async (horario:any) => {
@@ -205,9 +165,8 @@ const ViewHorario = ({ toggle, id }: Props) => {
       const response = await dispatch(asignedHorario({ data: { horario:[horario._id]  }, id: linea.id }))
       if (response.payload.success) {
         dispatch(fetchData())
-        setDatahorario(response.payload.data.horario)
-
         const res = await apiService.GetId('/linea/horarios', linea.id)
+        setDatahorario(response.payload.data.horario)
         sethorarios(res.data)
       }
     } catch (error) { } finally {
@@ -250,7 +209,7 @@ const ViewHorario = ({ toggle, id }: Props) => {
             </Card>
           </CardContent>
         </Grid>
-        <ListDays open={openDays} toggle={toggleDays} data={data} />
+        <ListDays open={openDays} toggle={toggleDays} data={horDta} />
       </Grid>
     </AddDrawMap>
   );

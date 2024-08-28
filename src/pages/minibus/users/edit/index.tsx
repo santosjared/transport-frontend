@@ -6,20 +6,17 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react"
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { Password, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { styled } from '@mui/material/styles';
 import { useDispatch } from 'react-redux';
-import { addUser, updateUser } from "src/store/apps/users";
-import { addLicenceDriver, updateLicence } from "src/store/apps/licence-driver";
+import { updateUser } from "src/store/apps/users";
 import AddIcon from '@mui/icons-material/Add';
 import KeyboardControlKeyIcon from '@mui/icons-material/KeyboardControlKey';
 import { AppDispatch } from "src/store";
-import { contrys } from "src/utils/contrys";
 import { isPhoneValidate } from "src/utils/validator";
 import { calculateYearsBetweenDates } from "src/utils/calculateYears";
 import { HttpStatus } from "src/utils/HttpStatus";
 import Swal from "sweetalert2";
-// import { useService } from "src/hooks/useService";
 import { isImage } from "src/utils/verificateImg";
 import getConfig from 'src/configs/environment'
 import { apiService } from "src/store/services/apiService";
@@ -39,19 +36,15 @@ interface FormErrors {
 }
 interface Props {
   toggle: () => void;
-  id: string
-  store: any
+  data: any
+  page: number,
+  pageSize: number
 }
 
-const genders = [
-  'Masculino',
-  'Femenina',
-  'Otro'
-]
 interface liceneTypes {
   category: string
-  dateEmition: Date | null
-  dateExpire: Date | null
+  dateEmition: any
+  dateExpire: any
   licenceFront: File | null
   licenceBack: File | null
 }
@@ -59,34 +52,34 @@ interface userTypes {
   profile: File | null,
   name: string,
   lastName: string,
-  gender: string,
+  gender: any,
   email: string,
-  password: string,
   ci: string,
   phone: string,
   address: string,
-  contry: string,
+  contry: any,
+  password: string,
   licenceId: string | null,
-  otherGender: string
+  otherGender?: string
 }
 const defaultUserData = {
   profile: null,
   name: '',
   lastName: '',
-  gender: genders[0],
+  gender: '',
   email: '',
   ci: '',
   phone: '',
-  password: '',
   address: '',
-  contry: contrys[0],
+  contry: [],
+  password: '',
   licenceId: null,
   otherGender: ''
 }
 const defaultLicenceData = {
   category: '',
-  dateEmition: null,
-  dateExpire: null,
+  dateEmition: '',
+  dateExpire: '',
   licenceFront: null,
   licenceBack: null
 }
@@ -116,9 +109,9 @@ const VisuallyHiddenInput = styled('input')({
   whiteSpace: 'nowrap',
   width: 1,
 });
-const EditUser = ({ toggle, id, store }: Props) => {
+const EditUser = ({ toggle, data, page,pageSize }: Props) => {
 
-  const [formUser, setformUser] = useState<userTypes>(defaultUserData)
+  const [formUser, setFormUser] = useState<userTypes>(defaultUserData)
   const [formLicence, setFormLicence] = useState<liceneTypes>(defaultLicenceData)
   const [formErrors, setFormErrors] = useState<FormErrors>(defaultErrors)
   const [self, setSelf] = useState('/images/avatars/2.png')
@@ -131,68 +124,88 @@ const EditUser = ({ toggle, id, store }: Props) => {
   const [licenceFront, setLicenceFront] = useState<File | null>(null)
   const [licenceBack, setLicenceBack] = useState<File | null>(null)
   const [onAddLicence, setOnAddLicence] = useState(false)
-  const [userId, setUserId] = useState('')
-  const [licenceId, setLicenceId] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [gender,setGender] = useState<any[]>([])
+  const [contry,setContry] = useState<any[]>([])
 
-  // const { GetId } = useService()
   const dispatch = useDispatch<AppDispatch>()
-  useEffect(() => {
-    if (id) {
-      const fetch = async () => {
-        const response = await apiService.GetId('/users', id)
 
-        const UserData = {
-          profile: response.data.profile,
-          name: response.data.name,
-          lastName: response.data.lastName,
-          gender: genders[2],
-          email: response.data.email,
+  useEffect(() => {
+    const fetchGender = async () => {
+      const response = await apiService.Get('/gender');
+      setGender(response.data);
+      setFormUser(prevFormUser => ({
+        ...prevFormUser,
+        gender: response.data[0].name
+      }));
+    };
+    fetchGender();
+  }, [toggle]);
+
+  useEffect(() => {
+    const fetchContry = async () => {
+      const response = await apiService.Get('/contry');
+      setContry(response.data);
+      setFormUser(prevFormUser => ({
+        ...prevFormUser,
+        contry: response.data[0]
+      }));
+    };
+    fetchContry();
+  }, [toggle]);
+  useEffect(() => {
+    if (data) {
+      const fetch = async () =>{
+        const UserData:userTypes = {
+          profile: data.profile,
+          name: data.name,
+          lastName: data.lastName,
+          gender: data.gender?.name,
+          email: data.email,
           password: '',
-          ci: response.data.ci,
-          phone: response.data.phone,
-          address: response.data.address,
-          contry: contrys[0],
-          licenceId: response.data.licenceId,
-          otherGender: response.data.gender
+          ci: data.ci,
+          phone: data.phone,
+          address: data.address,
+          contry:data.contry,
+          licenceId:data.licenceId,
         }
-        const img = await isImage(`${getConfig().backendURI}${response.data.profile}`)
+        const img = await isImage(`${getConfig().backendURI}${data.profile}`)
         if (img) {
-          setSelf(`${getConfig().backendURI}${response.data.profile}`)
+          setSelf(`${getConfig().backendURI}${data.profile}`)
         }
-        genders.map((value, index) => {
-          if (value == response.data.gender) {
-            UserData.gender = genders[index]
-          }
-        })
-        contrys.map((value, index) => {
-          if (value == response.data.contry) {
-            UserData.contry = contrys[index]
-          }
-        })
-        if (response.data.licenceId) {
+        if (data.licenceId) {
           setOnAddLicence(true)
-          const licence = await apiService.GetId('/licencia', response.data.licenceId.toString())
           const LicenceData = {
-            category: licence.data.category,
-            dateEmition: licence.data.dateEmition,
-            dateExpire: licence.data.dateExpire,
-            licenceFront: licence.data.licenceFront,
-            licenceBack: licence.data.licenceBack
+            category: data.licenceId.category,
+            dateEmition: GetFormYear(data.licenceId.dateEmition),
+            dateExpire: GetFormYear(data.licenceId.dateExpire),
+            licenceFront: data.licenceId.licenceFront,
+            licenceBack: data.licenceId.licenceBack
           }
-          const imgF = await isImage(`${getConfig().backendURI}${licence.data.licenceFront}`)
-          if (imgF) { setFront(`${getConfig().backendURI}${licence.data.licenceFront}`) }
-          const imgB = await isImage(`${getConfig().backendURI}${licence.data.licenceBack}`)
-          if (imgB) { setBack(`${getConfig().backendURI}${licence.data.licenceBack}`) }
-          setLicenceId(response.data.id)
+          const imgF = await isImage(`${getConfig().backendURI}${data.licenceId.licenceFront}`)
+          if (imgF) { setFront(`${getConfig().backendURI}${data.licenceId.licenceFront}`) }
+          const imgB = await isImage(`${getConfig().backendURI}${data.licenceId.licenceBack}`)
+          if (imgB) { setBack(`${getConfig().backendURI}${data.licenceId.licenceBack}`) }
+
           setFormLicence(LicenceData)
         } else { setOnAddLicence(false) }
-        setUserId(response.data.id)
-        setformUser(UserData)
+        setFormUser(UserData)
       }
       fetch()
     }
-  }, [id, store])
+
+  }, [toggle,data])
+  const GetFormYear = (data:any) =>{
+    try{
+      const date = new Date(data);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }catch{
+      return ''
+    }
+  }
   const handleImageFront = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file?.type.startsWith('image/')) {
@@ -221,7 +234,7 @@ const EditUser = ({ toggle, id, store }: Props) => {
   const handleChangePhone = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     if (isPhoneValidate(value)) {
-      setformUser({
+      setFormUser({
         ...formUser,
         [name]: value
       })
@@ -230,7 +243,7 @@ const EditUser = ({ toggle, id, store }: Props) => {
   }
   const handleChangeFields = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setformUser({
+    setFormUser({
       ...formUser,
       [name]: value
     })
@@ -253,14 +266,21 @@ const EditUser = ({ toggle, id, store }: Props) => {
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    console.log(handleErrors())
     if (!handleErrors()) {
-      formUser.profile = profile
-      if (formUser.gender === 'Otro') { formUser.gender = formUser.otherGender }
+      if(profile){
+        formUser.profile = profile
+      }
+
+      if (formUser.otherGender) {
+        formUser.gender = formUser.otherGender
+      }
+      if(formUser.contry.length !=0){
+        formUser.contry = formUser.contry._id
+      }
       if (onAddLicence) {
         formLicence.licenceBack = licenceBack;
         formLicence.licenceFront = licenceFront;
-        dispatch(updateUser({ userData: formUser, licenceData: formLicence, idUser: userId, idLicence: licenceId }))
+        dispatch(updateUser({ userData: formUser, licenceData: formLicence, idUser: data.id, idLicence: data.licenceId.id, filtrs:{skip: page * pageSize, limit: pageSize} }))
           .then((response: any) => {
             if (response.payload.status === HttpStatus.BAD_REQUEST) {
 
@@ -280,7 +300,7 @@ const EditUser = ({ toggle, id, store }: Props) => {
             }
           })
       } else {
-        dispatch(updateUser({ userData: formUser, idUser: userId })).then((response) => {
+        dispatch(updateUser({ userData: formUser, idUser: data.id, filtrs:{skip: page * pageSize, limit: pageSize} })).then((response) => {
             if (response.payload.status === HttpStatus.BAD_REQUEST) {
 
               formErrors.name = response.payload.data.address
@@ -412,7 +432,7 @@ const EditUser = ({ toggle, id, store }: Props) => {
   }
   const handleGenderOnchange = (e: SelectChangeEvent) => {
     const { name, value } = e.target
-    setformUser({
+    setFormUser({
       ...formUser,
       [name]: value
     })
@@ -501,10 +521,10 @@ const EditUser = ({ toggle, id, store }: Props) => {
                 onChange={handleGenderOnchange}
                 autoComplete='off'
               >
-                {genders.map((gender) => (<MenuItem
-                  value={gender}
-                  key={gender}
-                >{gender}</MenuItem>))}
+                {gender.map((value) => (<MenuItem
+                  value={value.name}
+                  key={value.id}
+                >{value.name}</MenuItem>))}
               </Select>
             </FormControl>
           </Grid>
@@ -565,9 +585,10 @@ const EditUser = ({ toggle, id, store }: Props) => {
           <Grid item xs={6}>
             <FormControl fullWidth >
               <Autocomplete
-                options={contrys}
-                getOptionLabel={(option) => option}
-                onChange={(event, value) => setformUser({
+                options={contry}
+                getOptionLabel={(option) => option.name ||''}
+                isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                onChange={(event, value) => setFormUser({
                   ...formUser,
                   contry: value as string
                 })}
@@ -612,7 +633,7 @@ const EditUser = ({ toggle, id, store }: Props) => {
           <FormControl fullWidth sx={{ mb: 6 }}>
             <InputLabel htmlFor="outlined-adornment-password" >Contraseña</InputLabel>
             <OutlinedInput
-              id="outlined-adornment-password"
+              id="outlined-password-edit"
               name="password"
               type={showPassword ? 'text' : 'password'}
               error={Boolean(formErrors.password)}

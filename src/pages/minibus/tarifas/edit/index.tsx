@@ -13,6 +13,7 @@ import { useDispatch } from 'react-redux'
 import { AppDispatch } from 'src/store'
 import { addTarifa, updateTarifa } from 'src/store/apps/tarifa'
 import Swal from 'sweetalert2'
+import { apiService } from 'src/store/services/apiService'
 
 interface Props {
   toggle: () => void;
@@ -29,14 +30,8 @@ interface tarifaData {
   name: string
   description: string
 }
-const defaultTarifa = [
-  { tipo: 'Escolar', tarifa: 'Bs. 0.50' },
-  { tipo: 'Universitario', tarifa: 'Bs. 1' },
-  { tipo: 'Adulto', tarifa: 'Bs. 1.50' },
-  { tipo: 'Tercera Edad', tarifa: 'Bs. 1' },
-]
 const defaultDta: tarifaData = {
-  rates: defaultTarifa,
+  rates: [],
   name: '',
   description: ''
 }
@@ -50,6 +45,13 @@ const EditTarifas = ({ toggle, data, page, pageSize }: Props) => {
   const [formErrors, setFormErrors] = useState(defaultErrors)
   const [tarifaForms, setTarifaForms] = useState<tarifaData>(defaultDta)
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    if(data){
+      setTarifaForms(preview => ({
+        ...preview, rates:data?.rates}))
+    }
+  }, [toggle])
 
   const dispatch = useDispatch<AppDispatch>()
   useEffect(()=>{
@@ -124,7 +126,7 @@ const EditTarifas = ({ toggle, data, page, pageSize }: Props) => {
       <fieldset style={{ border: '1.5px solid #EEEDED', borderRadius: 10, paddingTop: 20 }}>
         <legend style={{ textAlign: 'center' }}>Agregar Tarifas</legend>
         <form onSubmit={onSubmit}>
-          {tarifaForms.rates.map((value, index) => (
+          {tarifaForms.rates?.map((value, index) => (
             <Grid key={index} container spacing={2}>
               <Grid item xs={7}>
                 <FormControl fullWidth sx={{ mb: 6 }}>

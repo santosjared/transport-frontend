@@ -112,10 +112,11 @@ const DrawMap = ({ geojson, setGeojson, setHandleChanges, isProcessingQueue, nam
         points.forEach(async (latlng: L.LatLng) => {
           const street = await getStreetName(latlng.lat, latlng.lng);
           if (street) {
-            names.push(street);
-            const uniqueStreetNames = [...new Set(names)];
+            const newNames = [...names];
+            newNames.push(street);
+            const uniqueStreetNames = [...new Set(newNames)];
             setNames(uniqueStreetNames);
-          }
+        }
         });
       };
 

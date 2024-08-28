@@ -35,11 +35,11 @@ const ListTarifa = ({ open, toggle, data }: Props) => {
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <Card>
-                <Typography sx={{ display: 'flex', justifyContent: 'center', 
-                backgroundColor:theme=>`${theme.palette.primary.main}`, 
+                <Typography sx={{ display: 'flex', justifyContent: 'center',
+                backgroundColor:theme=>`${theme.palette.primary.main}`,
                 color:'#ffffff'}} variant="overline">{data.name}</Typography>
                 <CardContent sx={{paddingTop:2}}>
-                  {data.rates.map((tarifas: any) => (
+                  {data.rates?.map((tarifas: any) => (
                     <Typography key={tarifas.tipo}variant="subtitle2">{`${tarifas.tipo}: ${tarifas.tarifa}`}</Typography>
                   ))}
                   {data.description?<>
@@ -56,4 +56,4 @@ const ListTarifa = ({ open, toggle, data }: Props) => {
     </Dialog>
   )
 }
-export default ListTarifa    
+export default ListTarifa

@@ -292,7 +292,7 @@ const EditRol = ({ open, toggle, data }: Props) => {
                 </TableCell>
                 <TableCell >
                   <FormControlLabel
-                    label={'Ver'}
+                    label={'Editar'}
                     control={
                       <Checkbox
                         size='small'

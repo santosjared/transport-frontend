@@ -22,6 +22,7 @@ interface horarioData {
   id: string
   name: string;
   place: string;
+  arrive: string;
   firstOut: string;
   lastOut: string;
   days: string[];
@@ -30,6 +31,7 @@ interface horarioData {
 const defaultFilter = {
   name: '',
   place: '',
+  arrive:'',
   firstOut: '',
   lastOut: '',
   days: '',
@@ -64,7 +66,7 @@ const Horario = () => {
         confirmButtonText: 'Eliminar',
       }).then(async (result) => { return await result.isConfirmed });
       if (confirme) {
-        dispatch(deleteHorario(id)).then((result) => {
+        dispatch(deleteHorario({ filters: { filter: '', skip: page * pageSize, limit: pageSize }, id: id })).then((result) => {
           if (result.payload) {
             Swal.fire({
               title: '¡Éxito!',
@@ -124,9 +126,18 @@ const Horario = () => {
     {
       flex: 0.2,
       field: 'place',
-      headerName: 'Lugar de salida',
+      headerName: 'Lugar de partida',
       renderCell: ({ row }: TypeCell) => {
         return (<Typography noWrap variant='body2'>{row.place}</Typography>
+        )
+      }
+    },
+    {
+      flex: 0.2,
+      field: 'arrive',
+      headerName: 'Lugar de llegada',
+      renderCell: ({ row }: TypeCell) => {
+        return (<Typography noWrap variant='body2'>{row.arrive}</Typography>
         )
       }
     },
@@ -216,13 +227,6 @@ const Horario = () => {
       [name]: value
     })
   }
-  const handleChangeSelects = (e: SelectChangeEvent) => {
-    const { name, value } = e.target
-    setFilters({
-      ...filters,
-      [name]: value
-    })
-  }
   const handleFilters = ()=>{
     dispatch(fetchData({ filter: filters, skip: page * pageSize, limit: pageSize }))
   }
@@ -230,7 +234,6 @@ const Horario = () => {
     setFilters(defaultFilter)
     dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }
-  // const {Get} = useService()
   useEffect(() => {
     const fetch = async () => {
       const response = await apiService.Get('/auth')
@@ -256,7 +259,7 @@ const Horario = () => {
           {openfilters ? <Box sx={{ pt: 0, pl: 5, pr: 5, pb: 3 }}>
             <Card sx={{ p: 2 }}>
               <Grid container spacing={2}>
-                <Grid item xs={2.4}>
+                <Grid item xs={2}>
                   <FormControl fullWidth sx={{ mb: 1 }}>
                     <TextField label='Nombre de horario'
                       variant='standard'
@@ -271,9 +274,9 @@ const Horario = () => {
                     />
                   </FormControl>
                 </Grid>
-                <Grid item xs={2.4}>
+                <Grid item xs={2}>
                   <FormControl fullWidth sx={{ mb: 1 }}>
-                    <TextField label='place'
+                    <TextField label='Lugar de partida'
                       variant='standard'
                       name="place"
                       fullWidth
@@ -286,7 +289,22 @@ const Horario = () => {
                     />
                   </FormControl>
                 </Grid>
-                <Grid item xs={2.4}>
+                <Grid item xs={2}>
+                  <FormControl fullWidth sx={{ mb: 1 }}>
+                    <TextField label='Lugar de llegada'
+                      variant='standard'
+                      name="arrive"
+                      fullWidth
+                      value={filters.arrive}
+                      onChange={handleChangeFields}
+                      autoComplete='off'
+                      InputProps={{
+                        startAdornment: <FilterListIcon />,
+                      }}
+                    />
+                  </FormControl>
+                </Grid>
+                <Grid item xs={2}>
                   <FormControl fullWidth sx={{ mb: 1 }}>
                     <TextField label='Hora de Salida'
                       variant='standard'
@@ -301,7 +319,7 @@ const Horario = () => {
                     />
                   </FormControl>
                 </Grid>
-                <Grid item xs={2.4}>
+                <Grid item xs={2}>
                   <FormControl fullWidth sx={{ mb: 1 }}>
                     <TextField label='Ult. Salida'
                       variant='standard'
@@ -316,7 +334,7 @@ const Horario = () => {
                     />
                   </FormControl>
                 </Grid>
-                <Grid item xs={2.4}>
+                <Grid item xs={2}>
                   <FormControl fullWidth sx={{ mb: 1 }}>
                     <TextField label='Días'
                       variant='standard'
@@ -363,7 +381,7 @@ const Horario = () => {
         </Card>
       </Grid>
       <AddDraw open={draw} toggle={toggleDrawer} title='Registro de Horarios'>
-        <RegisterHorario toggle={toggleDrawer} />
+        <RegisterHorario toggle={toggleDrawer} page={page} pageSize={pageSize}/>
       </AddDraw>
       <AddDraw open={openEdit} toggle={toggleEdit} title='Editar Horario'>
         <EditHorario toggle={toggleEdit} store={editData} page={page} pageSize={pageSize} />

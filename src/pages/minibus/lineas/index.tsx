@@ -15,7 +15,7 @@ import ListRoad from "./listRoad"
 import ViewHorario from "./ListHorario"
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ViewTarifa from "./listTarifa"
-import ViewBus from "./listBus"
+import ViewBuses from "./listBus"
 import Icon from "src/@core/components/icon"
 import Swal from "sweetalert2"
 import EditLinea from "./edit"
@@ -71,7 +71,7 @@ const Lineas = () => {
         confirmButtonText: 'Eliminar',
       }).then(async (result) => { return await result.isConfirmed });
       if (confirme) {
-        dispatch(deleteLinea(id)).then((result) => {
+        dispatch(deleteLinea({ filters: { filter: '', skip: page * pageSize, limit: pageSize }, id: id })).then((result) => {
           if (result.payload) {
             Swal.fire({
               title: '¡Éxito!',
@@ -182,19 +182,6 @@ const Lineas = () => {
         )
       }
     },
-    // {
-    //   flex: 0.2,
-    //   field: 'asgined',
-    //   headerName: 'rutas buses',
-    //   renderCell: ({ row }: TypeCell) => {
-    //     return (
-    //      <>{rules.some((rule:any) => rule.name === 'Listar_buses_rutas-linea')? <>
-    //         <OpenInNewIcon sx={{ color: '#A0A0A0', cursor: 'pointer' }} onClick={() => handleBusRoad(row)} />
-    //         <Typography noWrap variant="body2" sx={{ cursor: 'pointer' }} onClick={() => handleBusRoad(row)}> asignar o desasignar</Typography>
-    //       </>:<Typography variant="body2">No disponible</Typography>}</>
-    //     )
-    //   }
-    // },
     {
       flex: 0.2,
       minWidth: 80,
@@ -213,9 +200,7 @@ const Lineas = () => {
   const [idLinea, setIdLinea] = useState('')
   const [openListRoad, setOpenListRoad] = useState(false)
   const [lineaData, setLinea] = useState<any[]>([])
-  const [dataHorario, setDataHorario] = useState<any[]>([])
   const [openHorario, setOpenHorario] = useState(false)
-  const [dataTarifa, setDataTarifa] = useState<any[]>([])
   const [openTarifa, setOpenTarifa] = useState(false)
   const [openBus, setOpenBus] = useState(false)
   const [openEdit, setOpenEdit] = useState(false)
@@ -255,15 +240,15 @@ const Lineas = () => {
     toggleRuta()
   }
   const handleHorario = (data: any) => {
-    setIdLinea(data.id)
+    setLinea(data)
     toggleHorario()
   }
   const handleTarifa = (data: any) => {
-    setIdLinea(data.id)
+    setLinea(data)
     toggleTarifa()
   }
   const handleBus = (data: any) => {
-    setIdLinea(data.id)
+    setLinea(data)
     toggleBus()
   }
   const handleChangeFields = (e: ChangeEvent<HTMLInputElement>) => {
@@ -280,11 +265,6 @@ const Lineas = () => {
     setFilters(defaultFilter)
     dispatch(fetchData({ filter: '', skip: page * pageSize, limit: pageSize }))
   }
-  const handleBusRoad =(data:any) =>{
-    setLinea(data)
-    toggleBusRuta()
-  }
-  // const {Get} = useService()
   useEffect(() => {
     const fetch = async () => {
       const response = await apiService.Get('/auth')
@@ -306,18 +286,15 @@ const Lineas = () => {
   }
   if (openHorario) {
     return (
-      <ViewHorario toggle={toggleHorario} id={idLinea} />
+      <ViewHorario toggle={toggleHorario} data={lineaData.length !==0 && lineaData} />
     )
   }
   if (openTarifa) {
-    return (<ViewTarifa toggle={toggleTarifa} id={idLinea} />)
+    return (<ViewTarifa toggle={toggleTarifa} tarifaDta={lineaData.length !==0 && lineaData} />)
   }
   if (openBus) {
-    return (<ViewBus toggle={toggleBus} id={idLinea} />)
+    return (<ViewBuses toggle={toggleBus} data={lineaData.length !==0 && lineaData}/>)
   }
-  // if(openBusRoad){
-  //   return(<BusRoad togglePrevia={togglePrevia} toggle={toggleBusRuta} data={lineaData} SetSelectionRuta={setSelectionRuta}/>)
-  // }
   if (openPrevia) {
     return (
       <ViewMap data={selectionRuta} onClose={togglePrevia} toggleRutas={toggleBusRuta} />
@@ -446,7 +423,7 @@ const Lineas = () => {
         </Card>
       </Grid>
       <AddDraw open={openAdd} toggle={toggleDrawer} title='Registro de la linea'>
-        <AddLinea toggle={toggleDrawer} />
+        <AddLinea toggle={toggleDrawer} page={page} pageSize={pageSize}/>
       </AddDraw>
       <AddDraw open={openEdit} toggle={toggleEdit} title="Editar linea">
         <EditLinea toggle={toggleEdit} dataEdit={lineaData} page={page} pageSize={pageSize} open={openEdit}/>

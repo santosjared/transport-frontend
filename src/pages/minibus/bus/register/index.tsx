@@ -9,22 +9,18 @@ import Button from "@mui/material/Button"
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from 'src/store';
-import { Autocomplete, Card, CardMedia, Grid, IconButton, InputLabel, MenuItem, Paper, Select, SelectChangeEvent, Typography, makeStyles } from '@mui/material';
+import { Card, CardMedia, Grid, InputLabel, MenuItem,Select, SelectChangeEvent, Typography} from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-// import { useService } from 'src/hooks/useService';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { markersBus } from 'src/utils/markerBus';
-import { typesBus } from 'src/utils/typeBus';
 import { useDropzone } from 'react-dropzone'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import Icon from 'src/@core/components/icon';
 import { addBus } from 'src/store/apps/bus';
 import Swal from 'sweetalert2';
+import { apiService } from 'src/store/services/apiService';
 
-
-const status = ['Activo', 'En mantenimiento', 'Inactivo', 'Otro']
 interface Props {
     toggle: () => void
+    page:number
+    pageSize:number
 }
 interface BusData {
     trademark: string;
@@ -39,13 +35,13 @@ interface BusData {
     otherType: string;
     otherState: string;
 }
-const defaultData = {
-    trademark: markersBus[0],
+const defaultData:BusData = {
+    trademark: '',
     model: 1990,
-    type: typesBus[0],
+    type: '',
     plaque: '',
     cantidad: 16,
-    status: status[0],
+    status: '',
     photo: null,
     ruat: null,
     otherMarker: '',
@@ -82,14 +78,56 @@ const VisuallyHiddenInput = styled('input')({
     width: 1,
 });
 
-const RegisterBus = ({ toggle }: Props) => {
+const RegisterBus = ({ toggle, page, pageSize }: Props) => {
     const [formBus, setFormBus] = useState<BusData>(defaultData)
     const [formErrors, setFormErrors] = useState(defaultErrors)
     const [photo, setPhoto] = useState<string>('/images/default/licence.png')
     const [file, setFile] = useState<File | null>(null)
     const [ruatFile, setRuatFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(false)
+    const [busMarker,setBusMarker] = useState<any[]>([])
+    const [busType,setBusType] = useState<any[]>([])
+    const [busStatus,setBusStatus] = useState<any[]>([])
+
     const dispatch = useDispatch<AppDispatch>()
+
+    useEffect(() => {
+      const fetch = async () => {
+        const response = await apiService.Get('/busmarker');
+        setBusMarker(response.data);
+        setFormBus(prevFormBus => ({
+          ...prevFormBus,
+          trademark: response.data[0].name
+        }));
+      };
+      fetch();
+    }, [toggle]);
+
+    useEffect(() => {
+      const fetch = async () => {
+        const response = await apiService.Get('/bustype');
+        setBusType(response.data);
+        setFormBus(prevFormBus => ({
+          ...prevFormBus,
+          type: response.data[0].name
+        }));
+      };
+      fetch();
+    }, [toggle]);
+
+    useEffect(() => {
+      const fetch = async () => {
+        const response = await apiService.Get('/busstatus');
+        setBusStatus(response.data);
+        setFormBus(prevFormBus => ({
+          ...prevFormBus,
+          status: response.data[0].name
+        }));
+      };
+      fetch();
+    }, [toggle]);
+
+
     const { getRootProps, getInputProps, isDragAccept } = useDropzone({
         accept: { 'application/pdf': ['.pdf'] },
         onDrop: (acceptedFiles: File[]) => {
@@ -149,15 +187,6 @@ const RegisterBus = ({ toggle }: Props) => {
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setIsLoading(true)
-        if(!markersBus.includes(formBus.otherMarker)){
-          markersBus.push(formBus.otherMarker)
-        }
-        if(!markersBus.includes(formBus.otherType)){
-          markersBus.push(formBus.otherType)
-        }
-        if(!markersBus.includes(formBus.otherState)){
-          markersBus.push(formBus.otherState)
-        }
         if (formBus.trademark === 'Otro') {
             formBus.trademark = formBus.otherMarker
         }
@@ -167,11 +196,15 @@ const RegisterBus = ({ toggle }: Props) => {
         if (formBus.status === 'Otro'){
             formBus.status = formBus.otherState
         }
-        formBus.photo = file
-        formBus.ruat = ruatFile
+        if(file){
+          formBus.photo = file
+        }
+        if(ruatFile){
+          formBus.ruat = ruatFile
+        }
         setFormBus(formBus)
         try {
-            const response = await dispatch(addBus(formBus))
+            const response = await dispatch(addBus({data:formBus,filters:{skip: page * pageSize, limit: pageSize}}))
             if (response.payload.success) {
                 Swal.fire({ title: '¡Éxito!', text: 'Datos guardados exitosamente', icon: "success" });
                 handleReset()
@@ -227,14 +260,14 @@ const RegisterBus = ({ toggle }: Props) => {
                         onChange={handleChangeSelects}
                         autoComplete='off'
                     >
-                        {markersBus.map((mark) => (<MenuItem
-                            value={mark}
-                            key={mark}
-                        >{mark}</MenuItem>))}
+                        {busMarker.map((mark) => (<MenuItem
+                            value={mark.name}
+                            key={mark.id}
+                        >{mark.name}</MenuItem>))}
                     </Select>
                     {formErrors.trademark && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.trademark}</FormHelperText>}
                 </FormControl>
-                {formBus.trademark == 'Otro' ?
+                {formBus.trademark == 'Otro' &&
                     <FormControl fullWidth sx={{ mb: 6 }}>
                         <TextField
                             name='otherMarker'
@@ -246,7 +279,7 @@ const RegisterBus = ({ toggle }: Props) => {
                             autoComplete='off'
                             onChange={handleChangeFields}
                         />
-                    </FormControl> : ''}
+                    </FormControl>}
                 <FormControl fullWidth sx={{ mb: 6 }}>
                     <InputLabel id="demo-simple-select-label">Tipo de Vehículo</InputLabel>
                     <Select
@@ -259,14 +292,14 @@ const RegisterBus = ({ toggle }: Props) => {
                         onChange={handleChangeSelects}
                         autoComplete='off'
                     >
-                        {typesBus.map((mark) => (<MenuItem
-                            value={mark}
-                            key={mark}
-                        >{mark}</MenuItem>))}
+                        {busType.map((type) => (<MenuItem
+                            value={type.name}
+                            key={type.id}
+                        >{type.name}</MenuItem>))}
                     </Select>
                     {formErrors.type && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.type}</FormHelperText>}
                 </FormControl>
-                {formBus.type === 'Otro' ?
+                {formBus.type === 'Otro' &&
                     <FormControl fullWidth sx={{ mb: 6 }}>
                         <TextField
                             value={formBus.otherType}
@@ -278,7 +311,7 @@ const RegisterBus = ({ toggle }: Props) => {
                             autoComplete='off'
                             onChange={handleChangeFields}
                         />
-                    </FormControl> : ''}
+                    </FormControl>}
                 <FormControl fullWidth sx={{ mb: 6 }}>
                     <TextField
                         name='model'
@@ -329,10 +362,10 @@ const RegisterBus = ({ toggle }: Props) => {
                         onChange={handleChangeSelects}
                         autoComplete='off'
                     >
-                        {status.map((mark) => (<MenuItem
-                            value={mark}
-                            key={mark}
-                        >{mark}</MenuItem>))}
+                        {busStatus.map((status) => (<MenuItem
+                            value={status.name}
+                            key={status.id}
+                        >{status.name}</MenuItem>))}
                     </Select>
                 </FormControl>
                 {formBus.status === 'Otro' ? <FormControl fullWidth sx={{ mb: 6 }}>

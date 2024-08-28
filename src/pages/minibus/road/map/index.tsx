@@ -1,7 +1,7 @@
 'use client'
-import { Box, BoxProps, Button, Card, CardContent, Checkbox, Divider, FormControl, Grid, IconButton, LinearProgress, TextField, Typography } from '@mui/material';
+import { Box, BoxProps, Button, Card, Divider, FormControl, Grid, IconButton, LinearProgress, TextField, Typography } from '@mui/material';
 import type { FeatureCollection } from 'geojson';
-import { FormEvent, Fragment, useEffect, useState } from 'react';
+import { FormEvent, Fragment, useState } from 'react';
 import Swal from 'sweetalert2'
 import { styled } from '@mui/material/styles'
 import Icon from "src/@core/components/icon"
@@ -17,7 +17,9 @@ import ClearIcon from '@mui/icons-material/Clear';
 
 interface Props {
   toggle: () => void
-  title: string
+  title: string,
+  page: number
+  pageSize:number
 }
 
 const defaultErrors = {
@@ -42,7 +44,7 @@ const geoDeafult: FeatureCollection = {
   type: "FeatureCollection",
   features: []
 }
-const Maps = ({ toggle, title }: Props) => {
+const Maps = ({ toggle, title, page, pageSize }: Props) => {
   const [geojson, setGeojson] = useState<FeatureCollection>(geoDeafult)
   const [zoom, setZoom] = useState<number>(16)
   const [center, setCenter] = useState<LatLng | null>(null)
@@ -109,7 +111,7 @@ const Maps = ({ toggle, title }: Props) => {
       routes: names
     }
     try {
-      const response = await dispatch(addRoad(data))
+      const response = await dispatch(addRoad({data:data,filtrs:{skip: page * pageSize, limit: pageSize}}))
       if (response.payload.success) {
         Swal.fire({ title: '¡Éxito!', text: 'Datos guardados exitosamente', icon: "success" });
         handleReset()

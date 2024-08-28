@@ -8,6 +8,7 @@ import { addHorario, updateHorario } from "src/store/apps/horario";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "src/store";
 import Swal from "sweetalert2";
+import { apiService } from "src/store/services/apiService";
 
 const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo', 'Feriados']
 
@@ -20,31 +21,36 @@ interface Props {
 interface horarioDta {
   name: string
   place: string,
+  arrive: string;
   firstOut: string
   lastOut: string
   frequency: number | string
   time: string
   days: string[],
+  otherDay: string
   description: string
 }
 const defaultErrors = {
   name: '',
   place: '',
+  arrive: '',
   firstOut: '',
-  lastOut: '',
   frequency: '',
   time: '',
+  lastOut: '',
   days: '',
   description: ''
 }
 const defaultData: horarioDta = {
   name: '',
   place: '',
+  arrive: '',
   firstOut: '00:00',
   lastOut: '00:00',
   frequency: 0,
-  time: '',
+  time: 'min',
   days: [],
+  otherDay: '',
   description: '',
 };
 
@@ -60,19 +66,36 @@ const EditHorario = ({ toggle, store, page,pageSize }: Props) => {
   const dispatch = useDispatch<AppDispatch>()
   const [isLoading, setIsLoading] = useState(false)
   const [otherDay, setOtherDay] = useState('')
-  const [inicialOtherDay,setInicialOtnerDay] = useState('')
+  const [day, setDay] = useState<any[]>([])
+
   useEffect(() => {
-    if (store) {
-      setHorarioForms(store)
-      const missing = store.days.filter((day: string) => !days.includes(day));
-      setOtherDay(missing)
-      setInicialOtnerDay(missing)
+    const fetch = async () => {
+      const response = await apiService.Get('/days')
+      setDay(response.data)
     }
-  }, [store,toggle])
-  const handleClose = () => {
-    toggle()
-    handleReset()
-  }
+    fetch()
+  }, [toggle])
+
+  useEffect(()=>{
+    if(store){
+      const dy = store.days?.map((day:any)=>{
+        return day?._id
+      })
+      const data: horarioDta ={
+        name:store.name,
+        place:store.place,
+        arrive:store?.arrive,
+        firstOut: store.firstOut,
+        lastOut: store.lastOut,
+        frequency: store.frequency,
+        time: store.time,
+        days: dy,
+        otherDay: '',
+        description: store?.description,
+      }
+      setHorarioForms(data)
+    }
+  },[store])
   const handleChangeFields = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     if(name === 'frequency'){
@@ -121,12 +144,6 @@ const EditHorario = ({ toggle, store, page,pageSize }: Props) => {
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    if(otherDay && otherDay != inicialOtherDay){
-      horarioForms.days.push(otherDay)
-    }
-    if(!days.includes(otherDay) && otherDay.length !==0){
-      days.push(otherDay)
-    }
     try {
       const response = await dispatch(updateHorario({ data: horarioForms, id: store.id, filtrs:{skip: page * pageSize, limit: pageSize} }))
       if (response.payload.success) {
@@ -170,34 +187,30 @@ const EditHorario = ({ toggle, store, page,pageSize }: Props) => {
     <form onSubmit={onSubmit}>
       <Box sx={{ border: '1px solid #EEEDED', borderTopLeftRadius: 10, borderTopRightRadius: 10, pl: 5 }}>
         <Grid container spacing={2}>
-          {days.map((day, index) => (
-            <Fragment key={index}><Grid item xs={4}>
+          {day.map((day, index) => (
+            <Fragment key={day.id}><Grid item xs={4}>
               <FormControlLabel
-                control={<Checkbox checked={horarioForms.days.includes(day)} onChange={handleCheckboxIdaChange} value={day} />}
-                label={day}
+                control={<Checkbox checked={horarioForms.days.includes(day._id)} onChange={handleCheckboxIdaChange} value={day._id} />}
+                label={day.name}
               />
-              {formErrors.days && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.days}</FormHelperText>}
             </Grid>
-              {index === days.length - 1 ?
-                <Grid item xs={4}>
-                  <FormControl fullWidth sx={{ mb: 3, pr: 4 }}>
-                    <TextField
-                      label='Otro'
-                      name="otherDay"
-                      placeholder="Fin de semana"
-                      value={otherDay}
-                      error={Boolean(formErrors.days)}
-                      helperText={formErrors.days}
-                      autoComplete='off'
-                      onChange={e => setOtherDay(e.target.value)}
-                    />
-                  </FormControl>
-                </Grid>
-                : ''
-              }
+
             </Fragment>
           ))}
+          <Grid item xs={4}>
+            <FormControl fullWidth sx={{ mb: 3, pr: 4 }}>
+              <TextField
+                label='Otro'
+                name="otherDay"
+                placeholder="Día de maestro"
+                value={otherDay}
+                autoComplete='off'
+                onChange={e => setOtherDay(e.target.value)}
+              />
+            </FormControl>
+          </Grid>
         </Grid>
+        <Box sx={{ mb: 3 }}>{formErrors.days && <FormHelperText sx={{ color: 'error.main' }}>{formErrors.days}</FormHelperText>}</Box>
       </Box>
       <Box sx={{
         borderTop: 0, borderBottom: '1px solid #EEEDED', borderLeft: '1px solid #EEEDED', borderRight: '1px solid #EEEDED',
@@ -249,9 +262,9 @@ const EditHorario = ({ toggle, store, page,pageSize }: Props) => {
           <Grid item xs={6}>
             <FormControl fullWidth sx={{ mb: 6 }}>
               <TextField
-                label='Lugar de salida'
+                label='Lugar de partida'
                 name="place"
-                placeholder='Las Lecherias'
+                placeholder='Ciudadela'
                 autoComplete='off'
                 value={horarioForms.place}
                 onChange={handleChangeFields}
@@ -260,7 +273,21 @@ const EditHorario = ({ toggle, store, page,pageSize }: Props) => {
               />
             </FormControl>
           </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={6}>
+            <FormControl fullWidth sx={{ mb: 6 }}>
+              <TextField
+                label='Lugar de llegada'
+                name="arrive"
+                placeholder='Plaza San Bernardo'
+                autoComplete='off'
+                value={horarioForms.arrive}
+                onChange={handleChangeFields}
+                error={Boolean(formErrors.arrive)}
+                helperText={formErrors.arrive}
+              />
+            </FormControl>
+          </Grid>
+          <Grid item xs={6}>
             <FormControl fullWidth sx={{ mb: 6 }}>
               <TextField
                 label='Frecuncia de salidad'
@@ -275,7 +302,7 @@ const EditHorario = ({ toggle, store, page,pageSize }: Props) => {
               />
             </FormControl>
           </Grid>
-          <Grid item xs={3}>
+          <Grid item xs={6}>
             <FormControl fullWidth sx={{ mb: 6 }}>
               <InputLabel id="demo-simple-select-label">Unidad de tiempo</InputLabel>
               <Select
@@ -320,7 +347,7 @@ const EditHorario = ({ toggle, store, page,pageSize }: Props) => {
           </Grid>
         </Grid>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button size='large' variant='outlined' color='secondary' onClick={handleClose} startIcon={<CancelIcon />}>
+          <Button size='large' variant='outlined' color='secondary' onClick={handleReset} startIcon={<CancelIcon />}>
             Cancelar
           </Button>
           <Button size='large' type='submit' variant='contained' sx={{ mr: 3 }}

@@ -27,7 +27,7 @@ const ListDays = ({ open, toggle, data }: Props) => {
     <Dialog
       fullWidth
       open={open}
-      maxWidth='sm'
+      maxWidth='md'
       scroll='body'
       onClose={toggle}
       TransitionComponent={Transition}
@@ -44,31 +44,43 @@ const ListDays = ({ open, toggle, data }: Props) => {
               <Card>
                 <Typography sx={{ display: 'flex', justifyContent: 'center',
                 backgroundColor:theme=>`${theme.palette.primary.main}`,
-                color:'#ffffff'}} variant="overline">operacion regular desde {isMorning(data.firstOut)?`${data.firstOut} de la mañana`: `${data.firstOut} `}
-                a {isMorning(data.lastOut)?`${data.lastOut} de la mañana`: `${data.lastOut} `}</Typography>
+                color:'#ffffff'}} variant="overline">operacion regular desde {isMorning(data.firstOut)?`${data.firstOut} de la mañana `: `${data.firstOut} `}
+                a {isMorning(data.lastOut)?`${data.lastOut} de la mañana `: `${data.lastOut} hrs.`}</Typography>
                 <CardContent sx={{paddingTop:2}}>
                 <Grid container spacing={2}>
-                  <Grid item xs={4}>
+                  <Grid item xs={2}>
                     <Typography variant="body1">Día</Typography>
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid item xs={2}>
                     <Typography variant="body1">Horarios de operación</Typography>
                   </Grid>
-                  <Grid item xs={4}>
-                    <Typography variant="body1">frecuencia &#40;{data.time}&#41;</Typography>
+                  <Grid item xs={2}>
+                    <Typography variant="body1">Frecuencia &#40;{data.time}&#41;</Typography>
+                  </Grid>
+                  <Grid item xs={2}>
+                    <Typography variant="body1">Lugar Partida</Typography>
+                  </Grid>
+                  <Grid item xs={2}>
+                    <Typography variant="body1">Lugar Llegada</Typography>
                   </Grid>
                   <Grid item xs={12}><Divider/></Grid>
 
-                  {data.days.map((dia: any) => (
-                    <Fragment key={dia}>
-                      <Grid item xs={4}>
-                      <Typography key={dia}variant="subtitle2">{dia}</Typography>
+                  {data.days?.map((dia: any) => (
+                    <Fragment key={dia.id}>
+                      <Grid item xs={2}>
+                      <Typography variant="subtitle2">{dia.name}</Typography>
                       </Grid>
-                      <Grid item xs={4}>
-                      <Typography key={dia}variant="subtitle2">{data.firstOut} - {data.lastOut}</Typography>
+                      <Grid item xs={2}>
+                      <Typography variant="subtitle2">{data.firstOut} - {data.lastOut}</Typography>
                       </Grid>
-                      <Grid item xs={4}>
-                      <Typography key={dia}variant="subtitle2">{data.frequency}</Typography>
+                      <Grid item xs={2}>
+                      <Typography variant="subtitle2">{data.frequency}</Typography>
+                      </Grid>
+                      <Grid item xs={2}>
+                      <Typography variant="subtitle2">{data.place}</Typography>
+                      </Grid>
+                      <Grid item xs={2}>
+                      <Typography variant="subtitle2">{data.arrive}</Typography>
                       </Grid>
                       <Grid item xs={12}>
                       <Divider/>

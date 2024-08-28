@@ -5,16 +5,19 @@ import FormControl from '@mui/material/FormControl'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import { Grid,IconButton } from '@mui/material'
-import React, { ChangeEvent, FormEvent, useState } from 'react'
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import Icon from "src/@core/components/icon"
 import ClearIcon from '@mui/icons-material/Clear';
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from 'src/store'
 import { addTarifa } from 'src/store/apps/tarifa'
 import Swal from 'sweetalert2'
+import { apiService } from 'src/store/services/apiService'
 
 interface Props {
   toggle: () => void
+  page:number
+  pageSize:number
 }
 interface InputsTarifa {
   tipo: string
@@ -25,14 +28,9 @@ interface tarifaData {
   name: string
   description: string
 }
-const defaultTarifa = [
-  { tipo: 'Escolar', tarifa: 'Bs. 0.50' },
-  { tipo: 'Universitario', tarifa: 'Bs. 1' },
-  { tipo: 'Adulto', tarifa: 'Bs. 1.50' },
-  { tipo: 'Tercera Edad', tarifa: 'Bs. 1' },
-]
+
 const defaultDta: tarifaData = {
-  rates: defaultTarifa,
+  rates: [],
   name: '',
   description: ''
 }
@@ -41,11 +39,20 @@ const defaultErrors = {
   tipo: '',
   tarifa: ''
 }
-const AddTarifas = ({ toggle }: Props) => {
+const AddTarifas = ({ toggle, page, pageSize }: Props) => {
 
   const [formErrors, setFormErrors] = useState(defaultErrors)
   const [tarifaForms, setTarifaForms] = useState<tarifaData>(defaultDta)
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    const fetch = async () => {
+      const response = await apiService.Get('/tarifas')
+      setTarifaForms(preview => ({
+        ...preview, rates:response.data}))
+    }
+    fetch()
+  }, [toggle])
 
   const dispatch = useDispatch<AppDispatch>()
   const handleAddTarifa = () => {
@@ -68,22 +75,11 @@ const AddTarifas = ({ toggle }: Props) => {
       rates: prevTarifaForms.rates.map((rate, i) => i === index ? { ...rate, [key]: value } : rate)
     }));
   }
-  function hasAnyDuplicates(array:any) {
-    const seen = new Set();
-    for (const item of array) {
-      const itemString = JSON.stringify(item);
-      if (seen.has(itemString)) {
-        return true; // Hay duplicados
-      }
-      seen.add(itemString);
-    }
-    return false; // No hay duplicados
-  }
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     try {
-      const response = await dispatch(addTarifa(tarifaForms))
+      const response = await dispatch(addTarifa({data:tarifaForms, filtrs:{skip: page * pageSize, limit: pageSize}}))
       if (response.payload.success) {
         Swal.fire({ title: '¡Éxito!', text: 'Datos guardados exitosamente', icon: "success" });
         handleReset()

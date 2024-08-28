@@ -1,31 +1,21 @@
-import { Ref, useState, forwardRef, ReactElement, MouseEvent, Fragment, useEffect, useCallback } from 'react'
+import { Ref, useState, forwardRef, ReactElement, Fragment, useEffect, useCallback } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
 import List from '@mui/material/List'
-import Menu from '@mui/material/Menu'
 import Avatar from '@mui/material/Avatar'
 import Dialog from '@mui/material/Dialog';
-import Button from '@mui/material/Button'
-import { Theme } from '@mui/material/styles'
 import ListItem from '@mui/material/ListItem'
-import MenuItem from '@mui/material/MenuItem'
 import TextField from '@mui/material/TextField'
 import IconButton from '@mui/material/IconButton'
 import InputLabel from '@mui/material/InputLabel'
 import Typography from '@mui/material/Typography'
 import Fade, { FadeProps } from '@mui/material/Fade'
 import ListItemText from '@mui/material/ListItemText'
-import Autocomplete from '@mui/material/Autocomplete'
-import useMediaQuery from '@mui/material/useMediaQuery'
 import DialogContent from '@mui/material/DialogContent'
 import ListItemAvatar from '@mui/material/ListItemAvatar'
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction'
 import Icon from 'src/@core/components/icon'
 import { Divider, FormControl } from '@mui/material'
-// import { useService } from 'src/hooks/useService'
-import { useQuery } from 'react-query'
 import getConfig from 'src/configs/environment'
 import { useDispatch } from 'react-redux'
 import { AppDispatch, RootState } from 'src/store'
@@ -55,7 +45,6 @@ const DialogUsers = ({open, toggle,id, page,pageSize}:Props)=>{
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state:RootState)=>state.userAndBus)
   const [value, setValue] = useState<string>('')
-    // const {Update}=useService()
     const handleFilter = useCallback((val: string) => {
       dispatch(fetchDataUser({filter:val}))
       setValue(val)

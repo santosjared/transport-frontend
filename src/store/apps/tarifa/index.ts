@@ -24,7 +24,7 @@ async (filtrs?: { [key: string]: any }) => {
 
 export const addTarifa = createAsyncThunk('appTarifa/addTarifa',
   async (data: { [key: string]: any }, {dispatch }: Redux) => {
-    const response = await apiService.Post('/tarifa', data)
+    const response = await apiService.Post('/tarifa', data.data)
     if(response.status === HttpStatus.BAD_REQUEST){
       const res = {
         success:false,
@@ -37,7 +37,7 @@ export const addTarifa = createAsyncThunk('appTarifa/addTarifa',
         success:true,
         data:response.data
       }
-      dispatch(fetchData())
+      dispatch(fetchData(data.filtrs))
       return res
     }
     if(response === HttpStatus.INTERNAL_SERVER_ERROR){
@@ -48,9 +48,9 @@ export const addTarifa = createAsyncThunk('appTarifa/addTarifa',
 )
 
 export const deleteTarifa = createAsyncThunk('appTarifa/deleteTarifa',
-  async (id: number | string, {dispatch }: Redux) => {
-    const response = await apiService.Delete('/tarifa', id)
-    dispatch(fetchData())
+  async (props:{filters:any,id:string}, {dispatch }: Redux) => {
+    const response = await apiService.Delete('/tarifa', props.id)
+    dispatch(fetchData(props.filters))
     return response.data
   }
 )

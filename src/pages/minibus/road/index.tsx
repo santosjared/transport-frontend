@@ -1,9 +1,8 @@
-import React, { useCallback, useState, MouseEvent, useEffect, ChangeEvent } from 'react'
+import React, { useState, MouseEvent, useEffect, ChangeEvent } from 'react'
 import { Box, Button, Card, CardHeader, FormControl, Grid, IconButton, TextField, Typography } from '@mui/material'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import { DataGrid } from '@mui/x-data-grid'
-import TableHeader from 'src/components/tableHeader'
 import Icon from 'src/@core/components/icon'
 import Maps from './map'
 import CustomChip from 'src/@core/components/mui/chip'
@@ -18,7 +17,6 @@ import MapsEdit from './edit'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { apiService } from 'src/store/services/apiService'
-// import { useService } from 'src/hooks/useService'
 
 interface RoadData {
   createdAt: string
@@ -41,7 +39,7 @@ interface TypeCell {
 
 const Roads = () => {
 
-  const RowOptions = ({ id, data }: { id: number | string; data: RoadData }) => {
+  const RowOptions = ({ id, data }: { id: string; data: RoadData }) => {
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
     const rowOptionsOpen = Boolean(anchorEl)
@@ -65,7 +63,7 @@ const Roads = () => {
         confirmButtonText: 'Eliminar',
       }).then(async (result) => { return await result.isConfirmed });
       if (confirme) {
-        dispatch(deleteRoad(id)).then((result) => {
+        dispatch(deleteRoad({ filters: { filter: '', skip: page * pageSize, limit: pageSize }, id: id })).then((result) => {
           if (result.payload) {
             Swal.fire({
               title: '¡Éxito!',
@@ -321,7 +319,7 @@ const Roads = () => {
     return (
       <>
         {openRoad && <ViewMap data={data} onClose={toggleRoad} />}
-        {hidden && <Maps toggle={toggleDrawer} title='Registrar Rutas' />}
+        {hidden && <Maps toggle={toggleDrawer} title='Registrar Rutas' page={page} pageSize={pageSize}/>}
         {openEdit && <MapsEdit title='Editar rutas' toggle={toggleEdit} data={data} page={page} pageSize={pageSize}/>}
       </>
     )

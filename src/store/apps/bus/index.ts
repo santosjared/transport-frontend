@@ -25,7 +25,7 @@ export const fetchData = createAsyncThunk('appBus/fetchBus',
 
 export const addBus = createAsyncThunk('appBus/addBus',
   async (data: { [key: string]: any }, { dispatch }: Redux) => {
-    const response = await apiService.Post('/bus', data)
+    const response = await apiService.Post('/bus', data.data)
     if (response.status === HttpStatus.BAD_REQUEST) {
       const res = {
         success: false,
@@ -38,7 +38,7 @@ export const addBus = createAsyncThunk('appBus/addBus',
         success: true,
         data: response.data
       }
-      dispatch(fetchData())
+      dispatch(fetchData(data.filters))
       return res
     }
     if (response.status === HttpStatus.INTERNAL_SERVER_ERROR) {

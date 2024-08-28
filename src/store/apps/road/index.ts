@@ -24,7 +24,7 @@ async (filtrs?: { [key: string]: any }) => {
 
 export const addRoad = createAsyncThunk('appRoad/addRoad',
     async (data: { [key: string]: any }, {dispatch }: Redux) => {
-      const response = await apiService.Post('/road', data)
+      const response = await apiService.Post('/road', data.data)
       if(response.status === HttpStatus.BAD_REQUEST){
         const res = {
           success:false,
@@ -37,7 +37,7 @@ export const addRoad = createAsyncThunk('appRoad/addRoad',
           success:true,
           data:response.data
         }
-        dispatch(fetchData())
+        dispatch(fetchData(data.filtrs))
         return res
       }
       if(response === HttpStatus.INTERNAL_SERVER_ERROR){
@@ -48,9 +48,9 @@ export const addRoad = createAsyncThunk('appRoad/addRoad',
 )
 
 export const deleteRoad = createAsyncThunk('appRoad/deleteRoad',
-  async (id: number | string, {dispatch }: Redux) => {
-    const response = await apiService.Delete('/road', id)
-    dispatch(fetchData())
+  async (props:{filters:any,id:string}, {dispatch }: Redux) => {
+    const response = await apiService.Delete('/road', props.id)
+    dispatch(fetchData(props.filters))
     return response.data
   }
 )
